@@ -46,7 +46,7 @@ for path in skip_modules:
 def convert_module(module_path):
     logging.info(f'Converting {module_path} to {command}')
     result = subprocess.run(
-        [tlauc_path, command, '--input', module_path, '--output', module_path, '--overwrite'],
+        [tlauc_path, module_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True
