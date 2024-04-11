@@ -51,15 +51,15 @@ CONSTANT Nodes, Edges   \* the nodes and edges of the graph
 
 ASSUME  
   (* nodes are represented by their integer identities *)
-  /\ Nodes \subseteq Int
-  /\ Nodes # {} 
-  /\ LET G == [node |-> Nodes, edge |-> Edges]
-     IN  /\ IsUndirectedGraph(G)
-         /\ IsStronglyConnected(G)
+  ∧ Nodes ⊆ ℤ
+  ∧ Nodes ≠ {} 
+  ∧ LET G ≜ [node ↦ Nodes, edge ↦ Edges]
+     IN  ∧ IsUndirectedGraph(G)
+         ∧ IsStronglyConnected(G)
 
-Neighbors(n) == {m \in Nodes : {m,n} \in Edges}
+Neighbors(n) ≜ {m ∈ Nodes : {m,n} ∈ Edges}
 
-Min(S) == CHOOSE x \in S : \A y \in S : x <= y
+Min(S) ≜ CHOOSE x ∈ S : ∀ y ∈ S : x ≤ y
 
 VARIABLES 
   (* the phase (down or up) each node is currently executing *)
@@ -69,12 +69,12 @@ VARIABLES
   (* mailbox of each node *)
   mailbox
 
-vars == <<phase, incoming, outgoing, mailbox>>
+vars ≜ ⟨phase, incoming, outgoing, mailbox⟩
 
 (****************************************************************************)
 (* Determine the kind of the node: source, sink or internal.                *)
 (****************************************************************************)
-kind(n) ==
+kind(n) ≜
     IF incoming[n] = {} THEN "source"
     ELSE IF outgoing[n] = {} THEN "sink"
     ELSE "internal"
@@ -82,41 +82,41 @@ kind(n) ==
 (****************************************************************************)
 (* Messages sent during the algorithm.                                      *)
 (****************************************************************************)
-Messages == 
-  [phase : {"down"}, sndr : Nodes, val : Nodes] \cup  
+Messages ≜ 
+  [phase : {"down"}, sndr : Nodes, val : Nodes] ∪  
   [phase : {"up"}, sndr : Nodes, reply : {"yes", "no"}]
-downMsg(s,v) == [phase |-> "down", sndr |-> s, val |-> v]
-upMsg(s,r) == [phase |-> "up", sndr |-> s, reply |-> r]
+downMsg(s,v) ≜ [phase ↦ "down", sndr ↦ s, val ↦ v]
+upMsg(s,r) ≜ [phase ↦ "up", sndr ↦ s, reply ↦ r]
 
 (****************************************************************************)
 (* Type correctness predicate.                                              *)
 (****************************************************************************)
-TypeOK == 
-    /\ phase \in [Nodes -> {"down", "up"}]
-    /\ incoming \in [Nodes -> SUBSET Nodes]
-    /\ \A n \in Nodes : incoming[n] \subseteq Neighbors(n)
-    /\ outgoing \in [Nodes -> SUBSET Nodes]
-    /\ \A n \in Nodes : outgoing[n] \subseteq Neighbors(n)
-    /\ mailbox \in [Nodes -> SUBSET Messages]
-    /\ \A n \in Nodes : \A msg \in mailbox[n] :
-          /\ msg.phase = "down" => 
-             /\ n \in outgoing[msg.sndr]
-             /\ \A mm \in mailbox[n] : \* at most one message per neighbor
-                   mm.phase = "down" /\ mm.sndr = msg.sndr => mm = msg
-          /\ msg.phase = "up" => 
-             /\ msg.sndr \in outgoing[n]
-             /\ \A mm \in mailbox[n] : \* at most one message per neighbor
-                   mm.phase = "up" /\ mm.sndr = msg.sndr => mm = msg
+TypeOK ≜ 
+    ∧ phase ∈ [Nodes → {"down", "up"}]
+    ∧ incoming ∈ [Nodes → SUBSET Nodes]
+    ∧ ∀ n ∈ Nodes : incoming[n] ⊆ Neighbors(n)
+    ∧ outgoing ∈ [Nodes → SUBSET Nodes]
+    ∧ ∀ n ∈ Nodes : outgoing[n] ⊆ Neighbors(n)
+    ∧ mailbox ∈ [Nodes → SUBSET Messages]
+    ∧ ∀ n ∈ Nodes : ∀ msg ∈ mailbox[n] :
+          ∧ msg.phase = "down" ⇒ 
+             ∧ n ∈ outgoing[msg.sndr]
+             ∧ ∀ mm ∈ mailbox[n] : \* at most one message per neighbor
+                   mm.phase = "down" ∧ mm.sndr = msg.sndr ⇒ mm = msg
+          ∧ msg.phase = "up" ⇒ 
+             ∧ msg.sndr ∈ outgoing[n]
+             ∧ ∀ mm ∈ mailbox[n] : \* at most one message per neighbor
+                   mm.phase = "up" ∧ mm.sndr = msg.sndr ⇒ mm = msg
 
 ------------------------------------------------------------------------------
 (****************************************************************************)
 (* Yo-Yo algorithm as a state machine.                                      *)
 (****************************************************************************)
-Init == 
-    /\ phase = [n \in Nodes |-> "down"]
-    /\ incoming = [n \in Nodes |-> { m \in Neighbors(n) : m < n}]
-    /\ outgoing = [n \in Nodes |-> { m \in Neighbors(n) : m > n}]
-    /\ mailbox = [n \in Nodes |-> {}]
+Init ≜ 
+    ∧ phase = [n ∈ Nodes ↦ "down"]
+    ∧ incoming = [n ∈ Nodes ↦ { m ∈ Neighbors(n) : m < n}]
+    ∧ outgoing = [n ∈ Nodes ↦ { m ∈ Neighbors(n) : m > n}]
+    ∧ mailbox = [n ∈ Nodes ↦ {}]
 
 ------------------------------------------------------------------------------
 (****************************************************************************)
@@ -124,29 +124,29 @@ Init ==
 (* Note that a node retains "down" messages after executing the phase       *)
 (* because they are used during the up phase.                               *)
 (****************************************************************************)
-DownSource(n) == 
-    /\ kind(n) = "source"
-    /\ phase[n] = "down"
-    /\ mailbox' = [m \in Nodes |-> 
-        IF m \in outgoing[n] THEN mailbox[m] \cup {downMsg(n,n)}
+DownSource(n) ≜ 
+    ∧ kind(n) = "source"
+    ∧ phase[n] = "down"
+    ∧ mailbox' = [m ∈ Nodes ↦ 
+        IF m ∈ outgoing[n] THEN mailbox[m] ∪ {downMsg(n,n)}
         ELSE mailbox[m]]
-    /\ phase' = [phase EXCEPT ![n] = "up"]
-    /\ UNCHANGED <<incoming, outgoing>>
+    ∧ phase' = [phase EXCEPT ![n] = "up"]
+    ∧ UNCHANGED ⟨incoming, outgoing⟩
 
-DownOther(n) == 
-    /\ kind(n) \in {"internal", "sink"}
-    /\ phase[n] = "down"
-    /\ LET downMsgs == {msg \in mailbox[n] : msg.phase = "down"}
-       IN  /\ {msg.sndr : msg \in downMsgs} = incoming[n]
-           /\ LET min == Min({msg.val : msg \in downMsgs})
-              IN mailbox' = [m \in Nodes |->
-                             IF m \in outgoing[n] 
-                             THEN mailbox[m] \cup {downMsg(n,min)}
+DownOther(n) ≜ 
+    ∧ kind(n) ∈ {"internal", "sink"}
+    ∧ phase[n] = "down"
+    ∧ LET downMsgs ≜ {msg ∈ mailbox[n] : msg.phase = "down"}
+       IN  ∧ {msg.sndr : msg ∈ downMsgs} = incoming[n]
+           ∧ LET min ≜ Min({msg.val : msg ∈ downMsgs})
+              IN mailbox' = [m ∈ Nodes ↦
+                             IF m ∈ outgoing[n] 
+                             THEN mailbox[m] ∪ {downMsg(n,min)}
                              ELSE mailbox[m]]
-    /\ phase' = [phase EXCEPT ![n] = "up"]
-    /\ UNCHANGED <<incoming, outgoing>>
+    ∧ phase' = [phase EXCEPT ![n] = "up"]
+    ∧ UNCHANGED ⟨incoming, outgoing⟩
 
-Down(n) == DownSource(n) \/ DownOther(n)
+Down(n) ≜ DownSource(n) ∨ DownOther(n)
 
 ------------------------------------------------------------------------------
 (****************************************************************************)
@@ -159,52 +159,52 @@ Down(n) == DownSource(n) \/ DownOther(n)
 (* neighbors that the node considers as incoming, and also to preserve      *)
 (* "down" messages for the following round when cleaning the mailbox.       *)
 (****************************************************************************)
-UpSource(n) ==
-    /\ kind(n) = "source"
-    /\ phase[n] = "up"
-    /\ LET upMsgs == {msg \in mailbox[n] : msg.phase = "up"}
-           noSndrs == {msg.sndr : msg \in {mm \in upMsgs : mm.reply = "no"}}
-       IN  /\ {msg.sndr : msg \in upMsgs} = outgoing[n]
-           /\ mailbox' = [mailbox EXCEPT ![n] = mailbox[n] \ upMsgs]
-           /\ incoming' = [incoming EXCEPT ![n] = noSndrs]
-           /\ outgoing' = [outgoing EXCEPT ![n] = @ \ noSndrs]
-    /\ phase' = [phase EXCEPT ![n] = "down"]
+UpSource(n) ≜
+    ∧ kind(n) = "source"
+    ∧ phase[n] = "up"
+    ∧ LET upMsgs ≜ {msg ∈ mailbox[n] : msg.phase = "up"}
+           noSndrs ≜ {msg.sndr : msg ∈ {mm ∈ upMsgs : mm.reply = "no"}}
+       IN  ∧ {msg.sndr : msg ∈ upMsgs} = outgoing[n]
+           ∧ mailbox' = [mailbox EXCEPT ![n] = mailbox[n] \ upMsgs]
+           ∧ incoming' = [incoming EXCEPT ![n] = noSndrs]
+           ∧ outgoing' = [outgoing EXCEPT ![n] = @ \ noSndrs]
+    ∧ phase' = [phase EXCEPT ![n] = "down"]
 
-UpOther(n) ==
-    /\ kind(n) \in {"internal", "sink"}
-    /\ phase[n] = "up"
-    /\ LET upMsgs == {msg \in mailbox[n] : msg.phase = "up"}
-           noSndrs == {msg.sndr : msg \in {mm \in upMsgs : mm.reply = "no"}}
-           downMsgs == {msg \in mailbox[n] : msg.phase = "down" /\ msg.sndr \in incoming[n]}
-       IN  /\ {msg.sndr : msg \in upMsgs} = outgoing[n]  \* always true for sinks
-           /\ IF noSndrs = {}  \* true in particular for sinks
-              THEN LET min == Min({msg.val : msg \in downMsgs})
-                       minSndrs == {msg.sndr : msg \in {mm \in downMsgs : mm.val = min}}
-                   IN  /\ mailbox' = [m \in Nodes |->
-                             IF m \in incoming[n]
-                             THEN mailbox[m] \union 
-                                    {upMsg(n, IF m \in minSndrs THEN "yes" ELSE "no")}
-                             ELSE IF m = n THEN mailbox[m] \ (upMsgs \union downMsgs)
+UpOther(n) ≜
+    ∧ kind(n) ∈ {"internal", "sink"}
+    ∧ phase[n] = "up"
+    ∧ LET upMsgs ≜ {msg ∈ mailbox[n] : msg.phase = "up"}
+           noSndrs ≜ {msg.sndr : msg ∈ {mm ∈ upMsgs : mm.reply = "no"}}
+           downMsgs ≜ {msg ∈ mailbox[n] : msg.phase = "down" ∧ msg.sndr ∈ incoming[n]}
+       IN  ∧ {msg.sndr : msg ∈ upMsgs} = outgoing[n]  \* always true for sinks
+           ∧ IF noSndrs = {}  \* true in particular for sinks
+              THEN LET min ≜ Min({msg.val : msg ∈ downMsgs})
+                       minSndrs ≜ {msg.sndr : msg ∈ {mm ∈ downMsgs : mm.val = min}}
+                   IN  ∧ mailbox' = [m ∈ Nodes ↦
+                             IF m ∈ incoming[n]
+                             THEN mailbox[m] ∪ 
+                                    {upMsg(n, IF m ∈ minSndrs THEN "yes" ELSE "no")}
+                             ELSE IF m = n THEN mailbox[m] \ (upMsgs ∪ downMsgs)
                              ELSE mailbox[m]]
-                       /\ incoming' = [incoming EXCEPT ![n] = minSndrs]
-                       /\ outgoing' = [outgoing EXCEPT ![n] = 
-                                           @ \union (incoming[n] \ minSndrs)]
-              ELSE /\ mailbox' = [m \in Nodes |->
-                        IF m \in incoming[n] THEN mailbox[m] \union {upMsg(n, "no")}
-                        ELSE IF m = n THEN mailbox[m] \ (upMsgs \union downMsgs)
+                       ∧ incoming' = [incoming EXCEPT ![n] = minSndrs]
+                       ∧ outgoing' = [outgoing EXCEPT ![n] = 
+                                           @ ∪ (incoming[n] \ minSndrs)]
+              ELSE ∧ mailbox' = [m ∈ Nodes ↦
+                        IF m ∈ incoming[n] THEN mailbox[m] ∪ {upMsg(n, "no")}
+                        ELSE IF m = n THEN mailbox[m] \ (upMsgs ∪ downMsgs)
                         ELSE mailbox[m]]
-                   /\ incoming' = [incoming EXCEPT ![n] = noSndrs]
-                   /\ outgoing' = [outgoing EXCEPT ![n] = 
-                                        (@ \ noSndrs) \union incoming[n]]
-    /\ phase' = [phase EXCEPT ![n] = "down"]
+                   ∧ incoming' = [incoming EXCEPT ![n] = noSndrs]
+                   ∧ outgoing' = [outgoing EXCEPT ![n] = 
+                                        (@ \ noSndrs) ∪ incoming[n]]
+    ∧ phase' = [phase EXCEPT ![n] = "down"]
 
-Up(n) == UpSource(n) \/ UpOther(n)
+Up(n) ≜ UpSource(n) ∨ UpOther(n)
 
 ------------------------------------------------------------------------------
 
-Next == \E n \in Nodes : Down(n) \/ Up(n)
+Next ≜ ∃ n ∈ Nodes : Down(n) ∨ Up(n)
 
-Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
+Spec ≜ Init ∧ □[Next]_vars ∧ WF_vars(Next)
 
 ------------------------------------------------------------------------------
 (****************************************************************************)
@@ -216,36 +216,36 @@ Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 (* Checking this as an invariant produces an execution that shows that all  *)
 (* sources except for the leader will be eliminated.                        *)
 (****************************************************************************)
-MoreThanOneSource == \E s1, s2 \in Nodes :
-    s1 # s2 /\ kind(s1) = "source" /\ kind(s2) = "source"
+MoreThanOneSource ≜ ∃ s1, s2 ∈ Nodes :
+    s1 ≠ s2 ∧ kind(s1) = "source" ∧ kind(s2) = "source"
 
 (****************************************************************************)
 (* Node m is an outgoing neighbor of node n iff n is an incoming neighbor   *)
 (* of m, except if the edge is being reversed, in which case there is a     *)
 (* "no" message in one of the mailboxes.                                    *)
 (****************************************************************************)
-NeighborInv == \A m,n \in Nodes :
-  m \in outgoing[n] <=> 
-    \/ n \in incoming[m]
-    \/ /\ n \in outgoing[m] 
-       /\ upMsg(n, "no") \in mailbox[m] \/ upMsg(m, "no") \in mailbox[n]
+NeighborInv ≜ ∀ m,n ∈ Nodes :
+  m ∈ outgoing[n] ⇔ 
+    ∨ n ∈ incoming[m]
+    ∨ ∧ n ∈ outgoing[m] 
+      ∧ upMsg(n, "no") ∈ mailbox[m] ∨ upMsg(m, "no") ∈ mailbox[n]
 
 (****************************************************************************)
 (* No new sources are generated during execution of the algorithm.          *)
 (****************************************************************************)
-NoNewSource == 
-  [][\A n \in Nodes : kind(n)' = "source" => kind(n) = "source"]_vars
+NoNewSource ≜ 
+  □[∀ n ∈ Nodes : kind(n)' = "source" ⇒ kind(n) = "source"]_vars
 
 (****************************************************************************)
 (* Stabilization condition: there is only one source node, all "down"       *)
 (* messages carry the identity of that node, all "up" messages say "yes".   *)
 (****************************************************************************)
-Stabilization ==
-    /\ kind(Min(Nodes)) = "source"
-    /\ \A n \in Nodes : kind(n) = "source" => n = Min(Nodes)
-    /\ \A n \in Nodes : \A msg \in mailbox[n] : 
-          /\ msg.phase = "down" => msg.val = Min(Nodes)
-          /\ msg.phase = "up" => msg.reply = "yes"
+Stabilization ≜
+    ∧ kind(Min(Nodes)) = "source"
+    ∧ ∀ n ∈ Nodes : kind(n) = "source" ⇒ n = Min(Nodes)
+    ∧ ∀ n ∈ Nodes : ∀ msg ∈ mailbox[n] : 
+          ∧ msg.phase = "down" ⇒ msg.val = Min(Nodes)
+          ∧ msg.phase = "up" ⇒ msg.reply = "yes"
 
-Liveness == <>[]Stabilization
+Liveness ≜ ◇□Stabilization
 ==============================================================================

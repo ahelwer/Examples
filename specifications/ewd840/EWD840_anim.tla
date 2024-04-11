@@ -7,87 +7,87 @@ EXTENDS EWD840, SVG, TLC, Sequences, Integers \* Grab SVG from https://github.co
 \* AnimInit more constraint to reduce the number of initial states.
 VARIABLES history
 
-AnimInit == 
-  /\ active \in [Node -> BOOLEAN]
-  /\ color \in [Node -> Color]
-  /\ tpos = N - 1 \* The token is initially always at N - 1.
-  /\ tcolor = "black"
-  /\ history = <<0, 0, "init">>
+AnimInit ≜ 
+  ∧ active ∈ [Node → BOOLEAN]
+  ∧ color ∈ [Node → Color]
+  ∧ tpos = N - 1 \* The token is initially always at N - 1.
+  ∧ tcolor = "black"
+  ∧ history = ⟨0, 0, "init"⟩
   
-AnimInitiateProbe ==
-  /\ InitiateProbe
-  /\ history' = <<history[1], history[2], "InitiateProbe">>
+AnimInitiateProbe ≜
+  ∧ InitiateProbe
+  ∧ history' = ⟨history[1], history[2], "InitiateProbe"⟩
   
-AnimPassToken(i) == 
-  /\ PassToken(i)
-  /\ history' = <<history[1], history[2], "PassToken">>
+AnimPassToken(i) ≜ 
+  ∧ PassToken(i)
+  ∧ history' = ⟨history[1], history[2], "PassToken"⟩
 
-AnimSystem == 
-  /\ AnimInitiateProbe \/ \E i \in Node \ {0} : AnimPassToken(i)
+AnimSystem ≜ 
+  ∧ AnimInitiateProbe ∨ ∃ i ∈ Node \ {0} : AnimPassToken(i)
 
-AnimSendMsg(i) ==
-  /\ active[i]
-  /\ \E j \in Node \ {i} :
-        /\ active' = [active EXCEPT ![j] = TRUE]
-        /\ color' = [color EXCEPT ![i] = IF j>i THEN "black" ELSE @]
-        /\ history' = <<i, j, "SendMsg">>
-  /\ UNCHANGED <<tpos, tcolor>>
+AnimSendMsg(i) ≜
+  ∧ active[i]
+  ∧ ∃ j ∈ Node \ {i} :
+        ∧ active' = [active EXCEPT ![j] = TRUE]
+        ∧ color' = [color EXCEPT ![i] = IF j>i THEN "black" ELSE @]
+        ∧ history' = ⟨i, j, "SendMsg"⟩
+  ∧ UNCHANGED ⟨tpos, tcolor⟩
 
-AnimDeactivate(i) ==
-  /\ Deactivate(i)
-  /\ history' = <<history[1], history[2], "Deactivate">>
+AnimDeactivate(i) ≜
+  ∧ Deactivate(i)
+  ∧ history' = ⟨history[1], history[2], "Deactivate"⟩
 
-AnimEnvironment == \E i \in Node : AnimSendMsg(i) \/ AnimDeactivate(i)
+AnimEnvironment ≜ ∃ i ∈ Node : AnimSendMsg(i) ∨ AnimDeactivate(i)
                   
-AnimNext == AnimSystem \/ AnimEnvironment
+AnimNext ≜ AnimSystem ∨ AnimEnvironment
 
-Animvars == <<active, color, tpos, tcolor, history>>
+Animvars ≜ ⟨active, color, tpos, tcolor, history⟩
 
-AnimSpec == AnimInit /\ [][AnimNext]_Animvars /\ WF_Animvars(AnimSystem)
+AnimSpec ≜ AnimInit ∧ □[AnimNext]_Animvars ∧ WF_Animvars(AnimSystem)
 
 ---------------------------------------------------------------------------
-Arial == [font |-> "Arial"]
+Arial ≜ [font ↦ "Arial"]
 
-LegendBasePos == [ x |-> -5, y |-> 25 ]
+LegendBasePos ≜ [ x ↦ -5, y ↦ 25 ]
 
-RingBasePos == [w |-> 55, h |-> 55, r |-> 75]
+RingBasePos ≜ [w ↦ 55, h ↦ 55, r ↦ 75]
 
 \* 12pts (x/y) offset to be concentric with RingNetwork.
-TokenBasePos == [ w |-> RingBasePos.w + 12, 
-                  h |-> RingBasePos.h + 12,
-                  r |-> RingBasePos.r + 25 ]
+TokenBasePos ≜ [ w ↦ RingBasePos.w + 12, 
+                  h ↦ RingBasePos.h + 12,
+                  r ↦ RingBasePos.r + 25 ]
 
 ---------------------------------------------------------------------------
 \* Labels
 
-Labels == Group(<<Text(LegendBasePos.x, LegendBasePos.y, "Circle: Active, Black: Tainted", Arial),
+Labels ≜ Group(⟨Text(LegendBasePos.x, LegendBasePos.y, "Circle: Active, Black: Tainted", Arial),
                   Text(LegendBasePos.x, LegendBasePos.y + 20, "Line: Message, Arrow: Receiver", Arial),
-                  Text(LegendBasePos.x, LegendBasePos.y + 40, "Level: " \o ToString(TLCGet("level")), Arial)>>,
-                  <<>>)
+                  Text(LegendBasePos.x, LegendBasePos.y + 40, "Level: " ∘ ToString(TLCGet("level")), Arial)⟩,
+                  ⟨⟩)
 
 ---------------------------------------------------------------------------
-NodeDimension == 26
+NodeDimension ≜ 26
 
 \* Ring Network
-RingNetwork ==
-    LET RN[ n \in Node ] ==         
-            LET coord == NodeOfRingNetwork(RingBasePos.w, RingBasePos.h, RingBasePos.r, n, N)    
-                id == Text(coord.x + 10, coord.y - 5, ToString(n), Arial)
-                node == Rect(coord.x, coord.y, NodeDimension, NodeDimension,
+RingNetwork ≜
+    LET RN[ n ∈ Node ] ≜         
+            LET coord ≜ NodeOfRingNetwork(RingBasePos.w, RingBasePos.h, RingBasePos.r, n, N)    
+                id ≜ Text(coord.x + 10, coord.y - 5, ToString(n), Arial)
+                node ≜ Rect(coord.x, coord.y, NodeDimension, NodeDimension,
                                             \* round (rx=15) if node is active.
-                                            [rx |-> IF ~active[n] THEN "0" ELSE "15",
-                                            stroke |-> "black", 
-                                            fill |-> color[n]])
-            IN Group(<<node, id>>, ("transform" :> "translate(0 125)"))
-    IN Group(RN, <<>>)
+                                            [rx ↦ IF ¬active[n] THEN "0" ELSE "15",
+                                            stroke ↦ "black", 
+                                            fill ↦ color[n]])
+            IN Group(⟨node, id⟩, ("transform" :> "translate(0 125)"))
+    IN Group(RN, ⟨⟩)
 
 ---------------------------------------------------------------------------
 \* Token ring (with larger radius than ring above and only for the node that currently holds the token).
-TokenNetwork ==     
-    LET coord == NodeOfRingNetwork(TokenBasePos.w, TokenBasePos.h, TokenBasePos.r, tpos, N)    
-        circ  == Circle(coord.x, coord.y, 5, [stroke |-> "black", fill |-> tcolor])  
+TokenNetwork ≜     
+    LET coord ≜ NodeOfRingNetwork(TokenBasePos.w, TokenBasePos.h, TokenBasePos.r, tpos, N)    
+        circ  ≜ Circle(coord.x, coord.y, 5, [stroke ↦ "black", fill ↦ tcolor])  
     \* Group always expects a sequence!
-    IN Group(<<circ>>, ("transform" :> "translate(0 125)"))
+    IN Group(⟨circ⟩, ("transform" :> "translate(0 125)"))
 
 ---------------------------------------------------------------------------
 \* Messages send from one node to another.  A proper arrow would be more intuitive with regards to the direction
@@ -96,26 +96,26 @@ TokenNetwork ==
 
 \* Centers the line/circle at the center of a node instead of
 \* a node's left upper corner (which are its 0:0 coordinates).
-ArrowPosOffset == NodeDimension \div 2
+ArrowPosOffset ≜ NodeDimension ÷ 2
 
-Messages ==
-    LET from == NodeOfRingNetwork(RingBasePos.w, RingBasePos.h, RingBasePos.r, history[1], N)
-        to   == NodeOfRingNetwork(RingBasePos.w, RingBasePos.h, RingBasePos.r, history[2], N)
-        line == Line(from.x + ArrowPosOffset, from.y + ArrowPosOffset, 
+Messages ≜
+    LET from ≜ NodeOfRingNetwork(RingBasePos.w, RingBasePos.h, RingBasePos.r, history[1], N)
+        to   ≜ NodeOfRingNetwork(RingBasePos.w, RingBasePos.h, RingBasePos.r, history[2], N)
+        line ≜ Line(from.x + ArrowPosOffset, from.y + ArrowPosOffset, 
                         to.x + ArrowPosOffset, to.y + ArrowPosOffset, 
-                        [stroke |-> "orange", marker_end |-> "url(#arrow)"])
-    IN Group(IF history[3] = "SendMsg" THEN <<line>> ELSE <<>>, ("transform" :> "translate(0 125)"))
+                        [stroke ↦ "orange", marker_end ↦ "url(#arrow)"])
+    IN Group(IF history[3] = "SendMsg" THEN ⟨line⟩ ELSE ⟨⟩, ("transform" :> "translate(0 125)"))
 
 ---------------------------------------------------------------------------
 \* This is just the arrow head that's used by the Message definition above as an attribute.
-Defs ==
+Defs ≜
     "<defs><marker id='arrow' markerWidth='15' markerHeight='15' refX='0' refY='3' orient='auto' markerUnits='strokeWidth' viewBox='0 0 20 20'><path d='M0,0 L0,6 L9,3 z' fill='orange' /></marker></defs>"
 
-Animation == SVGElemToString(Group(<<Labels, RingNetwork, TokenNetwork, Messages>>, <<>>))
+Animation ≜ SVGElemToString(Group(⟨Labels, RingNetwork, TokenNetwork, Messages⟩, ⟨⟩))
 
-Alias == [ 
+Alias ≜ [ 
     \* toolbox |-> Animation,
-    eyeofgnome |-> "<svg viewBox='-80 0 300 300'>" \o Defs \o Animation \o "</svg>"
+    eyeofgnome ↦ "<svg viewBox='-80 0 300 300'>" ∘ Defs ∘ Animation ∘ "</svg>"
     \* foob |-> [i \in 1..20 |-> i]
     ]
 
@@ -123,7 +123,7 @@ Alias == [
 
 \* Property that leads to interesting traces when animated.
 
-AnimInv == terminationDetected => TLCGet("level") < 20 
+AnimInv ≜ terminationDetected ⇒ TLCGet("level") < 20 
 
 =============================================================================
 

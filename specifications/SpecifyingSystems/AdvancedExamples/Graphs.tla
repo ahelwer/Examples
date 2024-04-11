@@ -2,33 +2,33 @@
 LOCAL INSTANCE Naturals
 LOCAL INSTANCE Sequences
 
-IsDirectedGraph(G) ==
-   /\ G = [node |-> G.node, edge |-> G.edge]
-   /\ G.edge \subseteq (G.node \X G.node)
+IsDirectedGraph(G) ≜
+   ∧ G = [node ↦ G.node, edge ↦ G.edge]
+   ∧ G.edge ⊆ (G.node × G.node)
 
-DirectedSubgraph(G) ==    
-  {H \in [node : SUBSET G.node, edge : SUBSET (G.node \X G.node)] :
-     IsDirectedGraph(H) /\ H.edge \subseteq G.edge}
+DirectedSubgraph(G) ≜    
+  {H ∈ [node : SUBSET G.node, edge : SUBSET (G.node × G.node)] :
+     IsDirectedGraph(H) ∧ H.edge ⊆ G.edge}
 -----------------------------------------------------------------------------
-IsUndirectedGraph(G) ==
-   /\ IsDirectedGraph(G)
-   /\ \A e \in G.edge : <<e[2], e[1]>> \in G.edge
+IsUndirectedGraph(G) ≜
+   ∧ IsDirectedGraph(G)
+   ∧ ∀ e ∈ G.edge : ⟨e[2], e[1]⟩ ∈ G.edge
 
-UndirectedSubgraph(G) == {H \in DirectedSubgraph(G) : IsUndirectedGraph(H)}
+UndirectedSubgraph(G) ≜ {H ∈ DirectedSubgraph(G) : IsUndirectedGraph(H)}
 -----------------------------------------------------------------------------
-Path(G) == {p \in Seq(G.node) :
-             /\ p # << >>
-             /\ \A i \in 1..(Len(p)-1) : <<p[i], p[i+1]>> \in G.edge}
+Path(G) ≜ {p ∈ Seq(G.node) :
+             ∧ p ≠ ⟨ ⟩
+             ∧ ∀ i ∈ 1‥(Len(p)-1) : ⟨p[i], p[i+1]⟩ ∈ G.edge}
 
-AreConnectedIn(m, n, G) == 
-  \E p \in Path(G) : (p[1] = m) /\ (p[Len(p)] = n)
+AreConnectedIn(m, n, G) ≜ 
+  ∃ p ∈ Path(G) : (p[1] = m) ∧ (p[Len(p)] = n)
 
-IsStronglyConnected(G) == 
-  \A m, n \in G.node : AreConnectedIn(m, n, G) 
+IsStronglyConnected(G) ≜ 
+  ∀ m, n ∈ G.node : AreConnectedIn(m, n, G) 
 -----------------------------------------------------------------------------
-IsTreeWithRoot(G, r) ==
-  /\ IsDirectedGraph(G)
-  /\ \A e \in G.edge : /\ e[1] # r
-                       /\ \A f \in G.edge : (e[1] = f[1]) => (e = f)
-  /\ \A n \in G.node : AreConnectedIn(n, r, G)
+IsTreeWithRoot(G, r) ≜
+  ∧ IsDirectedGraph(G)
+  ∧ ∀ e ∈ G.edge : ∧ e[1] ≠ r
+                   ∧ ∀ f ∈ G.edge : (e[1] = f[1]) ⇒ (e = f)
+  ∧ ∀ n ∈ G.node : AreConnectedIn(n, r, G)
 =============================================================================

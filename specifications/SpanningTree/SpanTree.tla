@@ -42,38 +42,38 @@ CONSTANTS Nodes, Edges, Root, MaxCardinality
 (* This assumption asserts mathematically what we are assuming about the   *)
 (* constants.                                                               *)
 (***************************************************************************)
-ASSUME /\ Root \in Nodes
-       /\ \A e \in Edges : (e \subseteq Nodes) /\ (Cardinality(e) = 2)
-       /\ MaxCardinality \in Nat
-       /\ MaxCardinality >= Cardinality(Nodes)
+ASSUME ∧ Root ∈ Nodes
+       ∧ ∀ e ∈ Edges : (e ⊆ Nodes) ∧ (Cardinality(e) = 2)
+       ∧ MaxCardinality ∈ ℕ
+       ∧ MaxCardinality ≥ Cardinality(Nodes)
 
 (***************************************************************************)
 (* This defines Nbrs(n) to be the set of neighbors of node n in the        *)
 (* graph--that is, the set of nodes joined by an edge to n.                *)
 (***************************************************************************)
-Nbrs(n) == {m \in Nodes : {m, n} \in Edges}
+Nbrs(n) ≜ {m ∈ Nodes : {m, n} ∈ Edges}
 
 (***************************************************************************)
 (* The spec is a straightforward TLA+ spec of the algorithm described      *)
 (* above.                                                                  *)
 (***************************************************************************)       
 VARIABLES mom, dist
-vars == <<mom, dist>>
+vars ≜ ⟨mom, dist⟩
 
-TypeOK == /\ mom  \in [Nodes -> Nodes]
-          /\ dist \in [Nodes -> Nat]
+TypeOK ≜ ∧ mom  ∈ [Nodes → Nodes]
+         ∧ dist ∈ [Nodes → ℕ]
 
-Init == /\ mom = [n \in Nodes |-> n]
-        /\ dist = [n \in Nodes |-> IF n = Root THEN 0 ELSE MaxCardinality]
+Init ≜ ∧ mom = [n ∈ Nodes ↦ n]
+       ∧ dist = [n ∈ Nodes ↦ IF n = Root THEN 0 ELSE MaxCardinality]
         
-Next == \E n \in Nodes :
-          \E m \in Nbrs(n) : 
-             /\ dist[m] < 1 + dist[n]
-             /\ \E d \in (dist[m]+1) .. (dist[n] - 1) :
-                    /\ dist' = [dist EXCEPT ![n] = d]
-                    /\ mom'  = [mom  EXCEPT ![n] = m]
+Next ≜ ∃ n ∈ Nodes :
+          ∃ m ∈ Nbrs(n) : 
+             ∧ dist[m] < 1 + dist[n]
+             ∧ ∃ d ∈ (dist[m]+1) ‥ (dist[n] - 1) :
+                    ∧ dist' = [dist EXCEPT ![n] = d]
+                    ∧ mom'  = [mom  EXCEPT ![n] = m]
 
-Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
+Spec ≜ Init ∧ □[Next]_vars ∧ WF_vars(Next)
    (************************************************************************)
    (* The formula WF_vars(Next) asserts that a behavior must not stop if   *)
    (* it's possible to take a Next step.  Thus, the algorithm must either  *)
@@ -89,17 +89,17 @@ Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 (* satisfied when the algorithm terminates) that implies that mom has the  *)
 (* correct value.                                                          *)
 (***************************************************************************)
-PostCondition == 
-  \A n \in Nodes :
-    \/ /\ n = Root 
-       /\ dist[n] = 0
-       /\ mom[n] = n
-    \/ /\ dist[n] = MaxCardinality 
-       /\ mom[n] = n
-       /\ \A m \in Nbrs(n) : dist[m] = MaxCardinality
-    \/ /\ dist[n] \in 1..(MaxCardinality-1)
-       /\ mom[n] \in Nbrs(n)
-       /\ dist[n] = dist[mom[n]] + 1
+PostCondition ≜ 
+  ∀ n ∈ Nodes :
+    ∨ ∧ n = Root 
+      ∧ dist[n] = 0
+      ∧ mom[n] = n
+    ∨ ∧ dist[n] = MaxCardinality 
+      ∧ mom[n] = n
+      ∧ ∀ m ∈ Nbrs(n) : dist[m] = MaxCardinality
+    ∨ ∧ dist[n] ∈ 1‥(MaxCardinality-1)
+      ∧ mom[n] ∈ Nbrs(n)
+      ∧ dist[n] = dist[mom[n]] + 1
 
 (***************************************************************************)
 (* ENABLED Next is the TLA+ formula that is true of a state iff (if and    *)
@@ -109,13 +109,13 @@ PostCondition ==
 (* the algorithm has terminated then PostCondition is true, is asserted by  *)
 (* this formula.                                                           *)
 (***************************************************************************)
-Safety == []((~ ENABLED Next) => PostCondition)
+Safety ≜ □((¬ ENABLED Next) ⇒ PostCondition)
 
 (***************************************************************************)
 (* This formula asserts the liveness condition that the algorithm          *)
 (* eventually terminates                                                   *)
 (***************************************************************************)
-Liveness == <>(~ ENABLED Next) 
+Liveness ≜ ◇(¬ ENABLED Next) 
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* These properties of the spec can be checked with the model that should  *)

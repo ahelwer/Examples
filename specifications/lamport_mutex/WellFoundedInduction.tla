@@ -31,9 +31,9 @@ EXTENDS NaturalsInduction
 (* containing S as a subset.  They're even true (though uninteresting) if  *)
 (* R and S \X S are disjoint sets.                                         *)
 (***************************************************************************)
-IsTransitivelyClosedOn(R, S) ==
-   \A i, j, k \in S : (<<i, j>> \in R)  /\ (<<j, k>> \in  R)  
-                         => (<<i, k>> \in R)
+IsTransitivelyClosedOn(R, S) ≜
+   ∀ i, j, k ∈ S : (⟨i, j⟩ ∈ R)  ∧ (⟨j, k⟩ ∈  R)  
+                         ⇒ (⟨i, k⟩ ∈ R)
 (***************************************************************************)
 (* If we think of R as a less-than relation, then R is well founded on S   *)
 (* iff there is no "infinitely descending" sequence of elements of S.  The *)
@@ -42,20 +42,20 @@ IsTransitivelyClosedOn(R, S) ==
 (*                                                                         *)
 (* A S with a well-founded ordering is often called well-ordered.          *)
 (***************************************************************************)
-IsWellFoundedOn(R, S) == 
-    ~ \E f \in [Nat -> S] : \A n \in Nat : <<f[n+1], f[n]>> \in R
+IsWellFoundedOn(R, S) ≜ 
+    ¬ ∃ f ∈ [ℕ → S] : ∀ n ∈ ℕ : ⟨f[n+1], f[n]⟩ ∈ R
 
-LEMMA EmptyIsWellFounded == \A S : IsWellFoundedOn({}, S)
+LEMMA EmptyIsWellFounded ≜ ∀ S : IsWellFoundedOn({}, S)
 
 
-LEMMA IsWellFoundedOnSubset ==
-        ASSUME NEW R, NEW S, NEW T \in SUBSET S,
+LEMMA IsWellFoundedOnSubset ≜
+        ASSUME NEW R, NEW S, NEW T ∈ SUBSET S,
                IsWellFoundedOn(R,S)
         PROVE  IsWellFoundedOn(R,T)
 
 
-LEMMA IsWellFoundedOnSubrelation ==
-       ASSUME NEW S, NEW R, NEW RR, RR \cap (S \X S) \subseteq R,
+LEMMA IsWellFoundedOnSubrelation ≜
+       ASSUME NEW S, NEW R, NEW RR, RR ∩ (S × S) ⊆ R,
               IsWellFoundedOn(R,S)
        PROVE  IsWellFoundedOn(RR,S)
 
@@ -64,55 +64,55 @@ LEMMA IsWellFoundedOnSubrelation ==
 (* If we think of R as a less-than relation on S, then the following is    *)
 (* the set of elements of S that are less than x.                          *)
 (***************************************************************************)
-SetLessThan(x, R, S) ==  {y \in S : <<y, x>> \in R}
+SetLessThan(x, R, S) ≜  {y ∈ S : ⟨y, x⟩ ∈ R}
 
 (***************************************************************************)
 (* If we think of R as a less-than relation on S, then R is well-founded   *)
 (* iff every non-empty subset of S has a minimal element.                  *)
 (***************************************************************************)
 
-THEOREM WFMin ==
+THEOREM WFMin ≜
          ASSUME NEW R, NEW S, 
                 IsWellFoundedOn(R, S),
-                NEW T, T \subseteq S, T # {}
-         PROVE  \E x \in T : \A y \in T : ~ (<<y, x>> \in R)
+                NEW T, T ⊆ S, T ≠ {}
+         PROVE  ∃ x ∈ T : ∀ y ∈ T : ¬ (⟨y, x⟩ ∈ R)
 
 
-THEOREM MinWF ==
+THEOREM MinWF ≜
          ASSUME NEW R, NEW S,
-                \A T \in SUBSET S : T # {} => \E x \in T : \A y \in T : ~ (<<y, x>> \in R)
+                ∀ T ∈ SUBSET S : T ≠ {} ⇒ ∃ x ∈ T : ∀ y ∈ T : ¬ (⟨y, x⟩ ∈ R)
          PROVE  IsWellFoundedOn(R,S)
 
 
 (***************************************************************************)
 (* The two following lemmas are simple consequences of theorem WFMin.      *)
 (***************************************************************************)
-LEMMA WellFoundedIsIrreflexive ==
-        ASSUME NEW R, NEW S, NEW x \in S,
+LEMMA WellFoundedIsIrreflexive ≜
+        ASSUME NEW R, NEW S, NEW x ∈ S,
                IsWellFoundedOn(R, S)
-        PROVE  <<x, x>> \notin R
+        PROVE  ⟨x, x⟩ ∉ R
 
 
-LEMMA WellFoundedIsAsymmetric ==
-        ASSUME NEW R, NEW S, NEW x \in S, NEW y \in S,
+LEMMA WellFoundedIsAsymmetric ≜
+        ASSUME NEW R, NEW S, NEW x ∈ S, NEW y ∈ S,
                IsWellFoundedOn(R,S),
-               <<x,y>> \in R, <<y,x>> \in R
+               ⟨x,y⟩ ∈ R, ⟨y,x⟩ ∈ R
         PROVE  FALSE
 
 
 (***************************************************************************)
 (* The following lemmas are simple facts about operator SetLessThan.       *)
 (***************************************************************************)
-LEMMA WFSetLessThanIrreflexive ==
-        ASSUME NEW R, NEW S, NEW x \in S,
+LEMMA WFSetLessThanIrreflexive ≜
+        ASSUME NEW R, NEW S, NEW x ∈ S,
                IsWellFoundedOn(R,S)
-        PROVE  x \notin SetLessThan(x,R,S)
+        PROVE  x ∉ SetLessThan(x,R,S)
 
 
-LEMMA SetLessTransitive ==
-        ASSUME NEW R, NEW S, NEW x \in S, NEW y \in SetLessThan(x,R,S),
+LEMMA SetLessTransitive ≜
+        ASSUME NEW R, NEW S, NEW x ∈ S, NEW y ∈ SetLessThan(x,R,S),
                IsTransitivelyClosedOn(R, S)
-        PROVE  SetLessThan(y, R, S) \subseteq SetLessThan(x, R, S)
+        PROVE  SetLessThan(y, R, S) ⊆ SetLessThan(x, R, S)
 
 
 ----------------------------------------------------------------------------
@@ -121,12 +121,12 @@ LEMMA SetLessTransitive ==
 (* well-founded set.  It generalizes theorem GeneralNatInduction of module *)
 (* NaturalsInduction.                                                      *)
 (***************************************************************************)
-THEOREM WFInduction ==
+THEOREM WFInduction ≜
           ASSUME NEW P(_), NEW R, NEW S,
                  IsWellFoundedOn(R, S),
-                 \A x \in S : (\A y \in SetLessThan(x, R, S) : P(y))
-                    => P(x)
-          PROVE  \A x \in S : P(x)
+                 ∀ x ∈ S : (∀ y ∈ SetLessThan(x, R, S) : P(y))
+                    ⇒ P(x)
+          PROVE  ∀ x ∈ S : P(x)
 
 
 (***************************************************************************)
@@ -136,30 +136,30 @@ THEOREM WFInduction ==
 (* well-founded relation by applying the special case to its transitive    *)
 (* closure.                                                                *)
 (***************************************************************************)
-WFDefOn(R, S, Def(_,_)) == 
-   \A g, h : 
-      \A x \in S :
-         (\A y \in SetLessThan(x, R, S) : g[y] = h[y])
-           => (Def(g,x) = Def(h,x))
+WFDefOn(R, S, Def(_,_)) ≜ 
+   ∀ g, h : 
+      ∀ x ∈ S :
+         (∀ y ∈ SetLessThan(x, R, S) : g[y] = h[y])
+           ⇒ (Def(g,x) = Def(h,x))
 
-OpDefinesFcn(f, S, Def(_,_)) ==
-   f =  CHOOSE g : g = [x \in S |-> Def(g, x)]
+OpDefinesFcn(f, S, Def(_,_)) ≜
+   f =  CHOOSE g : g = [x ∈ S ↦ Def(g, x)]
 
-WFInductiveDefines(f, S, Def(_,_)) ==
-     f = [x \in S |-> Def(f, x)]
+WFInductiveDefines(f, S, Def(_,_)) ≜
+     f = [x ∈ S ↦ Def(f, x)]
                                           
-WFInductiveUnique(S, Def(_,_)) ==
-  \A g, h : /\ WFInductiveDefines(g, S, Def)
-            /\ WFInductiveDefines(h, S, Def)
-            => (g = h)
+WFInductiveUnique(S, Def(_,_)) ≜
+  ∀ g, h : ∧ WFInductiveDefines(g, S, Def)
+           ∧ WFInductiveDefines(h, S, Def)
+           ⇒ (g = h)
 
-THEOREM WFDefOnUnique ==
+THEOREM WFDefOnUnique ≜
           ASSUME NEW Def(_,_), NEW R, NEW S,
                  IsWellFoundedOn(R, S), WFDefOn(R, S, Def)
           PROVE  WFInductiveUnique(S, Def)
 
 
-LEMMA WFInductiveDefLemma ==
+LEMMA WFInductiveDefLemma ≜
         ASSUME NEW Def(_,_), NEW R, NEW S, NEW f,
                IsWellFoundedOn(R, S),
                IsTransitivelyClosedOn(R, S),
@@ -175,24 +175,24 @@ LEMMA WFInductiveDefLemma ==
 (* smallest relation that contains R (restricted to S \X S) and that is    *)
 (* transitively closed, then prove some relevant properties.               *)
 (***************************************************************************)
-TransitiveClosureOn(R,S) ==
-   { ss \in S \X S : 
-        \A U \in SUBSET (S \X S) :
-           /\ R \cap S \X S \subseteq U
-           /\ IsTransitivelyClosedOn(U, S)
-           => ss \in U }  
+TransitiveClosureOn(R,S) ≜
+   { ss ∈ S × S : 
+        ∀ U ∈ SUBSET (S × S) :
+           ∧ R ∩ S × S ⊆ U
+           ∧ IsTransitivelyClosedOn(U, S)
+           ⇒ ss ∈ U }  
 
-LEMMA TransitiveClosureThm ==
-         \A R, S : 
-           /\ R \cap S \X S \subseteq TransitiveClosureOn(R, S)
-           /\ IsTransitivelyClosedOn(TransitiveClosureOn(R, S), S)
+LEMMA TransitiveClosureThm ≜
+         ∀ R, S : 
+           ∧ R ∩ S × S ⊆ TransitiveClosureOn(R, S)
+           ∧ IsTransitivelyClosedOn(TransitiveClosureOn(R, S), S)
 
 
-LEMMA TransitiveClosureMinimal ==
-        ASSUME NEW R, NEW S, NEW U \in SUBSET (S \X S),
-               R \cap S \X S \subseteq U,
+LEMMA TransitiveClosureMinimal ≜
+        ASSUME NEW R, NEW S, NEW U ∈ SUBSET (S × S),
+               R ∩ S × S ⊆ U,
                IsTransitivelyClosedOn(U,S)
-        PROVE  TransitiveClosureOn(R,S) \subseteq U
+        PROVE  TransitiveClosureOn(R,S) ⊆ U
 
 
 (***************************************************************************)
@@ -202,37 +202,37 @@ LEMMA TransitiveClosureMinimal ==
 (* pair in the transitive closure.                                         *)
 (***************************************************************************)
 
-LEMMA TCTCTC ==
-       ASSUME NEW R, NEW S, NEW i \in S, NEW j \in S, NEW k \in S,
-              <<i,j>> \in TransitiveClosureOn(R,S),
-              <<j,k>> \in TransitiveClosureOn(R,S)
-       PROVE  <<i,k>> \in TransitiveClosureOn(R,S)
+LEMMA TCTCTC ≜
+       ASSUME NEW R, NEW S, NEW i ∈ S, NEW j ∈ S, NEW k ∈ S,
+              ⟨i,j⟩ ∈ TransitiveClosureOn(R,S),
+              ⟨j,k⟩ ∈ TransitiveClosureOn(R,S)
+       PROVE  ⟨i,k⟩ ∈ TransitiveClosureOn(R,S)
 
 
-LEMMA TCRTC ==
-       ASSUME NEW R, NEW S, NEW i \in S, NEW j \in S, NEW k \in S,
-              <<i,j>> \in TransitiveClosureOn(R,S), <<j,k>> \in R
-       PROVE  <<i,k>> \in TransitiveClosureOn(R,S)
+LEMMA TCRTC ≜
+       ASSUME NEW R, NEW S, NEW i ∈ S, NEW j ∈ S, NEW k ∈ S,
+              ⟨i,j⟩ ∈ TransitiveClosureOn(R,S), ⟨j,k⟩ ∈ R
+       PROVE  ⟨i,k⟩ ∈ TransitiveClosureOn(R,S)
 
 
-LEMMA RTCTC ==
-       ASSUME NEW R, NEW S, NEW i \in S, NEW j \in S, NEW k \in S,
-              <<i,j>> \in R, <<j,k>> \in TransitiveClosureOn(R,S)
-       PROVE  <<i,k>> \in TransitiveClosureOn(R,S)
+LEMMA RTCTC ≜
+       ASSUME NEW R, NEW S, NEW i ∈ S, NEW j ∈ S, NEW k ∈ S,
+              ⟨i,j⟩ ∈ R, ⟨j,k⟩ ∈ TransitiveClosureOn(R,S)
+       PROVE  ⟨i,k⟩ ∈ TransitiveClosureOn(R,S)
 
 
-LEMMA TransitiveClosureChopLast ==
-        ASSUME NEW R, NEW S, NEW i \in S, NEW k \in S, <<i,k>> \in TransitiveClosureOn(R,S)
-        PROVE  \E j \in S : /\ <<j,k>> \in R
-                            /\ i = j \/ <<i,j>> \in TransitiveClosureOn(R,S)
+LEMMA TransitiveClosureChopLast ≜
+        ASSUME NEW R, NEW S, NEW i ∈ S, NEW k ∈ S, ⟨i,k⟩ ∈ TransitiveClosureOn(R,S)
+        PROVE  ∃ j ∈ S : ∧ ⟨j,k⟩ ∈ R
+                         ∧ i = j ∨ ⟨i,j⟩ ∈ TransitiveClosureOn(R,S)
 
 
-THEOREM TransitiveClosureWF ==
+THEOREM TransitiveClosureWF ≜
           ASSUME NEW R, NEW S, IsWellFoundedOn(R,S)
           PROVE  IsWellFoundedOn(TransitiveClosureOn(R, S), S)
 
 
-THEOREM WFInductiveDef ==
+THEOREM WFInductiveDef ≜
           ASSUME NEW Def(_,_), NEW R, NEW S, NEW f,
                  IsWellFoundedOn(R, S),
                  WFDefOn(R, S, Def),
@@ -245,14 +245,14 @@ THEOREM WFInductiveDef ==
 (* function satisfies its recursion equation.  The following result allows *)
 (* us to deduce the range of this function.                                *)
 (***************************************************************************)
-THEOREM WFInductiveDefType == 
+THEOREM WFInductiveDefType ≜ 
           ASSUME NEW Def(_,_), NEW f, NEW R, NEW S, NEW T,
-                 T # {},
+                 T ≠ {},
                  IsWellFoundedOn(R, S),
                  WFDefOn(R, S, Def),
                  WFInductiveDefines(f, S, Def),
-                 \A g \in [S -> T], s \in S : Def(g, s) \in T
-          PROVE  f \in [S -> T]
+                 ∀ g ∈ [S → T], s ∈ S : Def(g, s) ∈ T
+          PROVE  f ∈ [S → T]
 
  
  ---------------------------------------------------------------------------- 
@@ -262,13 +262,13 @@ THEOREM WFInductiveDefType ==
 (* define the operator OpToRel that constructs a relation (a set of        *)
 (* ordered pairs) from a relation expressed as an operator.                *)
 (***************************************************************************)
-OpToRel(_\prec_, S) == {ss \in S \X S : ss[1] \prec ss[2]}
+OpToRel(_≺_, S) ≜ {ss ∈ S × S : ss[1] ≺ ss[2]}
 
 (***************************************************************************)
 (* To construct well-founded relations from the less-than relation on the  *)
 (* natural numbers, we first prove that it is well-founded.                *)
 (***************************************************************************)
-THEOREM NatLessThanWellFounded == IsWellFoundedOn(OpToRel(<,Nat), Nat)
+THEOREM NatLessThanWellFounded ≜ IsWellFoundedOn(OpToRel(<,ℕ), ℕ)
 
 
 (***************************************************************************)
@@ -277,11 +277,11 @@ THEOREM NatLessThanWellFounded == IsWellFoundedOn(OpToRel(<,Nat), Nat)
 (* that notation.  (It's meaning is rather complicated in the general case *)
 (* when T is not a Cartesian product of sets.)                             *)
 (***************************************************************************)
-PreImage(f(_), S, R) == {ss \in S \X S : <<f(ss[1]), f(ss[2])>> \in R}
+PreImage(f(_), S, R) ≜ {ss ∈ S × S : ⟨f(ss[1]), f(ss[2])⟩ ∈ R}
 
-THEOREM PreImageWellFounded == 
+THEOREM PreImageWellFounded ≜ 
           ASSUME NEW S, NEW T, NEW R, NEW f(_),
-                 \A s \in S : f(s) \in T,
+                 ∀ s ∈ S : f(s) ∈ T,
                  IsWellFoundedOn(R, T)
           PROVE  IsWellFoundedOn(PreImage(f, S, R), S)
 
@@ -290,17 +290,17 @@ THEOREM PreImageWellFounded ==
 (* We now prove that the lexicographical ordering on the Cartesian product *)
 (* of two well-ordered sets is well-ordered.                               *)
 (***************************************************************************)
-LexPairOrdering(R1, R2, S1, S2) ==
-     {ss \in (S1 \X S2) \X (S1 \X S2) : 
-         \/ <<ss[1][1], ss[2][1]>> \in R1
-         \/ /\ ss[1][1] = ss[2][1]
-            /\ <<ss[1][2], ss[2][2]>> \in R2}
+LexPairOrdering(R1, R2, S1, S2) ≜
+     {ss ∈ (S1 × S2) × (S1 × S2) : 
+         ∨ ⟨ss[1][1], ss[2][1]⟩ ∈ R1
+         ∨ ∧ ss[1][1] = ss[2][1]
+           ∧ ⟨ss[1][2], ss[2][2]⟩ ∈ R2}
                            
-THEOREM WFLexPairOrdering ==
+THEOREM WFLexPairOrdering ≜
           ASSUME NEW R1, NEW R2, NEW S1, NEW S2, 
                  IsWellFoundedOn(R1, S1),
                  IsWellFoundedOn(R2, S2)
-          PROVE  IsWellFoundedOn(LexPairOrdering(R1, R2, S1, S2), S1 \X S2)
+          PROVE  IsWellFoundedOn(LexPairOrdering(R1, R2, S1, S2), S1 × S2)
 
 
 (***************************************************************************)
@@ -310,16 +310,16 @@ THEOREM WFLexPairOrdering ==
 (* for the most useful case: the Cartesian product of n copies of the same *)
 (* set.                                                                    *)
 (***************************************************************************)
-LexProductOrdering(R, S, n) ==
-   { ff \in [1..n -> S] \X [1..n -> S] :
-       \E j \in 1..n : 
-          /\ \A i \in 1..(j-1) : ff[1][i] = ff[2][i]
-          /\ <<ff[1][j], ff[2][j]>> \in R }
+LexProductOrdering(R, S, n) ≜
+   { ff ∈ [1‥n → S] × [1‥n → S] :
+       ∃ j ∈ 1‥n : 
+          ∧ ∀ i ∈ 1‥(j-1) : ff[1][i] = ff[2][i]
+          ∧ ⟨ff[1][j], ff[2][j]⟩ ∈ R }
 
-THEOREM WFLexProductOrdering ==
-  ASSUME NEW R, NEW S, NEW n \in Nat,
+THEOREM WFLexProductOrdering ≜
+  ASSUME NEW R, NEW S, NEW n ∈ ℕ,
          IsWellFoundedOn(R, S)
-  PROVE  IsWellFoundedOn(LexProductOrdering(R, S, n), [1..n -> S])
+  PROVE  IsWellFoundedOn(LexProductOrdering(R, S, n), [1‥n → S])
 
 =============================================================================
 \* Modification History

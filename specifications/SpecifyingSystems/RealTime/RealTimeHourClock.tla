@@ -3,27 +3,27 @@
 EXTENDS Reals, HourClock 
 VARIABLE now 
 CONSTANT Rho 
-ASSUME (Rho \in Real) /\  (Rho > 0) 
+ASSUME (Rho ∈ ℝ) ∧  (Rho > 0) 
 -----------------------------------------------------------------------------
 
    -------------------------- MODULE Inner ----------------------------------
    VARIABLE t  
-   TNext == t' = IF HCnxt THEN 0 ELSE t+(now'-now) 
-   Timer   == (t = 0)  /\  [][TNext]_<<t,hr, now>>
-   MaxTime == [](t \leq  3600 + Rho)  
-   MinTime == [][HCnxt => t \geq 3600 - Rho]_hr
-   HCTime  == Timer /\ MaxTime /\ MinTime 
+   TNext ≜ t' = IF HCnxt THEN 0 ELSE t+(now'-now) 
+   Timer   ≜ (t = 0)  ∧  □[TNext]_⟨t,hr, now⟩
+   MaxTime ≜ □(t ≤  3600 + Rho)  
+   MinTime ≜ □[HCnxt ⇒ t ≥ 3600 - Rho]_hr
+   HCTime  ≜ Timer ∧ MaxTime ∧ MinTime 
   ==========================================================================
 
-I(t) == INSTANCE Inner 
+I(t) ≜ INSTANCE Inner 
  
-NowNext == /\ now' \in {r \in Real : r > now} 
-           /\ UNCHANGED hr  
+NowNext ≜ ∧ now' ∈ {r ∈ ℝ : r > now} 
+          ∧ UNCHANGED hr  
 
-RTnow == /\ now \in Real 
-         /\ [][NowNext]_now 
-         /\ \A r \in Real : WF_now(NowNext /\ (now'>r))
+RTnow ≜ ∧ now ∈ ℝ 
+        ∧ □[NowNext]_now 
+        ∧ ∀ r ∈ ℝ : WF_now(NowNext ∧ (now'>r))
 
-RTHC == HC  /\  RTnow /\  (\EE t : I(t)!HCTime)
+RTHC ≜ HC  ∧  RTnow ∧  (\EE t : I(t)!HCTime)
 =============================================================================
  

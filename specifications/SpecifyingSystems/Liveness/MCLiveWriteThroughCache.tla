@@ -17,9 +17,9 @@ EXTENDS LiveWriteThroughCache
 (* Reply, and InitMemInt of the MemoryFace module.  See                    *)
 (* MCInternalMemory.tla for their explanations.                            *)
 (***************************************************************************)
-MCSend(p, d, oldMemInt, newMemInt)  ==  newMemInt = <<p, d>>
-MCReply(p, d, oldMemInt, newMemInt) ==  newMemInt = <<p, d>>
-MCInitMemInt == {<<CHOOSE p \in Proc : TRUE, NoVal>>}
+MCSend(p, d, oldMemInt, newMemInt)  ≜  newMemInt = ⟨p, d⟩
+MCReply(p, d, oldMemInt, newMemInt) ≜  newMemInt = ⟨p, d⟩
+MCInitMemInt ≜ {⟨CHOOSE p ∈ Proc : TRUE, NoVal⟩}
 
 (***************************************************************************)
 (* As described in the section titled "Proving Implementation", the        *)
@@ -30,9 +30,9 @@ MCInitMemInt == {<<CHOOSE p \in Proc : TRUE, NoVal>>}
 (* for the following choices of omem, octl, and obuf:                      *)
 (***************************************************************************)
 
-   omem == vmem
-   octl == [p \in Proc |-> IF ctl[p] = "waiting" THEN "busy" ELSE ctl[p]]
-   obuf == buf
+   omem ≜ vmem
+   octl ≜ [p ∈ Proc ↦ IF ctl[p] = "waiting" THEN "busy" ELSE ctl[p]]
+   obuf ≜ buf
 
 (***************************************************************************)
 (* If we extended what we did in the chapter "A Caching Memory" to the     *)
@@ -66,55 +66,55 @@ MCInitMemInt == {<<CHOOSE p \in Proc : TRUE, NoVal>>}
 (* LM_Inner_Liveness and LM_Inner_Liveness2 are tricky.                    *)
 (***************************************************************************)
 
-LM_Inner_IInit == /\ omem \in [Adr->Val]
-                  /\ octl = [p \in Proc |-> "rdy"] 
-                  /\ obuf = [p \in Proc |-> NoVal] 
-                  /\ memInt \in InitMemInt
+LM_Inner_IInit ≜ ∧ omem ∈ [Adr→Val]
+                 ∧ octl = [p ∈ Proc ↦ "rdy"] 
+                 ∧ obuf = [p ∈ Proc ↦ NoVal] 
+                 ∧ memInt ∈ InitMemInt
 
-LM_Inner_TypeInvariant == 
-  /\ omem \in [Adr->Val]
-  /\ octl \in [Proc -> {"rdy", "busy","done"}] 
-  /\ obuf \in [Proc -> MReq \cup Val \cup {NoVal}]
+LM_Inner_TypeInvariant ≜ 
+  ∧ omem ∈ [Adr→Val]
+  ∧ octl ∈ [Proc → {"rdy", "busy","done"}] 
+  ∧ obuf ∈ [Proc → MReq ∪ Val ∪ {NoVal}]
 
-LM_Inner_Req(p) == /\ octl[p] = "rdy" 
-          /\ \E req \in  MReq : 
-                /\ Send(p, req, memInt, memInt') 
-                /\ obuf' = [obuf EXCEPT ![p] = req]
-                /\ octl' = [octl EXCEPT ![p] = "busy"]
-          /\ UNCHANGED omem 
+LM_Inner_Req(p) ≜ ∧ octl[p] = "rdy" 
+         ∧ ∃ req ∈  MReq : 
+                ∧ Send(p, req, memInt, memInt') 
+                ∧ obuf' = [obuf EXCEPT ![p] = req]
+                ∧ octl' = [octl EXCEPT ![p] = "busy"]
+          ∧ UNCHANGED omem 
 
-LM_Inner_Do(p) == 
-  /\ octl[p] = "busy" 
-  /\ omem' = IF obuf[p].op = "Wr"
+LM_Inner_Do(p) ≜ 
+  ∧ octl[p] = "busy" 
+  ∧ omem' = IF obuf[p].op = "Wr"
               THEN [omem EXCEPT ![obuf[p].adr] = obuf[p].val] 
               ELSE omem 
-  /\ obuf' = [obuf EXCEPT ![p] = IF obuf[p].op = "Wr"
+  ∧ obuf' = [obuf EXCEPT ![p] = IF obuf[p].op = "Wr"
                                   THEN NoVal
                                   ELSE omem[obuf[p].adr]]
-  /\ octl' = [octl EXCEPT ![p] = "done"] 
-  /\ UNCHANGED memInt 
+  ∧ octl' = [octl EXCEPT ![p] = "done"] 
+  ∧ UNCHANGED memInt 
 
-LM_Inner_Rsp(p) == /\ octl[p] = "done"
-                   /\ Reply(p, obuf[p], memInt, memInt')
-                   /\ octl' = [octl EXCEPT ![p]= "rdy"]
-                   /\ UNCHANGED <<omem, obuf>> 
+LM_Inner_Rsp(p) ≜ ∧ octl[p] = "done"
+                  ∧ Reply(p, obuf[p], memInt, memInt')
+                  ∧ octl' = [octl EXCEPT ![p]= "rdy"]
+                  ∧ UNCHANGED ⟨omem, obuf⟩ 
 
-LM_Inner_INext == 
-     \E p \in Proc: LM_Inner_Req(p) \/ LM_Inner_Do(p) \/ LM_Inner_Rsp(p) 
+LM_Inner_INext ≜ 
+     ∃ p ∈ Proc: LM_Inner_Req(p) ∨ LM_Inner_Do(p) ∨ LM_Inner_Rsp(p) 
 
-LM_Inner_ISpec == 
-    LM_Inner_IInit  /\  [][LM_Inner_INext]_<<memInt, omem, octl, obuf>>
+LM_Inner_ISpec ≜ 
+    LM_Inner_IInit  ∧  □[LM_Inner_INext]_⟨memInt, omem, octl, obuf⟩
 
-LM_Inner_vars == <<memInt, omem, octl, obuf>>
+LM_Inner_vars ≜ ⟨memInt, omem, octl, obuf⟩
 
 
-LM_Inner_EnabledDo(p)  == octl[p] = "busy" 
+LM_Inner_EnabledDo(p)  ≜ octl[p] = "busy" 
   (*************************************************************************)
   (* The instantiation of ENABLED Do(p).  See the section titled           *)
   (* "Refinement Mappings and Fairness".                                   *)
   (*************************************************************************)
   
-LM_Inner_EnabledRsp(p) == octl[p] = "done"
+LM_Inner_EnabledRsp(p) ≜ octl[p] = "done"
   (*************************************************************************)
   (* The instantiation of ENABLED Rsp(p).  See the section titled          *)
   (* "Refinement Mappings and Fairness".                                   *)
@@ -126,20 +126,20 @@ LM_Inner_EnabledRsp(p) == octl[p] = "done"
 (* an explanation of why the following are the appropriate definitions of  *)
 (* LM_Inner_Liveness and LM_Inner_Liveness2.                               *)
 (***************************************************************************)
-LM_Inner_Liveness == 
-  \A p \in Proc : 
-    /\ []<>~LM_Inner_EnabledDo(p) \/ []<><<LM_Inner_Do(p)>>_LM_Inner_vars
-    /\ []<>~LM_Inner_EnabledRsp(p) \/ []<><<LM_Inner_Rsp(p)>>_LM_Inner_vars
+LM_Inner_Liveness ≜ 
+  ∀ p ∈ Proc : 
+    ∧ □◇¬LM_Inner_EnabledDo(p) ∨ □◇⟨LM_Inner_Do(p)⟩_LM_Inner_vars
+    ∧ □◇¬LM_Inner_EnabledRsp(p) ∨ □◇⟨LM_Inner_Rsp(p)⟩_LM_Inner_vars
 
-LM_Inner_Liveness2 == 
-  \A p \in Proc : 
-    \/ []<>~(LM_Inner_EnabledDo(p) \/ LM_Inner_EnabledRsp(p))
-    \/ []<><<LM_Inner_Do(p) \/ LM_Inner_Rsp(p)>>_LM_Inner_vars
+LM_Inner_Liveness2 ≜ 
+  ∀ p ∈ Proc : 
+    ∨ □◇¬(LM_Inner_EnabledDo(p) ∨ LM_Inner_EnabledRsp(p))
+    ∨ □◇⟨LM_Inner_Do(p) ∨ LM_Inner_Rsp(p)⟩_LM_Inner_vars
 
   
-LM_Inner_LISpec == LM_Inner_ISpec /\ LM_Inner_Liveness2
+LM_Inner_LISpec ≜ LM_Inner_ISpec ∧ LM_Inner_Liveness2
 
-LM_Inner_LivenessProperty == 
-   \A p \in Proc : (octl[p] = "req") ~> (octl[p] = "rdy")
+LM_Inner_LivenessProperty ≜ 
+   ∀ p ∈ Proc : (octl[p] = "req") ↝ (octl[p] = "rdy")
 
 =============================================================================

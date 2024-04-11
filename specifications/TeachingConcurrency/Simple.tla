@@ -17,7 +17,7 @@
 EXTENDS Integers, TLAPS
 
 CONSTANT N
-ASSUME NAssump ==  (N \in Nat) /\ (N > 0)
+ASSUME NAssump ≜  (N ∈ ℕ) ∧ (N > 0)
 
 (****************************************************************************
 Here is the algorithm in PlusCal.  It's easy to understand if you think
@@ -26,47 +26,47 @@ circle, with processes (i-1) % N and (i+1) % N being the processes on
 either side of process i.
 
 --algorithm Simple {
-    variables x = [i \in 0..(N-1) |-> 0], y = [i \in 0..(N-1) |-> 0] ;
-    process (proc \in 0..N-1) {
-      a: x[self] := 1 ;
-      b: y[self] := x[(self-1) % N]
+    variables x = [i ∈ 0‥(N-1) ↦ 0], y = [i ∈ 0‥(N-1) ↦ 0] ;
+    process (proc ∈ 0‥N-1) {
+      a: x[self] ≔ 1 ;
+      b: y[self] ≔ x[(self-1) % N]
     }
 }
 ****************************************************************************)
 \* BEGIN TRANSLATION  This is the TLA+ translation of the PlusCal code.
 VARIABLES x, y, pc
 
-vars == << x, y, pc >>
+vars ≜ ⟨ x, y, pc ⟩
 
-ProcSet == (0..N-1)
+ProcSet ≜ (0‥N-1)
 
-Init == (* Global variables *)
-        /\ x = [i \in 0..(N-1) |-> 0]
-        /\ y = [i \in 0..(N-1) |-> 0]
-        /\ pc = [self \in ProcSet |-> "a"]
+Init ≜ (* Global variables *)
+        ∧ x = [i ∈ 0‥(N-1) ↦ 0]
+        ∧ y = [i ∈ 0‥(N-1) ↦ 0]
+        ∧ pc = [self ∈ ProcSet ↦ "a"]
 
-a(self) == /\ pc[self] = "a"
-           /\ x' = [x EXCEPT ![self] = 1]
-           /\ pc' = [pc EXCEPT ![self] = "b"]
-           /\ y' = y
+a(self) ≜ ∧ pc[self] = "a"
+          ∧ x' = [x EXCEPT ![self] = 1]
+          ∧ pc' = [pc EXCEPT ![self] = "b"]
+          ∧ y' = y
 
-b(self) == /\ pc[self] = "b"
-           /\ y' = [y EXCEPT ![self] = x[(self-1) % N]]
-           /\ pc' = [pc EXCEPT ![self] = "Done"]
-           /\ x' = x
+b(self) ≜ ∧ pc[self] = "b"
+          ∧ y' = [y EXCEPT ![self] = x[(self-1) % N]]
+          ∧ pc' = [pc EXCEPT ![self] = "Done"]
+          ∧ x' = x
 
-proc(self) == a(self) \/ b(self)
+proc(self) ≜ a(self) ∨ b(self)
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
-Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
-               /\ UNCHANGED vars
+Terminating ≜ ∧ ∀ self ∈ ProcSet: pc[self] = "Done"
+              ∧ UNCHANGED vars
 
-Next == (\E self \in 0..N-1: proc(self))
-           \/ Terminating
+Next ≜ (∃ self ∈ 0‥N-1: proc(self))
+           ∨ Terminating
 
-Spec == Init /\ [][Next]_vars
+Spec ≜ Init ∧ □[Next]_vars
 
-Termination == <>(\A self \in ProcSet: pc[self] = "Done")
+Termination ≜ ◇(∀ self ∈ ProcSet: pc[self] = "Done")
 
 \* END TRANSLATION
 ----------------------------------------------------------------------------
@@ -78,8 +78,8 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 (*                                                                         *)
 (*    Spec => []PCorrect                                                   *)
 (***************************************************************************)
-PCorrect == (\A i \in 0..(N-1) : pc[i] = "Done") => 
-                (\E i \in 0..(N-1) : y[i] = 1)
+PCorrect ≜ (∀ i ∈ 0‥(N-1) : pc[i] = "Done") ⇒ 
+                (∃ i ∈ 0‥(N-1) : y[i] = 1)
 
 (***************************************************************************)
 (* Proving the invariance of PCorrect requires finding an inductive        *)
@@ -87,9 +87,9 @@ PCorrect == (\A i \in 0..(N-1) : pc[i] = "Done") =>
 (* includes a type-correctness invariant, which is the following formula   *)
 (* TypeOK.                                                                 *)
 (***************************************************************************)
-TypeOK == /\ x \in [0..(N-1) -> {0,1}]
-          /\ y \in [0..(N-1) -> {0,1}]
-          /\ pc \in [0..(N-1) -> {"a", "b", "Done"}]
+TypeOK ≜ ∧ x ∈ [0‥(N-1) → {0,1}]
+         ∧ y ∈ [0‥(N-1) → {0,1}]
+         ∧ pc ∈ [0‥(N-1) → {"a", "b", "Done"}]
  
 (***************************************************************************)
 (* It's easy to use TLC to check that the following formula Inv is an      *)
@@ -111,10 +111,10 @@ TypeOK == /\ x \in [0..(N-1) -> {0,1}]
 (* write the postcondition PCorrect and the disjunction to be a more       *)
 (* natural way to think about the inductive invariant.                     *)
 (***************************************************************************)                   
-Inv ==  /\ TypeOK
-        /\ \A i \in 0..(N-1) : (pc[i] \in {"b", "Done"}) => (x[i] = 1)
-        /\ \/ \E i \in 0..(N-1) : pc[i] /= "Done"
-           \/ \E i \in 0..(N-1) : y[i] = 1
+Inv ≜  ∧ TypeOK
+       ∧ ∀ i ∈ 0‥(N-1) : (pc[i] ∈ {"b", "Done"}) ⇒ (x[i] = 1)
+       ∧ ∨ ∃ i ∈ 0‥(N-1) : pc[i] ≠ "Done"
+         ∨ ∃ i ∈ 0‥(N-1) : y[i] = 1
 
 
 (***************************************************************************)
@@ -124,20 +124,20 @@ Inv ==  /\ TypeOK
 (* was trivial to get TLAPS to check the proof, except for the proof of    *)
 (* <2>2.  A comment explains the problem I had with that step.             *)
 (***************************************************************************)
-THEOREM Spec => []PCorrect
+THEOREM Spec ⇒ □PCorrect
 <1> USE NAssump
-<1>1. Init => Inv
+<1>1. Init ⇒ Inv
   BY DEF Init, Inv, TypeOK, ProcSet 
-<1>2. Inv /\ [Next]_vars => Inv'
+<1>2. Inv ∧ [Next]_vars ⇒ Inv'
   <2> SUFFICES ASSUME Inv,
                       [Next]_vars
                PROVE  Inv'
     OBVIOUS
-  <2>1. ASSUME NEW self \in 0..(N-1),
+  <2>1. ASSUME NEW self ∈ 0‥(N-1),
                a(self)
         PROVE  Inv'
     BY <2>1 DEF a, Inv, TypeOK
-  <2>2. ASSUME NEW self \in 0..(N-1),
+  <2>2. ASSUME NEW self ∈ 0‥(N-1),
                b(self)
         PROVE  Inv'
     (***********************************************************************)
@@ -152,7 +152,7 @@ THEOREM Spec => []PCorrect
     BY <2>3 DEF TypeOK, Inv, vars
   <2>4. QED
     BY <2>1, <2>2, <2>3 DEF Next, Terminating, proc
-<1>3. Inv => PCorrect
+<1>3. Inv ⇒ PCorrect
   BY DEF Inv, TypeOK, PCorrect
 <1>4. QED
   BY <1>1, <1>2, <1>3, PTL DEF Spec

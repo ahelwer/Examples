@@ -34,12 +34,12 @@ VARIABLES towers
 (*   B == <<>>                                                             *)
 (*   C == <<>>                                                             *)
 (***************************************************************************)
-ASSUME A \in [1..Len(A) -> Nat]
-ASSUME B \in [1..Len(B) -> Nat]
-ASSUME C \in [1..Len(C) -> Nat]
+ASSUME A ∈ [1‥Len(A) → ℕ]
+ASSUME B ∈ [1‥Len(B) → ℕ]
+ASSUME C ∈ [1‥Len(C) → ℕ]
 
-Init ==
-  towers = <<A, B, C>>
+Init ≜
+  towers = ⟨A, B, C⟩
 
 (***************************************************************************)
 (* A disk can be moved if:                                                 *)
@@ -48,11 +48,11 @@ Init ==
 (*  - The top disk of the source tower is smaller than the top disk of     *)
 (*    the destination tower.                                               *)
 (***************************************************************************)
-CanMove(from, to) ==
-  /\ from /= to
-  /\ towers[from] /= <<>>
-  /\ IF
-      towers[to] = <<>>
+CanMove(from, to) ≜
+  ∧ from ≠ to
+  ∧ towers[from] ≠ ⟨⟩
+  ∧ IF
+      towers[to] = ⟨⟩
     THEN
       TRUE
     ELSE
@@ -62,17 +62,17 @@ CanMove(from, to) ==
 (* Moving a disk means the source tower is left with all but the top disk, *)
 (* which is added to the destination tower.                                *)
 (***************************************************************************)
-Move(from, to) ==
+Move(from, to) ≜
   towers' = [
     towers EXCEPT
       ![from] = Tail(towers[from]),
-      ![to] = <<Head(towers[from])>> \o towers[to]
+      ![to] = ⟨Head(towers[from])⟩ ∘ towers[to]
   ]
 
-Next ==
-  \E from, to \in 1..Len(towers):
-    /\ CanMove(from, to)
-    /\ Move(from, to)
+Next ≜
+  ∃ from, to ∈ 1‥Len(towers):
+    ∧ CanMove(from, to)
+    ∧ Move(from, to)
 
 (***************************************************************************)
 (* This finishes the spec.  The next section are the invariants to check.  *)
@@ -81,26 +81,26 @@ Next ==
 (***************************************************************************)
 (* Helper to get the elements of a sequence.                               *)
 (***************************************************************************)
-Range(sequence) ==
-  {sequence[i]: i \in DOMAIN sequence}
+Range(sequence) ≜
+  {sequence[i]: i ∈ DOMAIN sequence}
 
 (***************************************************************************)
 (* `towers` has 3 elements, each a sequence of numbers.                    *)
 (***************************************************************************)
-TypeOK ==
-  /\ DOMAIN towers = 1..3
-  /\ \A sequence \in Range(towers):
-      sequence \in [1..Len(sequence) -> Nat]
+TypeOK ≜
+  ∧ DOMAIN towers = 1‥3
+  ∧ ∀ sequence ∈ Range(towers):
+      sequence ∈ [1‥Len(sequence) → ℕ]
 
 (***************************************************************************)
 (* In all towers there should never be elements which were not initially   *)
 (* present.                                                                *)
 (***************************************************************************)
-NoNewElements ==
+NoNewElements ≜
   LET
-    originalElements ==
+    originalElements ≜
       UNION {Range(A), Range(B), Range(C)}
-    towerElements ==
+    towerElements ≜
       UNION {Range(towers[1]), Range(towers[2]), Range(towers[3])}
   IN
     towerElements = originalElements
@@ -108,11 +108,11 @@ NoNewElements ==
 (***************************************************************************)
 (* The total number of disks should stay constant.                         *)
 (***************************************************************************)
-TotalConstant ==
+TotalConstant ≜
   LET
-    originalTotal ==
+    originalTotal ≜
       Len(A) + Len(B) + Len(C)
-    towerTotal==
+    towerTotal≜
       Len(towers[1]) + Len(towers[2]) + Len(towers[3])
   IN
     towerTotal = originalTotal
@@ -122,10 +122,10 @@ TotalConstant ==
 (* ordered by size.  If a violation of this invariant can be found, the    *)
 (* stack trace shows the steps to solve the Hanoi problem.                 *)
 (***************************************************************************)
-NotSolved ==
-  ~(
-    /\ towers[1] = <<>>
-    /\ towers[2] = <<>>
-    /\ towers[3] = [i \in 1..Len(towers[3]) |-> i]
+NotSolved ≜
+  ¬(
+    ∧ towers[1] = ⟨⟩
+    ∧ towers[2] = ⟨⟩
+    ∧ towers[3] = [i ∈ 1‥Len(towers[3]) ↦ i]
   )
 =============================================================================

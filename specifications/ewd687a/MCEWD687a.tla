@@ -7,23 +7,23 @@ L, P1, P2, P3
 ----
 
 \* MV CONSTANT definitions Procs
-const_1633116534008310000 == 
+const_1633116534008310000 ≜ 
 {L, P1, P2, P3}
 ----
 
 \* CONSTANT definitions @modelParameterConstants:1Edges
-const_1633116534008311000 == 
-{<<L, P1>>, <<P1, P2>>, <<P1, P2>>, <<P2, P1>>, <<P2,P3>>}
+const_1633116534008311000 ≜ 
+{⟨L, P1⟩, ⟨P1, P2⟩, ⟨P1, P2⟩, ⟨P2, P1⟩, ⟨P2,P3⟩}
 ----
 
 \* CONSTANT definitions @modelParameterConstants:2Leader
-const_1633116534008312000 == 
+const_1633116534008312000 ≜ 
 L
 ----
 
 \* CONSTRAINT definition @modelParameterContraint:0
-constr_1633116534008313000 ==
-\A e \in Edges : msgs[e] < 3 /\ acks[e] < 3 /\ sentUnacked[e] < 3 /\ rcvdUnacked[e] < 3
+constr_1633116534008313000 ≜
+∀ e ∈ Edges : msgs[e] < 3 ∧ acks[e] < 3 ∧ sentUnacked[e] < 3 ∧ rcvdUnacked[e] < 3
 
 =============================================================================
 \* Modification History

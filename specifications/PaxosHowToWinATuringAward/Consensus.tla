@@ -37,27 +37,27 @@ VARIABLE chosen
 (* behavior correct behavior of the system, but is an invariance property  *)
 (* that the spec should satisfy.                                           *)
 (***************************************************************************)
-TypeOK == /\ chosen \subseteq Value
-          /\ IsFiniteSet(chosen) 
+TypeOK ≜ ∧ chosen ⊆ Value
+         ∧ IsFiniteSet(chosen) 
 
 (***************************************************************************)
 (* The initial predicate describing the possible initial state of          *)
 (* 'chosen'.                                                               *)
 (***************************************************************************)
-Init == chosen = {}
+Init ≜ chosen = {}
 
 (***************************************************************************)
 (* The next-state relation describing how 'chosen' can change from one     *)
 (* step to the next.  Note that is enabled (equals true for some next      *)
 (* value chosen' of chosen) if and only if chosen equals the empty set.   *)
 (***************************************************************************)
-Next == /\ chosen = {}
-        /\ \E v \in Value : chosen' = {v}
+Next ≜ ∧ chosen = {}
+       ∧ ∃ v ∈ Value : chosen' = {v}
 
 (***************************************************************************)
 (* The TLA+ temporal formula that is the spec.                             *)
 (***************************************************************************)
-Spec == Init /\ [][Next]_chosen 
+Spec ≜ Init ∧ □[Next]_chosen 
 
 -----------------------------------------------------------------------------
 (***************************************************************************)
@@ -65,21 +65,21 @@ Spec == Init /\ [][Next]_chosen
 (* contain at most one value in any reachable state.  This condition on    *)
 (* the state is expressed by Inv defined here.                             *)
 (***************************************************************************)
-Inv == /\ TypeOK
-       /\ Cardinality(chosen) \leq 1
+Inv ≜ ∧ TypeOK
+      ∧ Cardinality(chosen) ≤ 1
 
 (***************************************************************************)
 (* The following theorem asserts the desired safety property.  Its proof    *)
 (* appears after the theorem.  This proof is easily checked by the TLAPS   *)
 (* prover.                                                                 *)
 (***************************************************************************)
-THEOREM Invariance  ==  Spec => []Inv
-<1>1. Init => Inv
+THEOREM Invariance  ≜  Spec ⇒ □Inv
+<1>1. Init ⇒ Inv
   BY FS_EmptySet DEF Init, Inv, TypeOK
-<1>2. Inv /\ [Next]_chosen  => Inv'
-  <2>1. Inv /\ Next => Inv'
+<1>2. Inv ∧ [Next]_chosen  ⇒ Inv'
+  <2>1. Inv ∧ Next ⇒ Inv'
     BY FS_Singleton DEF Next, Inv, TypeOK
-  <2>2. Inv /\ UNCHANGED chosen => Inv'
+  <2>2. Inv ∧ UNCHANGED chosen ⇒ Inv'
     BY DEF Inv, TypeOK
   <2>. QED  BY <2>1, <2>2
 <1>3. QED

@@ -6,67 +6,66 @@ CONSTANTS Node, Divergence
 
 VARIABLES counter, converge
 
-vars == <<counter, converge>>
+vars ≜ ⟨counter, converge⟩
 
-S == INSTANCE CRDT
+S ≜ INSTANCE CRDT
 
-TypeOK ==
-  /\ S!TypeOK
-  /\ counter \in [Node -> [Node -> 0 .. Divergence]]
-  /\ converge \in BOOLEAN
+TypeOK ≜
+  ∧ S!TypeOK
+  ∧ counter ∈ [Node → [Node → 0 ‥ Divergence]]
+  ∧ converge ∈ BOOLEAN
 
-Safety == S!Safety
+Safety ≜ S!Safety
 
-Monotonicity == [][
-  \/ S!Monotonic
-  \/ \A a, b, c, d \in Node :
+Monotonicity ≜ □[
+  ∨ S!Monotonic
+  ∨ ∀ a, b, c, d ∈ Node :
     (counter'[a][b] - counter[a][b]) = (counter'[c][d] - counter[c][d])
 ]_vars
 
-Liveness == converge ~> S!Convergence
+Liveness ≜ converge ↝ S!Convergence
 
-Init ==
-  /\ S!Init
-  /\ converge = FALSE
+Init ≜
+  ∧ S!Init
+  ∧ converge = FALSE
 
-Increment(n) ==
-  /\ ~converge
-  /\ counter[n][n] < Divergence
-  /\ S!Increment(n)
-  /\ UNCHANGED converge
+Increment(n) ≜
+  ∧ ¬converge
+  ∧ counter[n][n] < Divergence
+  ∧ S!Increment(n)
+  ∧ UNCHANGED converge
 
-Gossip(n, o) ==
-  /\ S!Gossip(n, o)
-  /\ UNCHANGED converge
+Gossip(n, o) ≜
+  ∧ S!Gossip(n, o)
+  ∧ UNCHANGED converge
 
-Converge ==
-  /\ converge' = TRUE
-  /\ UNCHANGED counter
+Converge ≜
+  ∧ converge' = TRUE
+  ∧ UNCHANGED counter
 
-GarbageCollect ==
-  LET SetMin(s) == CHOOSE e \in s : \A o \in s : e <= o IN
-  LET Transpose == SetMin({counter[n][o] : n, o \in Node}) IN
-  /\ counter' = [
-      n \in Node |-> [
-        o \in Node |-> counter[n][o] - Transpose
+GarbageCollect ≜
+  LET SetMin(s) ≜ CHOOSE e ∈ s : ∀ o ∈ s : e ≤ o IN
+  LET Transpose ≜ SetMin({counter[n][o] : n, o ∈ Node}) IN
+  ∧ counter' = [
+      n ∈ Node ↦ [
+        o ∈ Node ↦ counter[n][o] - Transpose
       ]
     ]
-  /\ UNCHANGED converge
+  ∧ UNCHANGED converge
 
-Next ==
-  \/ \E n \in Node : Increment(n)
-  \/ \E n, o \in Node : Gossip(n, o)
-  \/ Converge
-  \/ GarbageCollect
+Next ≜
+  ∨ ∃ n ∈ Node : Increment(n)
+  ∨ ∃ n, o ∈ Node : Gossip(n, o)
+  ∨ Converge
+  ∨ GarbageCollect
 
-Fairness == \A n, o \in Node : WF_vars(Gossip(n, o))
+Fairness ≜ ∀ n, o ∈ Node : WF_vars(Gossip(n, o))
 
-StateConstraint == \A n, o \in Node : counter[n][o] <= 4
+StateConstraint ≜ ∀ n, o ∈ Node : counter[n][o] ≤ 4
 
-Spec ==
-  /\ Init
-  /\ [][Next]_vars
-  /\ Fairness
+Spec ≜
+  ∧ Init
+  ∧ □[Next]_vars
+  ∧ Fairness
 
 =============================================================================
-

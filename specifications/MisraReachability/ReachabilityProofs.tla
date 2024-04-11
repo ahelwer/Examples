@@ -20,16 +20,16 @@ EXTENDS Reachability, NaturalsInduction
 (* This lemma is quite trivial.  It's a good warmup exercise in using      *)
 (* TLAPS to reason about data structures.                                  *)
 (***************************************************************************)
-LEMMA Reachable0 ==
-       \A S \in SUBSET Nodes : 
-           \A n \in S : n \in ReachableFrom(S)
+LEMMA Reachable0 ≜
+       ∀ S ∈ SUBSET Nodes : 
+           ∀ n ∈ S : n ∈ ReachableFrom(S)
   (*************************************************************************)
   (* Applying the Decompose Proof command to the lemma generates the       *)
   (* following statement.                                                  *)
   (*************************************************************************)
-  <1> SUFFICES ASSUME NEW S \in SUBSET Nodes,
-                      NEW n \in S
-               PROVE  n \in ReachableFrom(S)
+  <1> SUFFICES ASSUME NEW S ∈ SUBSET Nodes,
+                      NEW n ∈ S
+               PROVE  n ∈ ReachableFrom(S)
     OBVIOUS
   (*************************************************************************)
   (* By definition of Reachable, we have to show that there exists a path  *)
@@ -60,7 +60,7 @@ LEMMA Reachable0 ==
     (* putting the following USE statement before the WITNESS step.        *)
     (***********************************************************************)
     <2> USE DEF ExistsPath, IsPathFromTo
-    <2> WITNESS <<n>> \in Seq(Nodes)
+    <2> WITNESS ⟨n⟩ ∈ Seq(Nodes)
     <2> QED
       OBVIOUS
   <1>2. QED
@@ -83,23 +83,23 @@ LEMMA Reachable0 ==
 (* proof.  Start by executing the Hide Current Subtree command on the      *)
 (* lemma.                                                                  *)
 (***************************************************************************)
-LEMMA Reachable1 == 
-        \A S, T \in SUBSET Nodes : 
-          (\A n \in S : Succ[n] \subseteq (S \cup T))
-            => (S \cup ReachableFrom(T)) = ReachableFrom(S \cup T)
+LEMMA Reachable1 ≜ 
+        ∀ S, T ∈ SUBSET Nodes : 
+          (∀ n ∈ S : Succ[n] ⊆ (S ∪ T))
+            ⇒ (S ∪ ReachableFrom(T)) = ReachableFrom(S ∪ T)
   (*************************************************************************)
   (* An informal proof usually begins by implicitly assuming the following *)
   (* step.                                                                 *)
   (*************************************************************************)
-  <1> SUFFICES ASSUME NEW S \in SUBSET Nodes, NEW T \in SUBSET Nodes,
-                      \A n \in S : Succ[n] \subseteq (S \cup T)
-               PROVE  (S \cup ReachableFrom(T)) = ReachableFrom(S \cup T)
+  <1> SUFFICES ASSUME NEW S ∈ SUBSET Nodes, NEW T ∈ SUBSET Nodes,
+                      ∀ n ∈ S : Succ[n] ⊆ (S ∪ T)
+               PROVE  (S ∪ ReachableFrom(T)) = ReachableFrom(S ∪ T)
     OBVIOUS
   (*************************************************************************)
   (* The goal is that two sets are equal.  The most common way to prove    *)
   (* this is to prove that each set is a subset of the other.              *)
   (*************************************************************************)
-  <1>1. (S \cup ReachableFrom(T)) \subseteq ReachableFrom(S \cup T)
+  <1>1. (S ∪ ReachableFrom(T)) ⊆ ReachableFrom(S ∪ T)
     (***********************************************************************)
     (* This is pretty obvious from the definitions.  I realized that it    *)
     (* follows immediately from two easily proved facts:                   *)
@@ -115,19 +115,19 @@ LEMMA Reachable1 ==
     (* proved.  (It's a good idea to prove the simplest theorems first.)   *)
     (* So, I pulled that step and its proof out into lemma Reachable0.     *)
     (***********************************************************************)
-    <2>1. \A n \in S : n \in ReachableFrom(S)
+    <2>1. ∀ n ∈ S : n ∈ ReachableFrom(S)
       BY Reachable0
     <2>2. QED
       BY <2>1 DEF ReachableFrom
-  <1>2. ReachableFrom(S \cup T) \subseteq (S \cup ReachableFrom(T))  
+  <1>2. ReachableFrom(S ∪ T) ⊆ (S ∪ ReachableFrom(T))  
     (***********************************************************************)
     (* To prove that a set U is a subset of a set V, we prove that every   *)
     (* element of U is an element of V.  This is proved by letting n be    *)
     (* any element of U and proving that it's an element of V.  This leads *)
     (* to the following reduction of what has to be proved.                *)
     (***********************************************************************)
-    <2> SUFFICES ASSUME NEW n \in ReachableFrom(S)
-                 PROVE  n \in S \cup ReachableFrom(T)
+    <2> SUFFICES ASSUME NEW n ∈ ReachableFrom(S)
+                 PROVE  n ∈ S ∪ ReachableFrom(T)
       BY  DEF ReachableFrom
     (***********************************************************************)
     (* The assumption that n is in ReachableFrom(S) tells us that there    *)
@@ -152,12 +152,12 @@ LEMMA Reachable1 ==
     (* natural numbers by proving it first for 0.  So we define R(i) as    *)
     (* follows so that R(0) is the assertion for paths of length 1.        *)
     (***********************************************************************)
-    <2> DEFINE R(i) == 
-                 \A m \in S, q \in Nodes :
-                   (\E p \in Seq(Nodes) : /\ IsPathFromTo(p,m,q)
-                                          /\ Len(p) = i+1)
-                     => (q \in S \cup ReachableFrom(T))
-    <2>1. \A i \in Nat : R(i)
+    <2> DEFINE R(i) ≜ 
+                 ∀ m ∈ S, q ∈ Nodes :
+                   (∃ p ∈ Seq(Nodes) : ∧ IsPathFromTo(p,m,q)
+                                       ∧ Len(p) = i+1)
+                     ⇒ (q ∈ S ∪ ReachableFrom(T))
+    <2>1. ∀ i ∈ ℕ : R(i)
       (*********************************************************************)
       (* Level <3> is the obvious decomposition for an induction proof.    *)
       (*********************************************************************)
@@ -165,24 +165,24 @@ LEMMA Reachable1 ==
         (*******************************************************************)
         (* TLAPS has no problem proving this.                              *)
         (*******************************************************************)
-        <4> SUFFICES ASSUME NEW m \in S, NEW q \in Nodes,
-                            NEW p \in Seq(Nodes),
-                            /\ IsPathFromTo(p,m,q)
-                            /\ Len(p) = 0+1
-                     PROVE  q \in S \cup ReachableFrom(T)
+        <4> SUFFICES ASSUME NEW m ∈ S, NEW q ∈ Nodes,
+                            NEW p ∈ Seq(Nodes),
+                            ∧ IsPathFromTo(p,m,q)
+                            ∧ Len(p) = 0+1
+                     PROVE  q ∈ S ∪ ReachableFrom(T)
           OBVIOUS
         <4> QED
           BY DEF IsPathFromTo          
-      <3>2. ASSUME NEW i \in Nat, R(i)
+      <3>2. ASSUME NEW i ∈ ℕ, R(i)
             PROVE  R(i+1)
         (*******************************************************************)
         (* The proof of R(i+1) is decomposed as usual.                     *)
         (*******************************************************************)
-        <4> SUFFICES ASSUME NEW m \in S, NEW q \in Nodes,
-                            NEW p \in Seq(Nodes),
-                            /\ IsPathFromTo(p,m,q)
-                            /\ Len(p) = (i+1)+1
-                     PROVE  q \in S \cup ReachableFrom(T)
+        <4> SUFFICES ASSUME NEW m ∈ S, NEW q ∈ Nodes,
+                            NEW p ∈ Seq(Nodes),
+                            ∧ IsPathFromTo(p,m,q)
+                            ∧ Len(p) = (i+1)+1
+                     PROVE  q ∈ S ∪ ReachableFrom(T)
           BY DEF R
         (*******************************************************************)
         (* Since m is in S and p[2] is in Succ[m], the lemma's hypothesis  *)
@@ -200,9 +200,9 @@ LEMMA Reachable1 ==
         (* TLAPS prove the second case too, so I moved them before the     *)
         (* case split.                                                     *)
         (*******************************************************************)
-        <4>1. /\ Tail(p) \in Seq(Nodes)
-              /\ IsPathFromTo(Tail(p), p[2], q)
-              /\ Len(Tail(p)) = i+1
+        <4>1. ∧ Tail(p) ∈ Seq(Nodes)
+              ∧ IsPathFromTo(Tail(p), p[2], q)
+              ∧ Len(Tail(p)) = i+1
           BY  DEF IsPathFromTo
         (*******************************************************************)
         (* This step isn't necessary because TLAPS can figure out that the *)
@@ -210,16 +210,16 @@ LEMMA Reachable1 ==
         (* definition of PathFromTo, but I think it makes the proof easier *)
         (* to read.                                                        *)
         (*******************************************************************)
-        <4>2. p[2] \in S \cup T
+        <4>2. p[2] ∈ S ∪ T
           BY DEF IsPathFromTo
         (*******************************************************************)
         (* TLAPS easily proves the two cases.  However, it needs to be     *)
         (* told to split the proof into cases because it's not good at     *)
         (* figuring out by itself when to use a case split.                *)
         (*******************************************************************)
-        <4>3. CASE p[2] \in S
+        <4>3. CASE p[2] ∈ S
             BY <3>2, <4>1, <4>3
-        <4>4. CASE p[2] \in T
+        <4>4. CASE p[2] ∈ T
           BY <4>1, <4>4 DEF ReachableFrom, ExistsPath
         <4>5. QED
           BY <4>2, <4>3, <4>4 
@@ -229,13 +229,13 @@ LEMMA Reachable1 ==
     (***********************************************************************)
     (* Proving q \in S \cup ReachableFrom(T) from <2>1 is straightforward. *)
     (***********************************************************************)
-    <2>2. PICK m \in S, p \in Seq(Nodes) :
+    <2>2. PICK m ∈ S, p ∈ Seq(Nodes) :
                  IsPathFromTo(p,m,n)
       BY DEF ReachableFrom, ExistsPath 
     (***********************************************************************)
     (* We have to tell TLAPS to apply <2>1 with i = Len(p)-1.              *)
     (***********************************************************************)
-    <2>3. R(Len(p)-1) => n \in S \cup ReachableFrom(T)
+    <2>3. R(Len(p)-1) ⇒ n ∈ S ∪ ReachableFrom(T)
       BY <2>2 DEF IsPathFromTo
     (***********************************************************************)
     (* Hiding the definition of R makes it easier for TLAPS to prove the   *)
@@ -255,41 +255,41 @@ LEMMA Reachable1 ==
 (***************************************************************************)
 (* The proof of this lemma is straightforward.                             *)
 (***************************************************************************)
-LEMMA Reachable2 == 
-            \A S \in SUBSET Nodes: \A n \in S : 
-                 /\ ReachableFrom(S) = ReachableFrom(S \cup Succ[n])
-                 /\ n \in ReachableFrom(S)
-  <1> SUFFICES ASSUME NEW S \in SUBSET Nodes,
-                      NEW n \in S
-               PROVE  /\ ReachableFrom(S) = ReachableFrom(S \cup Succ[n])
-                      /\ n \in ReachableFrom(S)
+LEMMA Reachable2 ≜ 
+            ∀ S ∈ SUBSET Nodes: ∀ n ∈ S : 
+                 ∧ ReachableFrom(S) = ReachableFrom(S ∪ Succ[n])
+                 ∧ n ∈ ReachableFrom(S)
+  <1> SUFFICES ASSUME NEW S ∈ SUBSET Nodes,
+                      NEW n ∈ S
+               PROVE  ∧ ReachableFrom(S) = ReachableFrom(S ∪ Succ[n])
+                      ∧ n ∈ ReachableFrom(S)
     OBVIOUS
-  <1>1. ReachableFrom(S) = ReachableFrom(S \cup Succ[n])
+  <1>1. ReachableFrom(S) = ReachableFrom(S ∪ Succ[n])
     (***********************************************************************)
     (* We decompose the proof of equality of two sets to proving the two   *)
     (* subset relations.                                                   *)
     (***********************************************************************)
-    <2>1. ReachableFrom(S) \subseteq ReachableFrom(S \cup Succ[n])
+    <2>1. ReachableFrom(S) ⊆ ReachableFrom(S ∪ Succ[n])
       (*********************************************************************)
       (* This subset relation is trivial because S \subseteq T obviously   *)
       (* implies ReachableFrom(S) \subseteq Reachable(T)                   *)
       (*********************************************************************)      
       BY DEF ReachableFrom
-    <2>2.ReachableFrom(S \cup Succ[n])  \subseteq ReachableFrom(S)
+    <2>2.ReachableFrom(S ∪ Succ[n])  ⊆ ReachableFrom(S)
       (*********************************************************************)
       (* We reduce the proof U \subseteq V to proving that u \in V for     *)
       (* every u in U.                                                     *)
       (*********************************************************************)
-      <3> SUFFICES ReachableFrom(Succ[n]) \subseteq ReachableFrom(S)
+      <3> SUFFICES ReachableFrom(Succ[n]) ⊆ ReachableFrom(S)
         BY DEF ReachableFrom
-      <3> SUFFICES ASSUME NEW m \in Succ[n], NEW o \in Nodes,
+      <3> SUFFICES ASSUME NEW m ∈ Succ[n], NEW o ∈ Nodes,
                           ExistsPath(m, o)
                    PROVE  ExistsPath(n, o)
         BY DEF ReachableFrom
-      <3>1. PICK p \in Seq(Nodes) : IsPathFromTo(p, m, o)
+      <3>1. PICK p ∈ Seq(Nodes) : IsPathFromTo(p, m, o)
         BY DEF ExistsPath
-      <3> DEFINE q == <<n>> \o p
-      <3>2. (q \in Seq(Nodes)) /\ IsPathFromTo(q, n, o)
+      <3> DEFINE q ≜ ⟨n⟩ ∘ p
+      <3>2. (q ∈ Seq(Nodes)) ∧ IsPathFromTo(q, n, o)
         BY <3>1, SuccAssump  DEF IsPathFromTo            
       <3>3. QED
         BY <3>2 DEF ExistsPath
@@ -298,7 +298,7 @@ LEMMA Reachable2 ==
   (*************************************************************************)
   (* Here's where we need Reachable0.                                      *)
   (*************************************************************************)
-  <1>2. n \in ReachableFrom(S)
+  <1>2. n ∈ ReachableFrom(S)
     BY Reachable0
   <1>3. QED
     BY <1>1, <1>2
@@ -307,7 +307,7 @@ LEMMA Reachable2 ==
 (***************************************************************************)
 (* This lemma is quite obvious.                                            *)
 (***************************************************************************)                 
-LEMMA Reachable3 ==  ReachableFrom({}) = {}
+LEMMA Reachable3 ≜  ReachableFrom({}) = {}
 BY DEF ExistsPath, ReachableFrom
 =============================================================================
 \* Modification History

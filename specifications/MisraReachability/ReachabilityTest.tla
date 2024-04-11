@@ -43,7 +43,7 @@ CONSTANTS Nodes, SuccSet
   (* on which TLC will test the reachability properties.                   *)
   (*************************************************************************)
 
-P(Succ) == INSTANCE ReachabilityProofs
+P(Succ) ≜ INSTANCE ReachabilityProofs
   (*************************************************************************)
   (* For every definition Op in module ReachabilityProofs, this statement  *)
   (* defines the operator P(_)!Op in the current module, where the         *)
@@ -64,10 +64,10 @@ P(Succ) == INSTANCE ReachabilityProofs
 (* the Evaluate Constant Expression of a model's Model Checking Results    *)
 (* page), and checking that its value is <<TRUE, TRUE, TRUE, TRUE>>.       *)
 (***************************************************************************)
-Test == <<\A Succ \in SuccSet : P(Succ)!Reachable0,
-          \A Succ \in SuccSet : P(Succ)!Reachable1,
-          \A Succ \in SuccSet : P(Succ)!Reachable2,
-          \A Succ \in SuccSet : P(Succ)!Reachable3 >>         
+Test ≜ ⟨∀ Succ ∈ SuccSet : P(Succ)!Reachable0,
+          ∀ Succ ∈ SuccSet : P(Succ)!Reachable1,
+          ∀ Succ ∈ SuccSet : P(Succ)!Reachable2,
+          ∀ Succ ∈ SuccSet : P(Succ)!Reachable3 ⟩         
 ----------------------------------------------------------------------------
 
 (***************************************************************************)
@@ -76,7 +76,7 @@ Test == <<\A Succ \in SuccSet : P(Succ)!Reachable0,
 (* can.  We do this with a model in which SuccSet equals the following set *)
 (* SuccSet1.                                                               *)
 (***************************************************************************)
-SuccSet1 == [Nodes -> SUBSET Nodes]
+SuccSet1 ≜ [Nodes → SUBSET Nodes]
   (*************************************************************************)
   (* For 3 nodes, SuccSet1 has 3^(2^3) (about 6500) elements.  Evaluating  *)
   (* Test on my laptop takes TLC a few seconds--mostly start-up time.      *)
@@ -98,16 +98,16 @@ SuccSet1 == [Nodes -> SUBSET Nodes]
 (* of a constant value once when it starts up and using that same value    *)
 (* every time it has to evaluate the constant.                             *)
 (***************************************************************************)
-RandomSucc(x) ==   
+RandomSucc(x) ≜   
   LET RECURSIVE RS(_,_)
-      RS(F, D) == IF D = {}
+      RS(F, D) ≜ IF D = {}
                     THEN F
-                    ELSE LET d == CHOOSE d \in D : TRUE
-                             S == RandomElement(SUBSET Nodes)
+                    ELSE LET d ≜ CHOOSE d ∈ D : TRUE
+                             S ≜ RandomElement(SUBSET Nodes)
                          IN  RS(F @@ (d :> S), D \ {d})
-  IN RS(<< >>, Nodes)
+  IN RS(⟨ ⟩, Nodes)
 
-SuccSet2(n) == {RandomSucc(i) : i \in 1..n}
+SuccSet2(n) ≜ {RandomSucc(i) : i ∈ 1‥n}
   (*************************************************************************)
   (* With Succ set to SuccSet2(n), it takes TLC an average of about 3n     *)
   (* seconds to evaluate Test on my laptop for a set of 5 nodes.  It seems *)

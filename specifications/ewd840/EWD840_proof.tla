@@ -9,10 +9,10 @@ EXTENDS EWD840, TLAPS
 (***************************************************************************)
 (* The algorithm is type-correct: TypeOK is an inductive invariant.        *)
 (***************************************************************************)
-LEMMA TypeCorrect == Spec => []TypeOK
-<1>1. Init => TypeOK
+LEMMA TypeCorrect ≜ Spec ⇒ □TypeOK
+<1>1. Init ⇒ TypeOK
   BY DEF Init, TypeOK, Color
-<1>2. TypeOK /\ [Next]_vars => TypeOK'
+<1>2. TypeOK ∧ [Next]_vars ⇒ TypeOK'
   <2> SUFFICES ASSUME TypeOK,
                       [Next]_vars
                PROVE  TypeOK'
@@ -20,15 +20,15 @@ LEMMA TypeCorrect == Spec => []TypeOK
   <2>. USE NAssumption DEF TypeOK, Node, Color
   <2>1. CASE InitiateProbe
     BY <2>1 DEF InitiateProbe
-  <2>2. ASSUME NEW i \in Node \ {0},
+  <2>2. ASSUME NEW i ∈ Node \ {0},
                PassToken(i)
         PROVE  TypeOK'
     BY <2>2 DEF PassToken
-  <2>3. ASSUME NEW i \in Node,
+  <2>3. ASSUME NEW i ∈ Node,
                SendMsg(i)
         PROVE  TypeOK'
     BY <2>3 DEF SendMsg
-  <2>4. ASSUME NEW i \in Node,
+  <2>4. ASSUME NEW i ∈ Node,
                Deactivate(i)
         PROVE  TypeOK'
     BY <2>4 DEF Deactivate
@@ -42,14 +42,14 @@ LEMMA TypeCorrect == Spec => []TypeOK
 (* Prove the main soundness property of the algorithm by (1) proving that  *)
 (* Inv is an inductive invariant and (2) that it implies correctness.      *)
 (***************************************************************************)
-THEOREM Safety == Spec => []TerminationDetection
-<1>1. Init => Inv
+THEOREM Safety ≜ Spec ⇒ □TerminationDetection
+<1>1. Init ⇒ Inv
   BY NAssumption DEF Init, Inv, Node
-<1>2. TypeOK /\ Inv /\ [Next]_vars => Inv'
+<1>2. TypeOK ∧ Inv ∧ [Next]_vars ⇒ Inv'
   BY NAssumption
      DEF TypeOK, Inv, Next, vars, Node, Color,
          System, Environment, InitiateProbe, PassToken, SendMsg, Deactivate
-<1>3. Inv => TerminationDetection
+<1>3. Inv ⇒ TerminationDetection
   BY NAssumption DEF Inv, TerminationDetection, terminationDetected, Node
 <1>. QED
   BY <1>1, <1>2, <1>3, TypeCorrect, PTL DEF Spec
@@ -60,19 +60,19 @@ THEOREM Safety == Spec => []TerminationDetection
 (* TerminationDetection. If you find that one-line proof too obscure, here *)
 (* is a more detailed, hierarchical proof of that same implication.        *)
 (***************************************************************************)
-LEMMA Inv => TerminationDetection
+LEMMA Inv ⇒ TerminationDetection
 <1>1. SUFFICES ASSUME tpos = 0, tcolor = "white", 
-                      color[0] = "white", ~ active[0],
+                      color[0] = "white", ¬ active[0],
                       Inv
-               PROVE  \A i \in Node : ~ active[i]
+               PROVE  ∀ i ∈ Node : ¬ active[i]
   BY <1>1 DEF TerminationDetection, terminationDetected
-<1>2. ~ Inv!P2  BY tcolor = "white" DEF Inv
-<1>3. ~ Inv!P1  BY <1>1 DEF Inv
+<1>2. ¬ Inv!P2  BY tcolor = "white" DEF Inv
+<1>3. ¬ Inv!P1  BY <1>1 DEF Inv
 <1>. QED
   <2>1. Inv!P0  BY Inv, <1>2, <1>3 DEF Inv
-  <2>.  TAKE i \in Node
+  <2>.  TAKE i ∈ Node
   <2>3. CASE i = 0  BY <2>1, <1>1, <2>3
-  <2>4. CASE i \in 1 .. N-1
+  <2>4. CASE i ∈ 1 ‥ N-1
     <3>1. tpos < i  BY tpos=0, <2>4, NAssumption
     <3>2. i < N  BY NAssumption, <2>4
     <3>. QED  BY <3>1, <3>2, <2>1

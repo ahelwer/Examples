@@ -11,7 +11,7 @@ CONSTANT MaxQLen
     (* at most MaxQLen, for all p.                                         *)
     (***********************************************************************)
 
-MCNat == 0 .. MaxQLen 
+MCNat ≜ 0 ‥ MaxQLen 
   (*************************************************************************)
   (* The liveness condition contains quantification over the set           *)
   (*                                                                       *)
@@ -22,25 +22,25 @@ MCNat == 0 .. MaxQLen
   (* have TLC substitute MCNat for Nat.                                    *)
   (*************************************************************************)
 
-MCInitMem == [adr \in Adr |-> CHOOSE v \in Val  : TRUE]
+MCInitMem ≜ [adr ∈ Adr ↦ CHOOSE v ∈ Val  : TRUE]
   (*************************************************************************)
   (* We have to tell TLC what value to use for the constant parameter      *)
   (* InitMem.  We let it use MCInitMem, an arbitrary choice.               *)
   (*************************************************************************)
   
-Constraint == \A p \in Proc : Len(opQ[p]) \leq MaxQLen
+Constraint ≜ ∀ p ∈ Proc : Len(opQ[p]) ≤ MaxQLen
   (*************************************************************************)
   (* The constraint used to bound the size of the state space.             *)
   (*************************************************************************)
   
-AlwaysResponds == 
+AlwaysResponds ≜ 
   (*************************************************************************)
   (* Some simple liveness properties, implied by the fact that every       *)
   (* request eventually generates a response.                              *)
   (*************************************************************************)
-  /\ \A p \in Proc, r \in Reg :
-       (regFile[p][r].op # "Free") ~> (regFile[p][r].op = "Free")
-  /\ \A oi \in [proc : Proc, idx : Nat] :
-         (oi \in opId) ~> (oi \in opId /\ opIdQ(oi).reg = Done)
+  ∧ ∀ p ∈ Proc, r ∈ Reg :
+       (regFile[p][r].op ≠ "Free") ↝ (regFile[p][r].op = "Free")
+  ∧ ∀ oi ∈ [proc : Proc, idx : ℕ] :
+         (oi ∈ opId) ↝ (oi ∈ opId ∧ opIdQ(oi).reg = Done)
 
 =============================================================================

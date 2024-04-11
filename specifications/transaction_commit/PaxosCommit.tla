@@ -27,16 +27,16 @@
 (***************************************************************************)
 EXTENDS Integers
 
-Maximum(S) == 
+Maximum(S) ≜ 
   (*************************************************************************)
   (* If $S$ is a set of numbers, then this define $Maximum(S)$ to be the   *)
   (* maximum of those numbers, or $-1$ if $S$ is empty.                    *)
   (*************************************************************************)
-  LET Max[T \in SUBSET S] == 
+  LET Max[T ∈ SUBSET S] ≜ 
         IF T = {} THEN -1
-                  ELSE LET n    == CHOOSE n \in T : TRUE
-                           rmax == Max[T \ {n}]
-                       IN  IF n \geq rmax THEN n ELSE rmax
+                  ELSE LET n    ≜ CHOOSE n ∈ T : TRUE
+                           rmax ≜ Max[T \ {n}]
+                       IN  IF n ≥ rmax THEN n ELSE rmax
   IN  Max[S]
 
 CONSTANT RM,             \* The set of resource managers.
@@ -45,16 +45,16 @@ CONSTANT RM,             \* The set of resource managers.
          Ballot          \* The set of ballot numbers
 
 ASSUME  \* We assume these properties of the declared constants.
-  /\ Ballot \subseteq Nat
-  /\ 0 \in Ballot
-  /\ Majority \subseteq SUBSET Acceptor
-  /\ \A MS1, MS2 \in Majority : MS1 \cap MS2 # {}
+  ∧ Ballot ⊆ ℕ
+  ∧ 0 ∈ Ballot
+  ∧ Majority ⊆ SUBSET Acceptor
+  ∧ ∀ MS1, MS2 ∈ Majority : MS1 ∩ MS2 ≠ {}
        (********************************************************************)
        (* All we assume about the set $Majority$ of majorities is that any *)
        (* two majorities have non-empty intersection.                      *)
        (********************************************************************)
 
-Message ==
+Message ≜
   (*************************************************************************)
   (* The set of all possible messages.  There are messages of type         *)
   (* $"Commit"$ and $"Abort"$ to announce the decision, as well as         *)
@@ -64,15 +64,15 @@ Message ==
   (* broadcast to all acceptors.                                           *)
   (*************************************************************************)
   [type : {"phase1a"}, ins : RM, bal : Ballot \ {0}] 
-      \cup
-  [type : {"phase1b"}, ins : RM, mbal : Ballot, bal : Ballot \cup {-1},
+      ∪
+  [type : {"phase1b"}, ins : RM, mbal : Ballot, bal : Ballot ∪ {-1},
    val : {"prepared", "aborted", "none"}, acc : Acceptor] 
-      \cup
+      ∪
   [type : {"phase2a"}, ins : RM, bal : Ballot, val : {"prepared", "aborted"}]
-      \cup                              
+      ∪                              
   [type : {"phase2b"}, acc : Acceptor, ins : RM, bal : Ballot,  
    val : {"prepared", "aborted"}] 
-      \cup
+      ∪
   [type : {"Commit", "Abort"}]
 -----------------------------------------------------------------------------
 VARIABLES
@@ -81,29 +81,29 @@ VARIABLES
             \* $ins$ of the Paxos algorithm 
   msgs      \* The set of all messages ever sent.
 
-PCTypeOK ==  
+PCTypeOK ≜  
   (*************************************************************************)
   (* The type-correctness invariant.  Each acceptor maintains the values   *)
   (* $mbal$, $bal$, and $val$ for each instance of the Paxos consensus     *)
   (* algorithm.                                                            *)
   (*************************************************************************)
-  /\ rmState \in [RM -> {"working", "prepared", "committed", "aborted"}]
-  /\ aState  \in [RM -> [Acceptor -> [mbal : Ballot,
-                                      bal  : Ballot \cup {-1},
+  ∧ rmState ∈ [RM → {"working", "prepared", "committed", "aborted"}]
+  ∧ aState  ∈ [RM → [Acceptor → [mbal : Ballot,
+                                      bal  : Ballot ∪ {-1},
                                       val  : {"prepared", "aborted", "none"}]]]
-  /\ msgs \in SUBSET Message
+  ∧ msgs ∈ SUBSET Message
 
-PCInit ==  \* The initial predicate.
-  /\ rmState = [rm \in RM |-> "working"]
-  /\ aState  = [ins \in RM |-> 
-                 [ac \in Acceptor 
-                    |-> [mbal |-> 0, bal  |-> -1, val  |-> "none"]]]
-  /\ msgs = {}
+PCInit ≜  \* The initial predicate.
+  ∧ rmState = [rm ∈ RM ↦ "working"]
+  ∧ aState  = [ins ∈ RM ↦ 
+                 [ac ∈ Acceptor 
+                    ↦ [mbal ↦ 0, bal  ↦ -1, val  ↦ "none"]]]
+  ∧ msgs = {}
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* \mbox{}\hfill{\large \textbf{The Actions}}\hfill\mbox{}                 *)
 (***************************************************************************)
-Send(m) == msgs' = msgs \cup {m}
+Send(m) ≜ msgs' = msgs ∪ {m}
   (*************************************************************************)
   (* An action expression that describes the sending of message $m$.       *)
   (*************************************************************************)
@@ -111,46 +111,46 @@ Send(m) == msgs' = msgs \cup {m}
 (***************************************************************************)
 (* {\large \textbf{RM Actions}}                                            *)
 (***************************************************************************)
-RMPrepare(rm) == 
+RMPrepare(rm) ≜ 
   (*************************************************************************)
   (* Resource manager $rm$ prepares by sending a phase 2a message for      *)
   (* ballot number 0 with value $"prepared".$                              *)
   (*************************************************************************)
-  /\ rmState[rm] = "working"
-  /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
-  /\ Send([type |-> "phase2a", ins |-> rm, bal |-> 0, val |-> "prepared"])
-  /\ UNCHANGED aState
+  ∧ rmState[rm] = "working"
+  ∧ rmState' = [rmState EXCEPT ![rm] = "prepared"]
+  ∧ Send([type ↦ "phase2a", ins ↦ rm, bal ↦ 0, val ↦ "prepared"])
+  ∧ UNCHANGED aState
   
-RMChooseToAbort(rm) ==
+RMChooseToAbort(rm) ≜
   (*************************************************************************)
   (* Resource manager $rm$ spontaneously decides to abort.  It may (but    *)
   (* need not) send a phase 2a message for ballot number 0 with value      *)
   (* $"aborted"$.                                                          *)
   (*************************************************************************)
-  /\ rmState[rm] = "working"
-  /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
-  /\ Send([type |-> "phase2a", ins |-> rm, bal |-> 0, val |-> "aborted"])
-  /\ UNCHANGED aState
+  ∧ rmState[rm] = "working"
+  ∧ rmState' = [rmState EXCEPT ![rm] = "aborted"]
+  ∧ Send([type ↦ "phase2a", ins ↦ rm, bal ↦ 0, val ↦ "aborted"])
+  ∧ UNCHANGED aState
 
-RMRcvCommitMsg(rm) ==
+RMRcvCommitMsg(rm) ≜
   (*************************************************************************)
   (* Resource manager $rm$ is told by the leader to commit.  When   *)
   (* this action is enabled, $rmState[rm]$ must equal either $"prepared"$  *)
   (* or $"committed"$.  In the latter case, the action leaves the state    *)
   (* unchanged (it is a ``stuttering step'').                              *)
   (*************************************************************************)
-  /\ [type |-> "Commit"] \in msgs
-  /\ rmState' = [rmState EXCEPT ![rm] = "committed"]
-  /\ UNCHANGED <<aState, msgs>>
+  ∧ [type ↦ "Commit"] ∈ msgs
+  ∧ rmState' = [rmState EXCEPT ![rm] = "committed"]
+  ∧ UNCHANGED ⟨aState, msgs⟩
 
-RMRcvAbortMsg(rm) ==
+RMRcvAbortMsg(rm) ≜
   (*************************************************************************)
   (* Resource manager $rm$ is told by the leader to abort.  It      *)
   (* could be in any state except $"committed"$.                           *)
   (*************************************************************************)
-  /\ [type |-> "Abort"] \in msgs
-  /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
-  /\ UNCHANGED <<aState, msgs>>
+  ∧ [type ↦ "Abort"] ∈ msgs
+  ∧ rmState' = [rmState EXCEPT ![rm] = "aborted"]
+  ∧ UNCHANGED ⟨aState, msgs⟩
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* {\large \textbf{Leader Actions}}  \vspace{.25\baselineskip}             *)
@@ -160,17 +160,17 @@ RMRcvAbortMsg(rm) ==
 (* to be reliable, multiple processes could simultaneously consider        *)
 (* themselves to be the leader.                                     *)
 (***************************************************************************)
-Phase1a(bal, rm) ==
+Phase1a(bal, rm) ≜
   (*************************************************************************)
   (* If the leader times out without learning that a decision has   *)
   (* been reached on resource manager $rm$'s prepare/abort decision, it    *)
   (* can perform this action to initiate a new ballot $bal$.  (Sending     *)
   (* duplicate phase 1a messages is harmless.)                             *)
   (*************************************************************************)
-  /\ Send([type |-> "phase1a", ins |-> rm, bal |-> bal])
-  /\ UNCHANGED <<rmState, aState>>
+  ∧ Send([type ↦ "phase1a", ins ↦ rm, bal ↦ bal])
+  ∧ UNCHANGED ⟨rmState, aState⟩
 
-Phase2a(bal, rm) ==
+Phase2a(bal, rm) ≜
   (*************************************************************************)
   (* The action in which a leader sends a phase 2a message with ballot     *)
   (* $bal>0$ in instance $rm$, if it has received phase 1b messages for    *)
@@ -188,84 +188,84 @@ Phase2a(bal, rm) ==
   (* among potential leaders, and having a leader record in stable storage *)
   (* the largest ballot number for which it sent a phase 2a message.       *)
   (*************************************************************************)
-  /\ ~\E m \in msgs : /\ m.type = "phase2a"
-                      /\ m.bal = bal
-                      /\ m.ins = rm
-  /\ \E MS \in Majority :    
-        LET mset == {m \in msgs : /\ m.type = "phase1b"
-                                  /\ m.ins  = rm
-                                  /\ m.mbal = bal 
-                                  /\ m.acc  \in MS}
-            maxbal == Maximum({m.bal : m \in mset})
-            val == IF maxbal = -1 
+  ∧ ¬∃ m ∈ msgs : ∧ m.type = "phase2a"
+                  ∧ m.bal = bal
+                  ∧ m.ins = rm
+  ∧ ∃ MS ∈ Majority :    
+        LET mset ≜ {m ∈ msgs : ∧ m.type = "phase1b"
+                               ∧ m.ins  = rm
+                               ∧ m.mbal = bal 
+                               ∧ m.acc  ∈ MS}
+            maxbal ≜ Maximum({m.bal : m ∈ mset})
+            val ≜ IF maxbal = -1 
                      THEN "aborted"
-                     ELSE (CHOOSE m \in mset : m.bal = maxbal).val
-        IN  /\ \A ac \in MS : \E m \in mset : m.acc = ac
-            /\ Send([type |-> "phase2a", ins |-> rm, bal |-> bal, val |-> val])
-  /\ UNCHANGED <<rmState, aState>>
+                     ELSE (CHOOSE m ∈ mset : m.bal = maxbal).val
+        IN  ∧ ∀ ac ∈ MS : ∃ m ∈ mset : m.acc = ac
+            ∧ Send([type ↦ "phase2a", ins ↦ rm, bal ↦ bal, val ↦ val])
+  ∧ UNCHANGED ⟨rmState, aState⟩
 
-Decide == 
+Decide ≜ 
   (*************************************************************************)
   (* A leader can decide that Paxos Commit has reached a result and send a *)
   (* message announcing the result if it has received the necessary phase  *)
   (* 2b messages.                                                          *)
   (*************************************************************************)
-  /\ LET Decided(rm, v) ==
+  ∧ LET Decided(rm, v) ≜
            (****************************************************************)
            (* True iff instance $rm$ of the Paxos consensus algorithm has  *)
            (* chosen the value $v$.                                        *)
            (****************************************************************)
-           \E b \in Ballot, MS \in Majority : 
-             \A ac \in MS : [type |-> "phase2b", ins |-> rm, 
-                              bal |-> b, val |-> v, acc |-> ac ] \in msgs
-     IN  \/ /\ \A rm \in RM : Decided(rm, "prepared")
-            /\ Send([type |-> "Commit"])
-         \/ /\ \E rm \in RM : Decided(rm, "aborted")
-            /\ Send([type |-> "Abort"])
-  /\ UNCHANGED <<rmState, aState>>
+           ∃ b ∈ Ballot, MS ∈ Majority : 
+             ∀ ac ∈ MS : [type ↦ "phase2b", ins ↦ rm, 
+                              bal ↦ b, val ↦ v, acc ↦ ac ] ∈ msgs
+     IN  ∨ ∧ ∀ rm ∈ RM : Decided(rm, "prepared")
+           ∧ Send([type ↦ "Commit"])
+         ∨ ∧ ∃ rm ∈ RM : Decided(rm, "aborted")
+           ∧ Send([type ↦ "Abort"])
+  ∧ UNCHANGED ⟨rmState, aState⟩
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* {\large \textbf{Acceptor  Actions}}                                     *)
 (***************************************************************************)
-Phase1b(acc) ==  
-  \E m \in msgs : 
-    /\ m.type = "phase1a"
-    /\ aState[m.ins][acc].mbal < m.bal
-    /\ aState' = [aState EXCEPT ![m.ins][acc].mbal = m.bal]
-    /\ Send([type |-> "phase1b", 
-             ins  |-> m.ins, 
-             mbal |-> m.bal, 
-             bal  |-> aState[m.ins][acc].bal, 
-             val  |-> aState[m.ins][acc].val,
-             acc  |-> acc])
-    /\ UNCHANGED rmState
+Phase1b(acc) ≜  
+  ∃ m ∈ msgs : 
+    ∧ m.type = "phase1a"
+    ∧ aState[m.ins][acc].mbal < m.bal
+    ∧ aState' = [aState EXCEPT ![m.ins][acc].mbal = m.bal]
+    ∧ Send([type ↦ "phase1b", 
+             ins  ↦ m.ins, 
+             mbal ↦ m.bal, 
+             bal  ↦ aState[m.ins][acc].bal, 
+             val  ↦ aState[m.ins][acc].val,
+             acc  ↦ acc])
+    ∧ UNCHANGED rmState
 
-Phase2b(acc) == 
-  /\ \E m \in msgs : 
-       /\ m.type = "phase2a"
-       /\ aState[m.ins][acc].mbal \leq m.bal
-       /\ aState' = [aState EXCEPT ![m.ins][acc].mbal = m.bal,
+Phase2b(acc) ≜ 
+  ∧ ∃ m ∈ msgs : 
+       ∧ m.type = "phase2a"
+       ∧ aState[m.ins][acc].mbal ≤ m.bal
+       ∧ aState' = [aState EXCEPT ![m.ins][acc].mbal = m.bal,
                                    ![m.ins][acc].bal  = m.bal,
                                    ![m.ins][acc].val  = m.val]
-       /\ Send([type |-> "phase2b", ins |-> m.ins, bal |-> m.bal, 
-                  val |-> m.val, acc |-> acc])
-  /\ UNCHANGED rmState
+       ∧ Send([type ↦ "phase2b", ins ↦ m.ins, bal ↦ m.bal, 
+                  val ↦ m.val, acc ↦ acc])
+  ∧ UNCHANGED rmState
 -----------------------------------------------------------------------------
-PCNext ==  \* The next-state action
-  \/ \E rm \in RM : \/ RMPrepare(rm) 
-                    \/ RMChooseToAbort(rm) 
-                    \/ RMRcvCommitMsg(rm) 
-                    \/ RMRcvAbortMsg(rm)
-  \/ \E bal \in Ballot \ {0}, rm \in RM : Phase1a(bal, rm) \/ Phase2a(bal, rm)
-  \/ Decide
-  \/ \E acc \in Acceptor : Phase1b(acc) \/ Phase2b(acc) 
+PCNext ≜  \* The next-state action
+  ∨ ∃ rm ∈ RM : ∨ RMPrepare(rm) 
+                ∨ RMChooseToAbort(rm) 
+                ∨ RMRcvCommitMsg(rm) 
+                ∨ RMRcvAbortMsg(rm)
+  ∨ ∃ bal ∈ Ballot \ {0}, rm ∈ RM : Phase1a(bal, rm) ∨ Phase2a(bal, rm)
+  ∨ Decide
+  ∨ ∃ acc ∈ Acceptor : Phase1b(acc) ∨ Phase2b(acc) 
 -----------------------------------------------------------------------------
-PCSpec == PCInit /\ [][PCNext]_<<rmState, aState, msgs>>
+PCSpec ≜ PCInit ∧ □[PCNext]_⟨rmState, aState, msgs⟩
   (*************************************************************************)
   (* The complete spec of the Paxos Commit protocol.                       *)
   (*************************************************************************)
 
-THEOREM PCSpec => PCTypeOK
+THEOREM PCSpec ⇒ PCTypeOK
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now assert that the two-phase commit protocol implements the         *)
@@ -275,7 +275,7 @@ THEOREM PCSpec => PCTypeOK
 (* operators defined in module $TCommit$ to avoid possible name conflicts  *)
 (* with operators in the current module having the same name.)             *)
 (***************************************************************************)
-TC == INSTANCE TCommit
+TC ≜ INSTANCE TCommit
 
-THEOREM PCSpec => TC!TCSpec
+THEOREM PCSpec ⇒ TC!TCSpec
 =============================================================================

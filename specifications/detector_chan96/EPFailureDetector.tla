@@ -16,8 +16,8 @@ CONSTANTS
       messages in one transition. 
     - PredictPoint % SendPoint # 0 /\ SendPoint % PredictPoint # 0 : the operation 
       Predict cannot subsume the operation Predict and vice versa. *)
-ASSUME  /\ 0 < PredictPoint /\ 0 < SendPoint 
-        /\ PredictPoint % SendPoint # 0 /\ SendPoint % PredictPoint # 0 
+ASSUME  ∧ 0 < PredictPoint ∧ 0 < SendPoint 
+        ∧ PredictPoint % SendPoint ≠ 0 ∧ SendPoint % PredictPoint ≠ 0 
         
 (*  Variables' role:
       - localClock[i]         a discrete integer-numbered local clock of a process p_i
@@ -37,13 +37,13 @@ ASSUME  /\ 0 < PredictPoint /\ 0 < SendPoint
          fromLastHeard[i][j]. *)    
 VARIABLES suspected, delta, fromLastHeard, localClock, outgoingMessages
   
-vars == << suspected, delta, fromLastHeard, localClock, outgoingMessages >>
+vars ≜ ⟨ suspected, delta, fromLastHeard, localClock, outgoingMessages ⟩
 
-NULL == -1
+NULL ≜ -1
 
 (*  Create an "alive" message for every processes  *)
-MakeAliveMsgsForAll(snder) == { [ from |-> snder, to |-> rcver, type |-> "alive" ] : 
-                                        rcver \in Proc }
+MakeAliveMsgsForAll(snder) ≜ { [ from ↦ snder, to ↦ rcver, type ↦ "alive" ] : 
+                                        rcver ∈ Proc }
 
 (* The initial state of processes 
     - 1st conj: No process p_is predicted as a faulty one. 
@@ -51,22 +51,22 @@ MakeAliveMsgsForAll(snder) == { [ from |-> snder, to |-> rcver, type |-> "alive"
     - 3rd conj: No processes have received any messages from others. 
     - 4th conj: Every local clock starts at 0.
     - 5th conj: No messages were sent. *)
-Init ==  
-  /\ suspected = [ i \in Proc |-> {} ]                        
-  /\ delta = [ i \in Proc |-> [ j \in Proc |-> d0 ] ]         
-  /\ fromLastHeard = [ i \in Proc |-> [ j \in Proc |-> 0 ] ]  
-  /\ localClock = [ i \in Proc |-> 0 ]                                  
-  /\ outgoingMessages = [ i \in Proc |-> {} ]                 
+Init ≜  
+  ∧ suspected = [ i ∈ Proc ↦ {} ]                        
+  ∧ delta = [ i ∈ Proc ↦ [ j ∈ Proc ↦ d0 ] ]         
+  ∧ fromLastHeard = [ i ∈ Proc ↦ [ j ∈ Proc ↦ 0 ] ]  
+  ∧ localClock = [ i ∈ Proc ↦ 0 ]                                  
+  ∧ outgoingMessages = [ i ∈ Proc ↦ {} ]                 
   
 (*  - Whenever the value of its local clock is greater than SendPoint, PredictPoint, 
       and delta[i][j], the local clock is reset to 0. 
     - Because of the constraints about message delay and relative speeds of different
       processes in partial synchrony, the upper bound of local clocks exists.    *)  
-LocallyTick(i) ==
+LocallyTick(i) ≜
   localClock' = [ localClock EXCEPT ![i] = 
-                                IF /\ \A j \in Proc : delta[i][j] < localClock[i] 
-                                   /\ SendPoint < localClock[i]
-                                   /\ PredictPoint < localClock[i]     
+                                IF ∧ ∀ j ∈ Proc : delta[i][j] < localClock[i] 
+                                   ∧ SendPoint < localClock[i]
+                                   ∧ PredictPoint < localClock[i]     
                                 THEN 0
                                 ELSE localClock[i] + 1 ]  
                  
@@ -76,16 +76,16 @@ LocallyTick(i) ==
       and put these messages in its outgoingMessages which will be picked up by the 
       environmental controller in the composition action.   
     - p_i does not know exactly how the communication system works. *)
-SendAlive(i) ==    
-  /\ localClock[i] % PredictPoint # 0
-  /\ localClock[i] % SendPoint = 0
-  /\ LocallyTick(i)
-  /\ outgoingMessages' = [ outgoingMessages EXCEPT ![i] = MakeAliveMsgsForAll(i)]
-  /\ fromLastHeard' = [ fromLastHeard EXCEPT ![i] = 
-                              [ j \in Proc |-> IF fromLastHeard[i][j] <= delta[i][j]
+SendAlive(i) ≜    
+  ∧ localClock[i] % PredictPoint ≠ 0
+  ∧ localClock[i] % SendPoint = 0
+  ∧ LocallyTick(i)
+  ∧ outgoingMessages' = [ outgoingMessages EXCEPT ![i] = MakeAliveMsgsForAll(i)]
+  ∧ fromLastHeard' = [ fromLastHeard EXCEPT ![i] = 
+                              [ j ∈ Proc ↦ IF fromLastHeard[i][j] ≤ delta[i][j]
                                                THEN fromLastHeard[i][j]  + 1
                                                ELSE fromLastHeard[i][j] ] ]                                                           
-  /\ UNCHANGED << suspected, delta >>
+  ∧ UNCHANGED ⟨ suspected, delta ⟩
                                                                                                                                                                                                              
 (*  - incomingMessages: A process does not know exactly how messages are feed to it. 
     - 1nd conj: A process p_i can perform the operation Receive if and only if it do
@@ -102,50 +102,50 @@ SendAlive(i) ==
     - 5th conj: Update its predictions. All processes from which a process p_i has 
                 received some message in this transition are marked as correct ones. 
     - 6th conj: outgoingMessages is irrelevant in this transition. *)            
-Receive(i, incomingMessages) ==
-  /\ \/ /\ localClock[i] % PredictPoint = 0
-        /\ localClock[i] % SendPoint = 0
-     \/ /\ localClock[i] % PredictPoint # 0
-        /\ localClock[i] % SendPoint # 0
-  /\ LocallyTick(i)
-  /\ fromLastHeard' = [ fromLastHeard EXCEPT ![i] = 
-                              [ j \in Proc |-> IF \E m \in incomingMessages : m.from = j 
+Receive(i, incomingMessages) ≜
+  ∧ ∨ ∧ localClock[i] % PredictPoint = 0
+      ∧ localClock[i] % SendPoint = 0
+    ∨ ∧ localClock[i] % PredictPoint ≠ 0
+      ∧ localClock[i] % SendPoint ≠ 0
+  ∧ LocallyTick(i)
+  ∧ fromLastHeard' = [ fromLastHeard EXCEPT ![i] = 
+                              [ j ∈ Proc ↦ IF ∃ m ∈ incomingMessages : m.from = j 
                                                THEN 0
-                                               ELSE IF j \notin suspected[i]
-                                                    THEN IF fromLastHeard[i][j] <= delta[i][j]
+                                               ELSE IF j ∉ suspected[i]
+                                                    THEN IF fromLastHeard[i][j] ≤ delta[i][j]
                                                          THEN fromLastHeard[i][j] + 1
                                                          ELSE fromLastHeard[i][j]  
                                                     ELSE fromLastHeard[i][j] ] ]                                                         
-  /\ delta' = [ delta EXCEPT ![i] = [ j \in Proc |-> IF /\ j \in suspected[i]
-                                                        /\ \E m \in incomingMessages : m.from = j
+  ∧ delta' = [ delta EXCEPT ![i] = [ j ∈ Proc ↦ IF ∧ j ∈ suspected[i]
+                                                   ∧ ∃ m ∈ incomingMessages : m.from = j
                                                      THEN delta[i][j] + 1
                                                      ELSE delta[i][j] ] ]  
-  /\ suspected' = [ suspected EXCEPT ![i] = suspected[i] \ { j \in Proc : (\E msg \in incomingMessages : msg.from = j) } ]  
-  /\ UNCHANGED outgoingMessages                                                                                                                                                        
+  ∧ suspected' = [ suspected EXCEPT ![i] = suspected[i] \ { j ∈ Proc : (∃ msg ∈ incomingMessages : msg.from = j) } ]  
+  ∧ UNCHANGED outgoingMessages                                                                                                                                                        
 
 (*  - A process p_i makes predictions at every PredictPoint ticks of its local clock, based on messages 
       which it has received until now.     
     - If a process p_i has not received any message from a process p_j after delta[i][j] time units,
       a process p_i predicts that a process p_j is faulty. 
     - 6h conjunciton: outgoingMessages is irrelevant in this transition.  *)                                                                 
-Predict(i) ==    
-  /\ localClock[i] % PredictPoint = 0
-  /\ localClock[i] % SendPoint # 0
-  /\ LocallyTick(i)
-  /\ suspected' = [ suspected EXCEPT ![i] = suspected[i] \cup { j \in Proc : fromLastHeard[i][j] > delta[i][j] } ]
-  /\ UNCHANGED outgoingMessages
-  /\ fromLastHeard' = [ fromLastHeard EXCEPT ![i] = [ j \in Proc |-> IF fromLastHeard[i][j] <= delta[i][j]
+Predict(i) ≜    
+  ∧ localClock[i] % PredictPoint = 0
+  ∧ localClock[i] % SendPoint ≠ 0
+  ∧ LocallyTick(i)
+  ∧ suspected' = [ suspected EXCEPT ![i] = suspected[i] ∪ { j ∈ Proc : fromLastHeard[i][j] > delta[i][j] } ]
+  ∧ UNCHANGED outgoingMessages
+  ∧ fromLastHeard' = [ fromLastHeard EXCEPT ![i] = [ j ∈ Proc ↦ IF fromLastHeard[i][j] ≤ delta[i][j]
                                                                      THEN fromLastHeard[i][j] + 1
                                                                      ELSE fromLastHeard[i][j] ] ]
-  /\ UNCHANGED << delta >>
+  ∧ UNCHANGED ⟨ delta ⟩
     
 (* Type invariant *)    
-TypeOK ==        
-  /\ fromLastHeard \in [ Proc -> [ Proc -> Int ] ]
-  /\ \A p, q \in Proc : fromLastHeard[p][q] \in Int
-  /\ delta \in [ Proc -> [ Proc -> Int ] ]
-  /\ suspected \in [ Proc -> SUBSET Proc ]  
-  /\ outgoingMessages  \in [ Proc -> SUBSET Messages ]                                                                               
+TypeOK ≜        
+  ∧ fromLastHeard ∈ [ Proc → [ Proc → ℤ ] ]
+  ∧ ∀ p, q ∈ Proc : fromLastHeard[p][q] ∈ ℤ
+  ∧ delta ∈ [ Proc → [ Proc → ℤ ] ]
+  ∧ suspected ∈ [ Proc → SUBSET Proc ]  
+  ∧ outgoingMessages  ∈ [ Proc → SUBSET Messages ]                                                                               
 
 =============================================================================
 \* Modification History

@@ -9,18 +9,18 @@
 
 EXTENDS InternalMemory
 
-vars == <<memInt, mem, ctl, buf>>
+vars ≜ ⟨memInt, mem, ctl, buf⟩
   (*************************************************************************)
   (* The tuple of all variables.                                           *)
   (*************************************************************************)
   
-Liveness == \A p \in Proc : WF_vars(Do(p)) /\ WF_vars(Rsp(p))
-Liveness2 == \A p \in Proc : WF_vars(Do(p) \/ Rsp(p))
+Liveness ≜ ∀ p ∈ Proc : WF_vars(Do(p)) ∧ WF_vars(Rsp(p))
+Liveness2 ≜ ∀ p ∈ Proc : WF_vars(Do(p) ∨ Rsp(p))
   (*************************************************************************)
   (* The two versions of the liveness condition defined in the book.       *)
   (*************************************************************************)
   
-LISpec == ISpec /\ Liveness2
+LISpec ≜ ISpec ∧ Liveness2
   (*************************************************************************)
   (* The spec with liveness.                                               *)
   (*************************************************************************)
@@ -31,8 +31,8 @@ LISpec == ISpec /\ Liveness2
 (* setting ctl[p] to "rdy".                                                *)
 (***************************************************************************)
 
-LivenessProperty == 
-   \A p \in Proc : (ctl[p] = "busy") ~> (ctl[p] = "rdy")
+LivenessProperty ≜ 
+   ∀ p ∈ Proc : (ctl[p] = "busy") ↝ (ctl[p] = "rdy")
 
 -----------------------------------------------------------------------------
 (***************************************************************************)
@@ -41,5 +41,5 @@ LivenessProperty ==
 (* check this theorem.                                                     *)
 (***************************************************************************)
 
-THEOREM LISpec => LivenessProperty
+THEOREM LISpec ⇒ LivenessProperty
 =============================================================================

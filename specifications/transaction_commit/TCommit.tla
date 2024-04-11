@@ -2,23 +2,23 @@
 CONSTANT RM       \* The set of participating resource managers
 VARIABLE rmState  \* `rmState[rm]' is the state of resource manager rm.
 -----------------------------------------------------------------------------
-TCTypeOK == 
+TCTypeOK ≜ 
   (*************************************************************************)
   (* The type-correctness invariant                                        *)
   (*************************************************************************)
-  rmState \in [RM -> {"working", "prepared", "committed", "aborted"}]
+  rmState ∈ [RM → {"working", "prepared", "committed", "aborted"}]
 
-TCInit ==   rmState = [rm \in RM |-> "working"]
+TCInit ≜   rmState = [rm ∈ RM ↦ "working"]
   (*************************************************************************)
   (* The initial predicate.                                                *)
   (*************************************************************************)
 
-canCommit == \A rm \in RM : rmState[rm] \in {"prepared", "committed"}
+canCommit ≜ ∀ rm ∈ RM : rmState[rm] ∈ {"prepared", "committed"}
   (*************************************************************************)
   (* True iff all RMs are in the "prepared" or "committed" state.          *)
   (*************************************************************************)
 
-notCommitted == \A rm \in RM : rmState[rm] # "committed" 
+notCommitted ≜ ∀ rm ∈ RM : rmState[rm] ≠ "committed" 
   (*************************************************************************)
   (* True iff neither no resource manager has decided to commit.           *)
   (*************************************************************************)
@@ -28,22 +28,22 @@ notCommitted == \A rm \in RM : rmState[rm] # "committed"
 (* define the complete next-state action of the specification to be the    *)
 (* disjunction of the possible RM actions.                                 *)
 (***************************************************************************)
-Prepare(rm) == /\ rmState[rm] = "working"
-               /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
+Prepare(rm) ≜ ∧ rmState[rm] = "working"
+              ∧ rmState' = [rmState EXCEPT ![rm] = "prepared"]
 
-Decide(rm)  == \/ /\ rmState[rm] = "prepared"
-                  /\ canCommit
-                  /\ rmState' = [rmState EXCEPT ![rm] = "committed"]
-               \/ /\ rmState[rm] \in {"working", "prepared"}
-                  /\ notCommitted
-                  /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
+Decide(rm)  ≜ ∨ ∧ rmState[rm] = "prepared"
+                ∧ canCommit
+                ∧ rmState' = [rmState EXCEPT ![rm] = "committed"]
+              ∨ ∧ rmState[rm] ∈ {"working", "prepared"}
+                ∧ notCommitted
+                ∧ rmState' = [rmState EXCEPT ![rm] = "aborted"]
 
-TCNext == \E rm \in RM : Prepare(rm) \/ Decide(rm)
+TCNext ≜ ∃ rm ∈ RM : Prepare(rm) ∨ Decide(rm)
   (*************************************************************************)
   (* The next-state action.                                                *)
   (*************************************************************************)
 -----------------------------------------------------------------------------
-TCSpec == TCInit /\ [][TCNext]_rmState
+TCSpec ≜ TCInit ∧ □[TCNext]_rmState
   (*************************************************************************)
   (* The complete specification of the protocol.                           *)
   (*************************************************************************)
@@ -51,15 +51,15 @@ TCSpec == TCInit /\ [][TCNext]_rmState
 (***************************************************************************)
 (* We now assert invariance properties of the specification.               *)
 (***************************************************************************)
-TCConsistent ==  
+TCConsistent ≜  
   (*************************************************************************)
   (* A state predicate asserting that two RMs have not arrived at          *)
   (* conflicting decisions.                                                *)
   (*************************************************************************)
-  \A rm1, rm2 \in RM : ~ /\ rmState[rm1] = "aborted"
-                         /\ rmState[rm2] = "committed"
+  ∀ rm1, rm2 ∈ RM : ¬ ∧ rmState[rm1] = "aborted"
+                      ∧ rmState[rm2] = "committed"
 
-THEOREM TCSpec => [](TCTypeOK /\ TCConsistent)
+THEOREM TCSpec ⇒ □(TCTypeOK ∧ TCConsistent)
   (*************************************************************************)
   (* Asserts that TCTypeOK and TCConsistent are invariants of the protocol. *)
   (*************************************************************************)

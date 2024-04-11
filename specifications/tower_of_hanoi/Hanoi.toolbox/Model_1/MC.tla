@@ -2,17 +2,17 @@
 EXTENDS Hanoi, TLC
 
 \* CONSTANT definitions @modelParameterConstants:0D
-const_146427254081039000 == 
+const_146427254081039000 ≜ 
 5
 ----
 
 \* CONSTANT definitions @modelParameterConstants:1N
-const_146427254082040000 == 
+const_146427254082040000 ≜ 
 3
 ----
 
 \* SPECIFICATION definition @modelBehaviorSpec:0
-spec_146427254083041000 ==
+spec_146427254083041000 ≜
 Spec
 ----
 =============================================================================

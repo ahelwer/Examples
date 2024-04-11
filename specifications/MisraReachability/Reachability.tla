@@ -31,7 +31,7 @@
 EXTENDS Integers, Sequences, FiniteSets
 
 CONSTANTS Nodes,  Succ
-ASSUME SuccAssump == Succ \in [Nodes -> SUBSET Nodes]
+ASSUME SuccAssump ≜ Succ ∈ [Nodes → SUBSET Nodes]
 
 
 (***************************************************************************)
@@ -43,16 +43,16 @@ ASSUME SuccAssump == Succ \in [Nodes -> SUBSET Nodes]
 (* where ExistsPath(m, n) is true for nodes m and n iff there is a path    *)
 (* from m to n.                                                            *)
 (***************************************************************************)
-IsPathFromTo(p, m, n) == 
-       /\ Len(p) > 0
-       /\ (p[1] = m) /\ (p[Len(p)] = n)  
-       /\ \A i \in 1..(Len(p)-1) : p[i+1] \in Succ[p[i]]   
+IsPathFromTo(p, m, n) ≜ 
+       ∧ Len(p) > 0
+       ∧ (p[1] = m) ∧ (p[Len(p)] = n)  
+       ∧ ∀ i ∈ 1‥(Len(p)-1) : p[i+1] ∈ Succ[p[i]]   
 
-ExistsPath(m, n) == 
-   \E p \in Seq(Nodes) : IsPathFromTo(p, m, n)
+ExistsPath(m, n) ≜ 
+   ∃ p ∈ Seq(Nodes) : IsPathFromTo(p, m, n)
                       
-ReachableFrom(S) == 
-   {n \in Nodes : \E m \in S : ExistsPath(m, n)}
+ReachableFrom(S) ≜ 
+   {n ∈ Nodes : ∃ m ∈ S : ExistsPath(m, n)}
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* The following two statements import modules that are distributed with   *)

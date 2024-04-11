@@ -57,7 +57,7 @@ VARIABLES
     (* particular protocol, that's not a problem.                          *)
     (***********************************************************************)
 
-Messages ==
+Messages ≜
   (*************************************************************************)
   (* The set of all possible messages.  Messages of type "Prepared" are    *)
   (* sent from the H indicated by the message's vh field to the VTP.       *)
@@ -66,39 +66,39 @@ Messages ==
   (* by the VTPs, to be received by all Hs and Is.  The set msgs contains  *)
   (* just a single copy of such a message.                                 *)
   (*************************************************************************)
-  [type : {"Prepared"}, vi : I] \cup
-  [type : {"Prepared"}, vh : H] \cup
+  [type : {"Prepared"}, vi : I] ∪
+  [type : {"Prepared"}, vh : H] ∪
   [type : {"Issue", "Abort"}]
 
-VTPTypeOK ==
+VTPTypeOK ≜
   (*************************************************************************)
   (* The type-correctness invariant                                        *)
   (*************************************************************************)
-  /\ vState \in [V -> {"phantom", "valid"}]
-  /\ vlcState \in [V -> {"init", "working"}]
-  /\ hState \in [H -> {"waiting", "prepared", "holding", "aborted"}]
-  /\ iState \in [I -> {"waiting", "prepared", "issued", "aborted"}]
-  /\ vtpState \in {"init", "done"}
-  /\ vtpIPrepared \subseteq (H \cup I)
-  /\ msgs \subseteq Messages
+  ∧ vState ∈ [V → {"phantom", "valid"}]
+  ∧ vlcState ∈ [V → {"init", "working"}]
+  ∧ hState ∈ [H → {"waiting", "prepared", "holding", "aborted"}]
+  ∧ iState ∈ [I → {"waiting", "prepared", "issued", "aborted"}]
+  ∧ vtpState ∈ {"init", "done"}
+  ∧ vtpIPrepared ⊆ (H ∪ I)
+  ∧ msgs ⊆ Messages
 
-VTPInit ==
+VTPInit ≜
   (*************************************************************************)
   (* The initial predicate.                                                *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ hState = [h \in H |-> "waiting"]
-  /\ iState = [i \in I |-> "waiting"]
-  /\ vtpState = "init"
-  /\ vtpIPrepared   = {}
-  /\ msgs = {}
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ hState = [h ∈ H ↦ "waiting"]
+  ∧ iState = [i ∈ I ↦ "waiting"]
+  ∧ vtpState = "init"
+  ∧ vtpIPrepared   = {}
+  ∧ msgs = {}
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now define the actions that may be performed by the processes, first *)
 (* the VTP's actions, the Hs' actions, then the Is' actions.               *)
 (***************************************************************************)
-VTPRcvPrepared(h,i) ==
+VTPRcvPrepared(h,i) ≜
   (*************************************************************************)
   (* The VTP receives a "Prepared" message from Voucher Holder h and the   *)
   (* Voucher Issuer i. We could add the additional enabling condition      *)
@@ -106,159 +106,159 @@ VTPRcvPrepared(h,i) ==
   (* already received this message. But there is no need, because in that  *)
   (* case the action has no effect; it leaves the state unchanged.         *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ vtpState = "init"
-  /\ [type |-> "Prepared", vh |-> h] \in msgs
-  /\ [type |-> "Prepared", vi |-> i] \in msgs
-  /\ vtpIPrepared' = vtpIPrepared \cup {h,i}
-  /\ UNCHANGED <<vState, vlcState, hState, iState, vtpState, msgs>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ vtpState = "init"
+  ∧ [type ↦ "Prepared", vh ↦ h] ∈ msgs
+  ∧ [type ↦ "Prepared", vi ↦ i] ∈ msgs
+  ∧ vtpIPrepared' = vtpIPrepared ∪ {h,i}
+  ∧ UNCHANGED ⟨vState, vlcState, hState, iState, vtpState, msgs⟩
 
-VTPIssue(v) ==
+VTPIssue(v) ≜
   (*************************************************************************)
   (* The VTP Issues the voucher; enabled iff the VTP is in its             *)
   (* initial state and every H and I has sent a "Prepared" message.        *)
   (*************************************************************************)
-  /\ vState[v] = "phantom"
-  /\ vlcState[v] = "init"
-  /\ vtpState = "init"
-  /\ vtpIPrepared = H \cup I
-  /\ vtpState' = "done"
-  /\ vState' = [vState EXCEPT ![v] = "valid"]
-  /\ vlcState' = [vlcState EXCEPT ![v] = "working"]
-  /\ msgs' = msgs \cup {[type |-> "Issue"]}
-  /\ UNCHANGED <<hState, iState, vtpIPrepared>>
+  ∧ vState[v] = "phantom"
+  ∧ vlcState[v] = "init"
+  ∧ vtpState = "init"
+  ∧ vtpIPrepared = H ∪ I
+  ∧ vtpState' = "done"
+  ∧ vState' = [vState EXCEPT ![v] = "valid"]
+  ∧ vlcState' = [vlcState EXCEPT ![v] = "working"]
+  ∧ msgs' = msgs ∪ {[type ↦ "Issue"]}
+  ∧ UNCHANGED ⟨hState, iState, vtpIPrepared⟩
 
-VTPAbort(v) ==
+VTPAbort(v) ≜
   (*************************************************************************)
   (* The VTP spontaneously aborts the transaction.                         *)
   (*************************************************************************)
-  /\ vState[v] = "phantom"
-  /\ vlcState[v] = "init"
-  /\ vtpState = "init"
-  /\ vtpState' = "done"
-  /\ msgs' = msgs \cup {[type |-> "Abort"]}
-  /\ UNCHANGED <<vState, vlcState, hState, iState, vtpIPrepared>>
+  ∧ vState[v] = "phantom"
+  ∧ vlcState[v] = "init"
+  ∧ vtpState = "init"
+  ∧ vtpState' = "done"
+  ∧ msgs' = msgs ∪ {[type ↦ "Abort"]}
+  ∧ UNCHANGED ⟨vState, vlcState, hState, iState, vtpIPrepared⟩
 
-HPrepare(h) ==
+HPrepare(h) ≜
   (*************************************************************************)
   (* Voucher holder h prepares.                                            *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ hState[h] = "waiting"
-  /\ hState' = [hState EXCEPT ![h] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", vh |-> h]}
-  /\ UNCHANGED <<vState, vlcState, vtpState, iState, vtpIPrepared>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ hState[h] = "waiting"
+  ∧ hState' = [hState EXCEPT ![h] = "prepared"]
+  ∧ msgs' = msgs ∪ {[type ↦ "Prepared", vh ↦ h]}
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, iState, vtpIPrepared⟩
 
-HChooseToAbort(h) ==
+HChooseToAbort(h) ≜
   (*************************************************************************)
   (* Voucher holder h spontaneously decides to abort.  As noted above, h   *)
   (* does not send any message in our simplified spec.                     *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ hState[h] = "waiting"
-  /\ hState' = [hState EXCEPT ![h] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, iState, vtpIPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ hState[h] = "waiting"
+  ∧ hState' = [hState EXCEPT ![h] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, iState, vtpIPrepared, msgs⟩
 
-HRcvIssueMsg(h) ==
+HRcvIssueMsg(h) ≜
   (*************************************************************************)
   (* Voucher holder h is told by the VTP to Issue.                         *)
   (*************************************************************************)
-  /\ vState \in [V -> {"phantom", "valid"}]
-  /\ vlcState \in [V -> {"init", "working"}]
-  /\ hState[h] = "waiting"
-  /\ [type |-> "Issue"] \in msgs
-  /\ hState' = [hState EXCEPT ![h] = "holding"]
-  /\ UNCHANGED <<vtpState, vState, vlcState, iState, vtpIPrepared, msgs>>
+  ∧ vState ∈ [V → {"phantom", "valid"}]
+  ∧ vlcState ∈ [V → {"init", "working"}]
+  ∧ hState[h] = "waiting"
+  ∧ [type ↦ "Issue"] ∈ msgs
+  ∧ hState' = [hState EXCEPT ![h] = "holding"]
+  ∧ UNCHANGED ⟨vtpState, vState, vlcState, iState, vtpIPrepared, msgs⟩
 
-HRcvAbortMsg(h) ==
+HRcvAbortMsg(h) ≜
   (*************************************************************************)
   (* Voucher holder h is told by the VTP to abort.                         *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ hState[h] = "waiting"
-  /\ [type |-> "Abort"] \in msgs
-  /\ hState' = [hState EXCEPT ![h] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, iState, vtpIPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ hState[h] = "waiting"
+  ∧ [type ↦ "Abort"] ∈ msgs
+  ∧ hState' = [hState EXCEPT ![h] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, iState, vtpIPrepared, msgs⟩
 
-IPrepare(i) ==
+IPrepare(i) ≜
   (*************************************************************************)
   (* Voucher issuer i prepares.                                            *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ iState[i] = "waiting"
-  /\ iState' = [iState EXCEPT ![i] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", vi |-> i]}
-  /\ UNCHANGED <<vState, vlcState, vtpState, hState, vtpIPrepared>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ iState[i] = "waiting"
+  ∧ iState' = [iState EXCEPT ![i] = "prepared"]
+  ∧ msgs' = msgs ∪ {[type ↦ "Prepared", vi ↦ i]}
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, hState, vtpIPrepared⟩
 
-IChooseToAbort(i) ==
+IChooseToAbort(i) ≜
   (*************************************************************************)
   (* Voucher issuer i spontaneously decides to abort. As noted above, i    *)
   (* does not send any message in our simplified spec.                     *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ iState[i] = "waiting"
-  /\ iState' = [iState EXCEPT ![i] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, hState, vtpIPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ iState[i] = "waiting"
+  ∧ iState' = [iState EXCEPT ![i] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, hState, vtpIPrepared, msgs⟩
 
-IRcvIssueMsg(i) ==
+IRcvIssueMsg(i) ≜
   (*************************************************************************)
   (* Voucher issuer i is told by the VTP to Issue.                         *)
   (*************************************************************************)
-  /\ vState \in [V -> {"phantom", "valid"}]
-  /\ vlcState \in [V -> {"init", "working"}]
-  /\ iState[i] = "waiting"
-  /\ [type |-> "Issue"] \in msgs
-  /\ iState' = [iState EXCEPT ![i] = "issued"]
-  /\ UNCHANGED <<vtpState, vState, vlcState, hState, vtpIPrepared, msgs>>
+  ∧ vState ∈ [V → {"phantom", "valid"}]
+  ∧ vlcState ∈ [V → {"init", "working"}]
+  ∧ iState[i] = "waiting"
+  ∧ [type ↦ "Issue"] ∈ msgs
+  ∧ iState' = [iState EXCEPT ![i] = "issued"]
+  ∧ UNCHANGED ⟨vtpState, vState, vlcState, hState, vtpIPrepared, msgs⟩
 
-IRcvAbortMsg(i) ==
+IRcvAbortMsg(i) ≜
   (*************************************************************************)
   (* Voucher issuer i is told by the VTP to abort.                         *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "phantom"]
-  /\ vlcState = [v \in V |-> "init"]
-  /\ iState[i] = "waiting"
-  /\ [type |-> "Abort"] \in msgs
-  /\ iState' = [iState EXCEPT ![i] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, hState, vtpIPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "phantom"]
+  ∧ vlcState = [v ∈ V ↦ "init"]
+  ∧ iState[i] = "waiting"
+  ∧ [type ↦ "Abort"] ∈ msgs
+  ∧ iState' = [iState EXCEPT ![i] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, hState, vtpIPrepared, msgs⟩
 
-VTPNext ==
-  \/ \E v \in V:
-       VTPIssue(v) \/ VTPAbort(v)
-  \/ \E h,i \in H \cup I:
+VTPNext ≜
+  ∨ ∃ v ∈ V:
+       VTPIssue(v) ∨ VTPAbort(v)
+  ∨ ∃ h,i ∈ H ∪ I:
        VTPRcvPrepared(h,i)
-  \/ \E h \in H:
-       HPrepare(h) \/ HChooseToAbort(h)
-       \/ HRcvAbortMsg(h) \/ HRcvIssueMsg(h)
-  \/ \E i \in I:
-       IPrepare(i) \/ IChooseToAbort(i)
-       \/ IRcvAbortMsg(i) \/ IRcvIssueMsg(i)
+  ∨ ∃ h ∈ H:
+       HPrepare(h) ∨ HChooseToAbort(h)
+       ∨ HRcvAbortMsg(h) ∨ HRcvIssueMsg(h)
+  ∨ ∃ i ∈ I:
+       IPrepare(i) ∨ IChooseToAbort(i)
+       ∨ IRcvAbortMsg(i) ∨ IRcvIssueMsg(i)
 -----------------------------------------------------------------------------
-VTPConsistent ==
+VTPConsistent ≜
   (*************************************************************************)
   (* A state predicate asserting that a H and an I have not reached        *)
   (* conflicting decisions. It is an invariant of the specification.       *)
   (*************************************************************************)
-  /\ \A h \in H, i \in I :   /\ ~ /\ hState[h] = "holding"
-                                  /\ iState[i] = "aborted"
-                             /\ ~ /\ hState[h] = "aborted"
-                                  /\ iState[i] = "issued"
+  ∧ ∀ h ∈ H, i ∈ I :   ∧ ¬ ∧ hState[h] = "holding"
+                           ∧ iState[i] = "aborted"
+                       ∧ ¬ ∧ hState[h] = "aborted"
+                           ∧ iState[i] = "issued"
 -----------------------------------------------------------------------------
-VTPVars == <<hState, iState, vState, vlcState, vtpState, vtpIPrepared, msgs>>
+VTPVars ≜ ⟨hState, iState, vState, vlcState, vtpState, vtpIPrepared, msgs⟩
 
-VTPSpec == VTPInit /\ [][VTPNext]_VTPVars
+VTPSpec ≜ VTPInit ∧ □[VTPNext]_VTPVars
   (*************************************************************************)
   (* The complete spec of the a Voucher Issue using Two-Phase Commit       *)
   (* protocol.                                                             *)
   (*************************************************************************)
 
-THEOREM VTPSpec => [](VTPTypeOK /\ VTPConsistent)
+THEOREM VTPSpec ⇒ □(VTPTypeOK ∧ VTPConsistent)
   (*************************************************************************)
   (* This theorem asserts the truth of the temporal formula whose meaning  *)
   (* is that the state predicate VTPTypeOK /\ VTPConsistent is an          *)
@@ -275,7 +275,7 @@ THEOREM VTPSpec => [](VTPTypeOK /\ VTPConsistent)
 (***************************************************************************)
 INSTANCE VoucherLifeCycle
 
-THEOREM VTPSpec => VSpec
+THEOREM VTPSpec ⇒ VSpec
   (*************************************************************************)
   (* This theorem asserts that the specification VTPSpec of the Two-Phase  *)
   (* Commit protocol implements the specification VSpec of the             *)

@@ -35,8 +35,8 @@ VARIABLES big,   \* The number of gallons of water in the 5 gallon jug.
 (* of parentheses.  This makes a large formula much easier to read.        *)
 (* However, it does mean that you have to be careful with your indentation.*)
 (***************************************************************************)
-TypeOK == /\ small \in 0..3 
-          /\ big   \in 0..5
+TypeOK ≜ ∧ small ∈ 0‥3 
+         ∧ big   ∈ 0‥5
 
 
 (***************************************************************************)
@@ -44,8 +44,8 @@ TypeOK == /\ small \in 0..3
 (* values of the variables.  I like to name this predicate Init, but the   *)
 (* name doesn't matter.                                                    *)
 (***************************************************************************)
-Init == /\ big = 0 
-        /\ small = 0
+Init ≜ ∧ big = 0 
+       ∧ small = 0
 
 (***************************************************************************)
 (* Now we define the actions that our hero can perform.  There are three   *)
@@ -62,17 +62,17 @@ Init == /\ big = 0
 (* So, the first two possibilities yield the following four possible       *)
 (* actions.                                                                *)
 (***************************************************************************)
-FillSmallJug  == /\ small' = 3 
-                 /\ big' = big
+FillSmallJug  ≜ ∧ small' = 3 
+                ∧ big' = big
 
-FillBigJug    == /\ big' = 5 
-                 /\ small' = small
+FillBigJug    ≜ ∧ big' = 5 
+                ∧ small' = small
 
-EmptySmallJug == /\ small' = 0 
-                 /\ big' = big
+EmptySmallJug ≜ ∧ small' = 0 
+                ∧ big' = big
 
-EmptyBigJug   == /\ big' = 0 
-                 /\ small' = small
+EmptyBigJug   ≜ ∧ big' = 0 
+                ∧ small' = small
 
 (***************************************************************************)
 (* We now consider pouring water from one jug into another.  Again, since  *)
@@ -85,29 +85,29 @@ EmptyBigJug   == /\ big' = 0
 (* mathematically, we first define Min(m,n) to equal the minimum of the    *)
 (* numbers m and n.                                                        *)
 (***************************************************************************)
-Min(m,n) == IF m < n THEN m ELSE n
+Min(m,n) ≜ IF m < n THEN m ELSE n
 
 (***************************************************************************)
 (* Now we define the last two pouring actions.  From the observation       *)
 (* above, these definitions should be clear.                               *)
 (***************************************************************************)
-SmallToBig == /\ big'   = Min(big + small, 5)
-              /\ small' = small - (big' - big)
+SmallToBig ≜ ∧ big'   = Min(big + small, 5)
+             ∧ small' = small - (big' - big)
 
-BigToSmall == /\ small' = Min(big + small, 3) 
-              /\ big'   = big - (small' - small)
+BigToSmall ≜ ∧ small' = Min(big + small, 3) 
+             ∧ big'   = big - (small' - small)
 
 (***************************************************************************)
 (* We define the next-state relation, which I like to call Next.  A Next   *)
 (* step is a step of one of the six actions defined above.  Hence, Next is *)
 (* the disjunction of those actions.                                       *)
 (***************************************************************************)
-Next ==  \/ FillSmallJug 
-         \/ FillBigJug    
-         \/ EmptySmallJug 
-         \/ EmptyBigJug    
-         \/ SmallToBig    
-         \/ BigToSmall    
+Next ≜  ∨ FillSmallJug 
+        ∨ FillBigJug    
+        ∨ EmptySmallJug 
+        ∨ EmptyBigJug    
+        ∨ SmallToBig    
+        ∨ BigToSmall    
 
 (***************************************************************************)
 (* We define the formula Spec to be the complete specification, asserting  *)
@@ -115,7 +115,7 @@ Next ==  \/ FillSmallJug
 (* step either satisfies Next or else leaves the pair <<big, small>>       *)
 (* unchanged.                                                              *)
 (***************************************************************************)
-Spec == Init /\ [][Next]_<<big, small>> 
+Spec ≜ Init ∧ □[Next]_⟨big, small⟩ 
 -----------------------------------------------------------------------------
 
 (***************************************************************************)
@@ -124,7 +124,7 @@ Spec == Init /\ [][Next]_<<big, small>>
 (* solved their problem when they reach a state with big = 4.  So, we      *)
 (* define NotSolved to be the predicate asserting that big # 4.            *)
 (***************************************************************************)
-NotSolved == big # 4
+NotSolved ≜ big ≠ 4
 
 (***************************************************************************)
 (* We find a solution by having TLC check if NotSolved is an invariant,    *)

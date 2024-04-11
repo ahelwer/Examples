@@ -16,8 +16,8 @@ CONSTANTS  Send(_, _, _, _),
 \*         /\ Reply(p,d,miOld,miNew) \in BOOLEAN  
 
 -----------------------------------------------------------------------------
-MReq == [op : {"Rd"}, adr: Adr] 
-          \cup [op : {"Wr"}, adr: Adr, val : Val]
+MReq ≜ [op : {"Rd"}, adr: Adr] 
+          ∪ [op : {"Wr"}, adr: Adr, val : Val]
 
-NoVal == CHOOSE v : v \notin Val
+NoVal ≜ CHOOSE v : v ∉ Val
 =============================================================================

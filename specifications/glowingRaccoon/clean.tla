@@ -32,74 +32,74 @@ VARIABLES tee, \* temperature, a string
           hybrid \* count of template-primer hybrids
 
 (* list of state variables, for convenience *)
-vars == << tee, primer, dna, template, hybrid >>
+vars ≜ ⟨ tee, primer, dna, template, hybrid ⟩
           
 (* helper function *)
-natMin(i,j) == IF i < j THEN i ELSE j \* min of two nats
+natMin(i,j) ≜ IF i < j THEN i ELSE j \* min of two nats
 
 (* actions *)
-heat == /\ tee = "Hot" \* current temperature is "Hot"
-        /\ tee' = "TooHot" \* heat up to "TooHot"
-        /\ primer' = primer + hybrid \* we'll take those back, thanks
-        /\ dna' = 0 \* the dna denatures
-        /\ template' = template + hybrid + 2 * dna \* has to go somewhere
-        /\ hybrid' = 0 \* these denature too
+heat ≜ ∧ tee = "Hot" \* current temperature is "Hot"
+       ∧ tee' = "TooHot" \* heat up to "TooHot"
+       ∧ primer' = primer + hybrid \* we'll take those back, thanks
+       ∧ dna' = 0 \* the dna denatures
+       ∧ template' = template + hybrid + 2 * dna \* has to go somewhere
+       ∧ hybrid' = 0 \* these denature too
 
-cool == /\ tee = "TooHot" \* when you just denatured
-        /\ tee' = "Hot" \* cool off to "Hot"
-        /\ UNCHANGED << primer, dna, template, hybrid >>
+cool ≜ ∧ tee = "TooHot" \* when you just denatured
+       ∧ tee' = "Hot" \* cool off to "Hot"
+       ∧ UNCHANGED ⟨ primer, dna, template, hybrid ⟩
 
-anneal == /\ tee = "Hot" \* too hot to anneal primers
-          /\ tee' = "Warm" \* "Warm" is just right
-          /\ UNCHANGED dna \* dna can reanneal; we neglect that
+anneal ≜ ∧ tee = "Hot" \* too hot to anneal primers
+         ∧ tee' = "Warm" \* "Warm" is just right
+         ∧ UNCHANGED dna \* dna can reanneal; we neglect that
           (* this is the neat part *)
-          /\ \E k \in 1..natMin(primer, template) : 
-             /\ primer' = primer - k \* k consumed
-             /\ template' = template - k \* k consumed
-             /\ hybrid' = hybrid + k \* k more hybrids
+         ∧ ∃ k ∈ 1‥natMin(primer, template) : 
+             ∧ primer' = primer - k \* k consumed
+             ∧ template' = template - k \* k consumed
+             ∧ hybrid' = hybrid + k \* k more hybrids
 
-extend == /\ tee = "Warm" \* too cool for extension
-            /\ tee' = "Hot" \* "Hot" is just right
-            /\ UNCHANGED <<primer, template>>
-            /\ dna' = dna + hybrid \* assuming it just happens
-            /\ hybrid' = 0 \* all turned to dna
+extend ≜ ∧ tee = "Warm" \* too cool for extension
+            ∧ tee' = "Hot" \* "Hot" is just right
+            ∧ UNCHANGED ⟨primer, template⟩
+            ∧ dna' = dna + hybrid \* assuming it just happens
+            ∧ hybrid' = 0 \* all turned to dna
             
 (* initial state *)
-Init == /\ tee = "Hot" \* not really all that hot
-        /\ primer = PRIMER \* we have consumed no primers
-        /\ dna = DNA \* we start with some nice 'frozen' dna
-        /\ template = 0 \* everything is bound up
-        /\ hybrid = 0 \* no annealing has happened yet
+Init ≜ ∧ tee = "Hot" \* not really all that hot
+       ∧ primer = PRIMER \* we have consumed no primers
+       ∧ dna = DNA \* we start with some nice 'frozen' dna
+       ∧ template = 0 \* everything is bound up
+       ∧ hybrid = 0 \* no annealing has happened yet
             
 (* state transition *)
-Next ==  \/ heat
-         \/ cool
-         \/ anneal
-         \/ extend
+Next ≜  ∨ heat
+        ∨ cool
+        ∨ anneal
+        ∨ extend
 
 (* specification of system *)
-Spec == /\ Init 
-        /\ [][Next]_vars 
+Spec ≜ ∧ Init 
+       ∧ □[Next]_vars 
 
 (* type invariant *)
-TypeOK == 
-    /\ tee \in {"Warm", "Hot", "TooHot"}
-    /\ primer \in Nat
-    /\ dna \in Nat
-    /\ template \in Nat
-    /\ hybrid \in Nat
+TypeOK ≜ 
+    ∧ tee ∈ {"Warm", "Hot", "TooHot"}
+    ∧ primer ∈ ℕ
+    ∧ dna ∈ ℕ
+    ∧ template ∈ ℕ
+    ∧ hybrid ∈ ℕ
 
 (* safety *)
-primerPositive == (primer >= 0) \* a redundant invariant
+primerPositive ≜ (primer ≥ 0) \* a redundant invariant
 
 (* preservation as an invariant *)
-preservationInvariant == template + primer + 2*(dna + hybrid) = PRIMER + 2 * DNA
+preservationInvariant ≜ template + primer + 2*(dna + hybrid) = PRIMER + 2 * DNA
 
 (* preservation as a property *)
-constantCount == UNCHANGED ( template + primer + 2*(dna + hybrid) )
-preservationProperty == [][constantCount]_vars \* as property
+constantCount ≜ UNCHANGED ( template + primer + 2*(dna + hybrid) )
+preservationProperty ≜ □[constantCount]_vars \* as property
 
 (* liveness *)
-primerDepleted == <>(primer = 0) \* does not hold!
+primerDepleted ≜ ◇(primer = 0) \* does not hold!
 
 =============================================================================

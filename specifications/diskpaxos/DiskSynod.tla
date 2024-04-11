@@ -3,127 +3,127 @@
 EXTENDS Synod, FiniteSets
 
 CONSTANTS Ballot(_), Disk, IsMajority(_)
-ASSUME /\ \A p \in Proc : /\ Ballot(p) \subseteq {n \in Nat : n > 0}
-                          /\ \A q \in Proc \ {p} : Ballot(p) \cap Ballot(q) = {}
-       /\ IsMajority(Disk)
-       /\ \A S, T \in SUBSET Disk :
-              IsMajority(S) /\ IsMajority(T) => (S \cup T # {})
+ASSUME ∧ ∀ p ∈ Proc : ∧ Ballot(p) ⊆ {n ∈ ℕ : n > 0}
+                      ∧ ∀ q ∈ Proc \ {p} : Ballot(p) ∩ Ballot(q) = {}
+       ∧ IsMajority(Disk)
+       ∧ ∀ S, T ∈ SUBSET Disk :
+              IsMajority(S) ∧ IsMajority(T) ⇒ (S ∪ T ≠ {})
 
-DiskBlock == [mbal : (UNION {Ballot(p) : p \in Proc}) \cup {0},
-              bal  : (UNION {Ballot(p) : p \in Proc}) \cup {0},
-              inp  : Inputs \cup {NotAnInput}]
+DiskBlock ≜ [mbal : (UNION {Ballot(p) : p ∈ Proc}) ∪ {0},
+              bal  : (UNION {Ballot(p) : p ∈ Proc}) ∪ {0},
+              inp  : Inputs ∪ {NotAnInput}]
 
-InitDB == [mbal |-> 0, bal |-> 0, inp |-> NotAnInput]
+InitDB ≜ [mbal ↦ 0, bal ↦ 0, inp ↦ NotAnInput]
 
 VARIABLES disk , dblock , phase, disksWritten, blocksRead
 
-vars == <<input, output, disk , phase, dblock , disksWritten, blocksRead>>
+vars ≜ ⟨input, output, disk , phase, dblock , disksWritten, blocksRead⟩
 
-Init == /\ input \in [Proc -> Inputs]
-        /\ output = [p \in Proc |-> NotAnInput]
-        /\ disk = [d \in Disk |-> [p \in Proc |-> InitDB ]]
-        /\ phase = [p \in Proc |-> 0]
-        /\ dblock = [p \in Proc |-> InitDB ]
-        /\ disksWritten = [p \in Proc |-> {}]
-        /\ blocksRead = [p \in Proc |-> [d \in Disk |-> {}]]
+Init ≜ ∧ input ∈ [Proc → Inputs]
+       ∧ output = [p ∈ Proc ↦ NotAnInput]
+       ∧ disk = [d ∈ Disk ↦ [p ∈ Proc ↦ InitDB ]]
+       ∧ phase = [p ∈ Proc ↦ 0]
+       ∧ dblock = [p ∈ Proc ↦ InitDB ]
+       ∧ disksWritten = [p ∈ Proc ↦ {}]
+       ∧ blocksRead = [p ∈ Proc ↦ [d ∈ Disk ↦ {}]]
        
-hasRead (p, d , q) == \E br \in blocksRead [p][d ] : br .proc = q
+hasRead (p, d , q) ≜ ∃ br ∈ blocksRead [p][d ] : br .proc = q
 
-allBlocksRead(p) ==
-  LET allRdBlks == UNION {blocksRead [p][d ] : d \in Disk }
-  IN {br.block : br \in allRdBlks}
+allBlocksRead(p) ≜
+  LET allRdBlks ≜ UNION {blocksRead [p][d ] : d ∈ Disk }
+  IN {br.block : br ∈ allRdBlks}
 
-InitializePhase(p) ==
-  /\ disksWritten' = [disksWritten EXCEPT ![p] = {}]
-  /\ blocksRead' = [blocksRead EXCEPT ![p] = [d \in Disk |-> {}]]
+InitializePhase(p) ≜
+  ∧ disksWritten' = [disksWritten EXCEPT ![p] = {}]
+  ∧ blocksRead' = [blocksRead EXCEPT ![p] = [d ∈ Disk ↦ {}]]
 
-StartBallot(p) ==
-  /\ phase[p] \in {1, 2}
-  /\ phase' = [phase EXCEPT ![p] = 1]
-  /\ \E b \in Ballot(p) : /\ b > dblock [p].mbal
-                          /\ dblock' = [dblock EXCEPT ![p].mbal = b]
-  /\ InitializePhase(p)
-  /\ UNCHANGED <<input, output, disk>>
+StartBallot(p) ≜
+  ∧ phase[p] ∈ {1, 2}
+  ∧ phase' = [phase EXCEPT ![p] = 1]
+  ∧ ∃ b ∈ Ballot(p) : ∧ b > dblock [p].mbal
+                      ∧ dblock' = [dblock EXCEPT ![p].mbal = b]
+  ∧ InitializePhase(p)
+  ∧ UNCHANGED ⟨input, output, disk⟩
 
-Phase1or2Write(p, d) ==
-  /\ phase[p] \in {1, 2}
-  /\ disk' = [disk EXCEPT ![d][p] = dblock[p]]
-  /\ disksWritten' = [disksWritten EXCEPT ![p] = @ \cup {d}]
-  /\ UNCHANGED <<input, output, phase, dblock , blocksRead>>
+Phase1or2Write(p, d) ≜
+  ∧ phase[p] ∈ {1, 2}
+  ∧ disk' = [disk EXCEPT ![d][p] = dblock[p]]
+  ∧ disksWritten' = [disksWritten EXCEPT ![p] = @ ∪ {d}]
+  ∧ UNCHANGED ⟨input, output, phase, dblock , blocksRead⟩
 
-Phase1or2Read (p, d, q) ==
-  /\ d \in disksWritten[p]
-  /\ IF disk [d ][q].mbal < dblock [p].mbal
-     THEN /\ blocksRead' = 
+Phase1or2Read (p, d, q) ≜
+  ∧ d ∈ disksWritten[p]
+  ∧ IF disk [d ][q].mbal < dblock [p].mbal
+     THEN ∧ blocksRead' = 
                 [blocksRead EXCEPT
-                    ![p][d ] = @ \cup {[block |-> disk [d ][q], proc |-> q]}]
-          /\ UNCHANGED <<input, output, disk , phase, dblock , disksWritten>>
+                    ![p][d ] = @ ∪ {[block ↦ disk [d ][q], proc ↦ q]}]
+          ∧ UNCHANGED ⟨input, output, disk , phase, dblock , disksWritten⟩
      ELSE StartBallot(p)
 
-EndPhase1or2(p) ==
-  /\ IsMajority({d \in disksWritten[p] :
-                    \A q \in Proc \ {p} : hasRead (p, d , q)})
-  /\ \/ /\ phase[p] = 1
-        /\ dblock' =
+EndPhase1or2(p) ≜
+  ∧ IsMajority({d ∈ disksWritten[p] :
+                    ∀ q ∈ Proc \ {p} : hasRead (p, d , q)})
+  ∧ ∨ ∧ phase[p] = 1
+      ∧ dblock' =
               [dblock EXCEPT
                 ![p].bal = dblock [p].mbal,
                 ![p].inp =
-                    LET blocksSeen == allBlocksRead(p) \cup {dblock [p]}
-                        nonInitBlks ==
-                            {bs \in blocksSeen : bs.inp # NotAnInput}
-                        maxBlk ==
-                            CHOOSE b \in nonInitBlks :
-                                \A c \in nonInitBlks : b.bal >= c.bal
+                    LET blocksSeen ≜ allBlocksRead(p) ∪ {dblock [p]}
+                        nonInitBlks ≜
+                            {bs ∈ blocksSeen : bs.inp ≠ NotAnInput}
+                        maxBlk ≜
+                            CHOOSE b ∈ nonInitBlks :
+                                ∀ c ∈ nonInitBlks : b.bal ≥ c.bal
                     IN IF nonInitBlks = {} THEN input[p]
                        ELSE maxBlk .inp ]
-        /\ UNCHANGED output
-     \/ /\ phase[p] = 2
-        /\ output' = [output EXCEPT ![p] = dblock [p].inp]
-        /\ UNCHANGED dblock
-  /\ phase' = [phase EXCEPT ![p] = @ + 1]
-  /\ InitializePhase(p)
-  /\ UNCHANGED <<input, disk>>
+      ∧ UNCHANGED output
+    ∨ ∧ phase[p] = 2
+      ∧ output' = [output EXCEPT ![p] = dblock [p].inp]
+      ∧ UNCHANGED dblock
+  ∧ phase' = [phase EXCEPT ![p] = @ + 1]
+  ∧ InitializePhase(p)
+  ∧ UNCHANGED ⟨input, disk⟩
 
-Fail(p) ==
-  /\ \E ip \in Inputs : input' = [input EXCEPT ![p] = ip]
-  /\ phase' = [phase EXCEPT ![p] = 0]
-  /\ dblock' = [dblock EXCEPT ![p] = InitDB]
-  /\ output' = [output EXCEPT ![p] = NotAnInput]
-  /\ InitializePhase(p)
-  /\ UNCHANGED disk
+Fail(p) ≜
+  ∧ ∃ ip ∈ Inputs : input' = [input EXCEPT ![p] = ip]
+  ∧ phase' = [phase EXCEPT ![p] = 0]
+  ∧ dblock' = [dblock EXCEPT ![p] = InitDB]
+  ∧ output' = [output EXCEPT ![p] = NotAnInput]
+  ∧ InitializePhase(p)
+  ∧ UNCHANGED disk
 
-Phase0Read(p, d) ==
-  /\ phase[p] = 0
-  /\ blocksRead' = [blocksRead EXCEPT
-                        ![p][d ] = @ \cup {[block |-> disk [d][p], proc |-> p]}]
-  /\ UNCHANGED <<input, output, disk , phase, dblock , disksWritten>>
+Phase0Read(p, d) ≜
+  ∧ phase[p] = 0
+  ∧ blocksRead' = [blocksRead EXCEPT
+                        ![p][d ] = @ ∪ {[block ↦ disk [d][p], proc ↦ p]}]
+  ∧ UNCHANGED ⟨input, output, disk , phase, dblock , disksWritten⟩
   
 
-EndPhase0(p) ==
-  /\ phase[p] = 0
-  /\ IsMajority({d \in Disk : hasRead (p, d, p)})
-  /\ \E b \in Ballot(p) :
-        /\ \A r \in allBlocksRead (p) : b > r.mbal
-        /\ dblock' = [dblock EXCEPT
-                        ![p] = [(CHOOSE r \in allBlocksRead (p) :
-                                     \A s \in allBlocksRead (p) : r .bal >= s.bal)
+EndPhase0(p) ≜
+  ∧ phase[p] = 0
+  ∧ IsMajority({d ∈ Disk : hasRead (p, d, p)})
+  ∧ ∃ b ∈ Ballot(p) :
+        ∧ ∀ r ∈ allBlocksRead (p) : b > r.mbal
+        ∧ dblock' = [dblock EXCEPT
+                        ![p] = [(CHOOSE r ∈ allBlocksRead (p) :
+                                     ∀ s ∈ allBlocksRead (p) : r .bal ≥ s.bal)
                                   EXCEPT !.mbal = b]]
-  /\ InitializePhase(p)
-  /\ phase' = [phase EXCEPT ![p] = 1]
-  /\ UNCHANGED <<input, output, disk>>
+  ∧ InitializePhase(p)
+  ∧ phase' = [phase EXCEPT ![p] = 1]
+  ∧ UNCHANGED ⟨input, output, disk⟩
 
-Next == \E p \in Proc :
-          \/ StartBallot(p)
-          \/ \E d \in Disk : \/ Phase0Read (p, d)
-                             \/ Phase1or2Write(p, d)
-                             \/ \E q \in Proc \ {p} : Phase1or2Read (p, d, q)
-          \/ EndPhase1or2(p)
-          \/ Fail(p)
-          \/ EndPhase0(p)
+Next ≜ ∃ p ∈ Proc :
+          ∨ StartBallot(p)
+          ∨ ∃ d ∈ Disk : ∨ Phase0Read (p, d)
+                         ∨ Phase1or2Write(p, d)
+                         ∨ ∃ q ∈ Proc \ {p} : Phase1or2Read (p, d, q)
+          ∨ EndPhase1or2(p)
+          ∨ Fail(p)
+          ∨ EndPhase0(p)
 
-DiskSynodSpec == Init /\ [][Next]_vars
+DiskSynodSpec ≜ Init ∧ □[Next]_vars
 
-THEOREM DiskSynodSpec => SynodSpec
+THEOREM DiskSynodSpec ⇒ SynodSpec
 
 
 =============================================================================

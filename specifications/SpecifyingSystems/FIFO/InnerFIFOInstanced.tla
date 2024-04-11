@@ -29,76 +29,75 @@ VARIABLES in, out, q
 (* substituted for `chan', with `Message' substituted for `Data', and with *)
 (* "InChan_" prepended to the names of all defined symbols.                *)
 (***************************************************************************)
-InChan_TypeInvariant  ==  in \in [val : Message,  rdy : {0, 1},  ack : {0, 1}]
+InChan_TypeInvariant  ≜  in ∈ [val : Message,  rdy : {0, 1},  ack : {0, 1}]
 
-InChan_Init  ==  /\ InChan_TypeInvariant
-                 /\ in.ack = in.rdy 
+InChan_Init  ≜  ∧ InChan_TypeInvariant
+                ∧ in.ack = in.rdy 
 
-InChan_Send(d) ==  /\ in.rdy = in.ack
-                   /\ in' = [in EXCEPT !.val = d, !.rdy = 1 - @]
+InChan_Send(d) ≜  ∧ in.rdy = in.ack
+                  ∧ in' = [in EXCEPT !.val = d, !.rdy = 1 - @]
 
-InChan_Rcv     ==  /\ in.rdy # in.ack
-                   /\ in' = [in EXCEPT !.ack = 1 - @]
+InChan_Rcv     ≜  ∧ in.rdy ≠ in.ack
+                  ∧ in' = [in EXCEPT !.ack = 1 - @]
 
-InChan_Next  ==  (\E d \in Message : InChan_Send(d)) \/ InChan_Rcv
+InChan_Next  ≜  (∃ d ∈ Message : InChan_Send(d)) ∨ InChan_Rcv
 
-InChan_Spec  ==  InChan_Init /\ [][InChan_Next]_in
+InChan_Spec  ≜  InChan_Init ∧ □[InChan_Next]_in
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* Below are all the definitions from Channel, except with `out'            *)
 (* substituted for `chan', with `Message' substituted for `Data', and with *)
 (* "OutChan_" prepended to the names of all defined symbols.               *)
 (***************************************************************************)
-OutChan_TypeInvariant  ==  out \in [val : Message,  rdy : {0, 1},  ack : {0, 1}]
+OutChan_TypeInvariant  ≜  out ∈ [val : Message,  rdy : {0, 1},  ack : {0, 1}]
 
-OutChan_Init  ==  /\ OutChan_TypeInvariant
-                  /\ out.ack = out.rdy 
+OutChan_Init  ≜  ∧ OutChan_TypeInvariant
+                 ∧ out.ack = out.rdy 
 
-OutChan_Send(d) ==  /\ out.rdy = out.ack
-                    /\ out' = [out EXCEPT !.val = d, !.rdy = 1 - @]
+OutChan_Send(d) ≜  ∧ out.rdy = out.ack
+                   ∧ out' = [out EXCEPT !.val = d, !.rdy = 1 - @]
 
-OutChan_Rcv     ==  /\ out.rdy # out.ack
-                    /\ out' = [out EXCEPT !.ack = 1 - @]
+OutChan_Rcv     ≜  ∧ out.rdy ≠ out.ack
+                   ∧ out' = [out EXCEPT !.ack = 1 - @]
 
-OutChan_Next  ==  (\E d \in Message : OutChan_Send(d)) \/ OutChan_Rcv
+OutChan_Next  ≜  (∃ d ∈ Message : OutChan_Send(d)) ∨ OutChan_Rcv
 
-OutChan_Spec  ==  OutChan_Init /\ [][OutChan_Next]_out
+OutChan_Spec  ≜  OutChan_Init ∧ □[OutChan_Next]_out
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* The rest of the module is the same as module InnerFIFO, except that     *)
 (* each "!" is replaced by "_".                                            *)
 (***************************************************************************)
-Init == /\ InChan_Init
-        /\ OutChan_Init
-        /\ q = << >>
+Init ≜ ∧ InChan_Init
+       ∧ OutChan_Init
+       ∧ q = ⟨ ⟩
 
-TypeInvariant  ==  /\ InChan_TypeInvariant
-                   /\ OutChan_TypeInvariant
-                   /\ q \in Seq(Message)
+TypeInvariant  ≜  ∧ InChan_TypeInvariant
+                  ∧ OutChan_TypeInvariant
+                  ∧ q ∈ Seq(Message)
 
-SSend(msg)  ==  /\ InChan_Send(msg)       \* Send msg on channel `in'.
-                /\ UNCHANGED <<out, q>>
+SSend(msg)  ≜  ∧ InChan_Send(msg)       \* Send msg on channel `in'.
+               ∧ UNCHANGED ⟨out, q⟩
 
-BufRcv == /\ InChan_Rcv              \* Receive message from channel `in'.
-          /\ q' = Append(q, in.val)  \*   and append it to tail of q.
-          /\ UNCHANGED out
+BufRcv ≜ ∧ InChan_Rcv              \* Receive message from channel `in'.
+         ∧ q' = Append(q, in.val)  \*   and append it to tail of q.
+         ∧ UNCHANGED out
 
-BufSend == /\ q # << >>               \* Enabled only if q is nonempty.
-           /\ OutChan_Send(Head(q))   \* Send Head(q) on channel `out'
-           /\ q' = Tail(q)            \*   and remove it from q.
-           /\ UNCHANGED in
+BufSend ≜ ∧ q ≠ ⟨ ⟩               \* Enabled only if q is nonempty.
+          ∧ OutChan_Send(Head(q))   \* Send Head(q) on channel `out'
+          ∧ q' = Tail(q)            \*   and remove it from q.
+          ∧ UNCHANGED in
 
-RRcv == /\ OutChan_Rcv          \* Receive message from channel `out'.
-        /\ UNCHANGED <<in, q>>
+RRcv ≜ ∧ OutChan_Rcv          \* Receive message from channel `out'.
+       ∧ UNCHANGED ⟨in, q⟩
 
-Next == \/ \E msg \in Message : SSend(msg)
-        \/ BufRcv
-        \/ BufSend
-        \/ RRcv 
+Next ≜ ∨ ∃ msg ∈ Message : SSend(msg)
+       ∨ BufRcv
+       ∨ BufSend
+       ∨ RRcv 
 
-Spec == Init /\ [][Next]_<<in, out, q>>
+Spec ≜ Init ∧ □[Next]_⟨in, out, q⟩
 -----------------------------------------------------------------------------
-THEOREM Spec => []TypeInvariant
+THEOREM Spec ⇒ □TypeInvariant
 =============================================================================
-
 

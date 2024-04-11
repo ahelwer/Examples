@@ -2,30 +2,30 @@
 LOCAL INSTANCE Naturals
 LOCAL INSTANCE Sequences
 -----------------------------------------------------------------------------
-OneOf(s) == {<<s[i]>> : i \in DOMAIN s}
-tok(s) == {<<s>>}
-Tok(S) == {<<s>> : s \in S}
+OneOf(s) ≜ {⟨s[i]⟩ : i ∈ DOMAIN s}
+tok(s) ≜ {⟨s⟩}
+Tok(S) ≜ {⟨s⟩ : s ∈ S}
 -----------------------------------------------------------------------------
-Nil == {<< >>}
+Nil ≜ {⟨ ⟩}
   
-L & M   == {s \o t : s \in L, t \in M}
+L & M   ≜ {s ∘ t : s ∈ L, t ∈ M}
   
-L | M   == L \cup M
+L | M   ≜ L ∪ M
 
-L^+ == 
-  LET LL[n \in Nat] == IF n = 0 THEN L 
+L⁺ ≜ 
+  LET LL[n ∈ ℕ] ≜ IF n = 0 THEN L 
                                 ELSE LL[n-1] | (LL[n-1] & L)
 
-  IN  UNION {LL[n] : n \in Nat}
+  IN  UNION {LL[n] : n ∈ ℕ}
   
-L^* == Nil | L^+ 
+L^* ≜ Nil | L⁺ 
 -----------------------------------------------------------------------------
-L ::= M == L = M
+L ⩴ M ≜ L = M
 
-Grammar == [STRING -> SUBSET Seq(STRING)]
+Grammar ≜ [STRING → SUBSET Seq(STRING)]
 
-LeastGrammar(P(_)) ==
-  CHOOSE G \in Grammar : /\ P(G) 
-                         /\ \A H \in Grammar :
-                              P(H) => \A s \in STRING : G[s] \subseteq H[s]
+LeastGrammar(P(_)) ≜
+  CHOOSE G ∈ Grammar : ∧ P(G) 
+                       ∧ ∀ H ∈ Grammar :
+                              P(H) ⇒ ∀ s ∈ STRING : G[s] ⊆ H[s]
 =============================================================================

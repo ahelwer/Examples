@@ -18,44 +18,44 @@ EXTENDS Naturals, Sequences
 (***************************************************************************)
 CONSTANTS N, Id
 
-Node == 1 .. N
+Node ≜ 1 ‥ N
 
 ASSUME
-  /\ N \in Nat \ {0}
-  /\ Id \in Seq(Nat)
-  /\ Len(Id) = N
-  /\ \A m,n \in Node : m # n => Id[m] # Id[n]  \* IDs are unique
+  ∧ N ∈ ℕ \ {0}
+  ∧ Id ∈ Seq(ℕ)
+  ∧ Len(Id) = N
+  ∧ ∀ m,n ∈ Node : m ≠ n ⇒ Id[m] ≠ Id[n]  \* IDs are unique
 
-succ(n) == IF n=N THEN 1 ELSE n+1  \* successor along the ring
+succ(n) ≜ IF n=N THEN 1 ELSE n+1  \* successor along the ring
 
 (** Chang-Roberts algorithm written in PlusCal
 --algorithm ChangRoberts {
   (* msgs[n]: messages waiting to be received by node n *)
-  variable msgs = [n \in Node |-> {}];
-  fair process (node \in Node)
+  variable msgs = [n ∈ Node ↦ {}];
+  fair process (node ∈ Node)
      variables
        (* this node may be an initiator or not *)
-       initiator \in BOOLEAN,
+       initiator ∈ BOOLEAN,
        state = IF initiator THEN "cand" ELSE "lost";
   {
        \* initiators send their own ID to their neighbor
    n0: if (initiator) {
-          msgs[succ(self)] := @ \cup {Id[self]}
+          msgs[succ(self)] ≔ @ ∪ {Id[self]}
        };
    n1: while (TRUE) {
          \* handle some incoming message
-         with (id \in msgs[self],
+         with (id ∈ msgs[self],
                _msgs = [msgs EXCEPT ![self] = @ \ {id}]) {
            if (state = "lost") {  \* nodes that have already lost forward the message
-              msgs := [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
+              msgs ≔ [_msgs EXCEPT ![succ(self)] = @ ∪ {id}]
            } else if (id < Id[self]) {
              \* received smalled ID: record loss and forward the message
-              state := "lost";
-              msgs := [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
+              state ≔ "lost";
+              msgs ≔ [_msgs EXCEPT ![succ(self)] = @ ∪ {id}]
            } else {
              \* do not forward the message; if it's the own ID, declare win
-              msgs := _msgs;
-              if (id = Id[self]) { state := "won" }
+              msgs ≔ _msgs;
+              if (id = Id[self]) { state ≔ "won" }
            }
          } \* end with
        } \* end while
@@ -65,77 +65,77 @@ succ(n) == IF n=N THEN 1 ELSE n+1  \* successor along the ring
 \* BEGIN TRANSLATION (chksum(pcal) = "65c8d352" /\ chksum(tla) = "33951c89")
 VARIABLES msgs, pc, initiator, state
 
-vars == << msgs, pc, initiator, state >>
+vars ≜ ⟨ msgs, pc, initiator, state ⟩
 
-ProcSet == (Node)
+ProcSet ≜ (Node)
 
-Init == (* Global variables *)
-        /\ msgs = [n \in Node |-> {}]
+Init ≜ (* Global variables *)
+        ∧ msgs = [n ∈ Node ↦ {}]
         (* Process node *)
-        /\ initiator \in [Node -> BOOLEAN]
-        /\ state = [self \in Node |-> IF initiator[self] THEN "cand" ELSE "lost"]
-        /\ pc = [self \in ProcSet |-> "n0"]
+        ∧ initiator ∈ [Node → BOOLEAN]
+        ∧ state = [self ∈ Node ↦ IF initiator[self] THEN "cand" ELSE "lost"]
+        ∧ pc = [self ∈ ProcSet ↦ "n0"]
 
-n0(self) == /\ pc[self] = "n0"
-            /\ IF initiator[self]
-                  THEN /\ msgs' = [msgs EXCEPT ![succ(self)] = @ \cup {Id[self]}]
-                  ELSE /\ TRUE
-                       /\ msgs' = msgs
-            /\ pc' = [pc EXCEPT ![self] = "n1"]
-            /\ UNCHANGED << initiator, state >>
+n0(self) ≜ ∧ pc[self] = "n0"
+           ∧ IF initiator[self]
+                  THEN ∧ msgs' = [msgs EXCEPT ![succ(self)] = @ ∪ {Id[self]}]
+                  ELSE ∧ TRUE
+                       ∧ msgs' = msgs
+           ∧ pc' = [pc EXCEPT ![self] = "n1"]
+           ∧ UNCHANGED ⟨ initiator, state ⟩
 
-n1(self) == /\ pc[self] = "n1"
-            /\ \E id \in msgs[self]:
-                 LET _msgs == [msgs EXCEPT ![self] = @ \ {id}] IN
+n1(self) ≜ ∧ pc[self] = "n1"
+           ∧ ∃ id ∈ msgs[self]:
+                 LET _msgs ≜ [msgs EXCEPT ![self] = @ \ {id}] IN
                    IF state[self] = "lost"
-                      THEN /\ msgs' = [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
-                           /\ state' = state
-                      ELSE /\ IF id < Id[self]
-                                 THEN /\ state' = [state EXCEPT ![self] = "lost"]
-                                      /\ msgs' = [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
-                                 ELSE /\ msgs' = _msgs
-                                      /\ IF id = Id[self]
-                                            THEN /\ state' = [state EXCEPT ![self] = "won"]
-                                            ELSE /\ TRUE
-                                                 /\ state' = state
-            /\ pc' = [pc EXCEPT ![self] = "n1"]
-            /\ UNCHANGED initiator
+                      THEN ∧ msgs' = [_msgs EXCEPT ![succ(self)] = @ ∪ {id}]
+                           ∧ state' = state
+                      ELSE ∧ IF id < Id[self]
+                                 THEN ∧ state' = [state EXCEPT ![self] = "lost"]
+                                      ∧ msgs' = [_msgs EXCEPT ![succ(self)] = @ ∪ {id}]
+                                 ELSE ∧ msgs' = _msgs
+                                      ∧ IF id = Id[self]
+                                            THEN ∧ state' = [state EXCEPT ![self] = "won"]
+                                            ELSE ∧ TRUE
+                                                 ∧ state' = state
+           ∧ pc' = [pc EXCEPT ![self] = "n1"]
+           ∧ UNCHANGED initiator
 
-node(self) == n0(self) \/ n1(self)
+node(self) ≜ n0(self) ∨ n1(self)
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
-Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
-               /\ UNCHANGED vars
+Terminating ≜ ∧ ∀ self ∈ ProcSet: pc[self] = "Done"
+              ∧ UNCHANGED vars
 
-Next == (\E self \in Node: node(self))
-           \/ Terminating
+Next ≜ (∃ self ∈ Node: node(self))
+           ∨ Terminating
 
-Spec == /\ Init /\ [][Next]_vars
-        /\ \A self \in Node : WF_vars(node(self))
+Spec ≜ ∧ Init ∧ □[Next]_vars
+       ∧ ∀ self ∈ Node : WF_vars(node(self))
 
-Termination == <>(\A self \in ProcSet: pc[self] = "Done")
+Termination ≜ ◇(∀ self ∈ ProcSet: pc[self] = "Done")
 
 \* END TRANSLATION
 -----------------------------------------------------------------------------
 (* type correctness *)
-TypeOK ==
-  /\ pc \in [Node -> {"n0", "n1", "Done"}]
-  /\ msgs \in [Node -> SUBSET {Id[n] : n \in Node}]
-  /\ initiator \in [Node -> BOOLEAN]
-  /\ state \in [Node -> {"cand", "lost", "won"}]
+TypeOK ≜
+  ∧ pc ∈ [Node → {"n0", "n1", "Done"}]
+  ∧ msgs ∈ [Node → SUBSET {Id[n] : n ∈ Node}]
+  ∧ initiator ∈ [Node → BOOLEAN]
+  ∧ state ∈ [Node → {"cand", "lost", "won"}]
 
 (***************************************************************************)
 (* Safety property: when node n wins the election, it is the initiator     *)
 (* with the smallest ID, and all other nodes know that they lost.          *)
 (***************************************************************************)
-Correctness ==
-  \A n \in Node : state[n] = "won" =>
-     /\ initiator[n]
-     /\ \A m \in Node \ {n} : 
-           /\ state[m] = "lost"
-           /\ initiator[m] => Id[m] > Id[n]
+Correctness ≜
+  ∀ n ∈ Node : state[n] = "won" ⇒
+     ∧ initiator[n]
+     ∧ ∀ m ∈ Node \ {n} : 
+           ∧ state[m] = "lost"
+           ∧ initiator[m] ⇒ Id[m] > Id[n]
 
-Liveness == (\E n \in Node : state[n] = "cand") => <>(\E n \in Node : state[n] = "won")
+Liveness ≜ (∃ n ∈ Node : state[n] = "cand") ⇒ ◇(∃ n ∈ Node : state[n] = "won")
 =============================================================================
 \* Modification History
 \* Last modified Tue Apr 27 20:05:58 PDT 2021 by markus

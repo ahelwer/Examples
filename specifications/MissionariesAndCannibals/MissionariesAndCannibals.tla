@@ -92,9 +92,9 @@ VARIABLES bank_of_boat, who_is_on_bank
 (* formulas bulleted by /\.  A disjunction of formulas is similarly        *)
 (* written with a list bulleted by \/.                                     *)
 (***************************************************************************)
-TypeOK == /\ bank_of_boat \in {"E","W"}
-          /\ who_is_on_bank \in 
-                [{"E","W"} -> SUBSET (Cannibals \cup Missionaries)]
+TypeOK ≜ ∧ bank_of_boat ∈ {"E","W"}
+         ∧ who_is_on_bank ∈ 
+                [{"E","W"} → SUBSET (Cannibals ∪ Missionaries)]
 
 (***************************************************************************)
 (* The possible executions of the system are specified by two formulas: an *)
@@ -112,9 +112,9 @@ TypeOK == /\ bank_of_boat \in {"E","W"}
 (* represents the array/function F with index-set/domain D such that F[x]  *)
 (* equals exp(x) for all x in D.                                           *)
 (***************************************************************************)                             
-Init == /\ bank_of_boat = "E"
-        /\ who_is_on_bank = [i \in {"E","W"} |-> 
-                               IF i = "E" THEN Cannibals \cup Missionaries
+Init ≜ ∧ bank_of_boat = "E"
+       ∧ who_is_on_bank = [i ∈ {"E","W"} ↦ 
+                               IF i = "E" THEN Cannibals ∪ Missionaries
                                           ELSE  {} ]
               
 (***************************************************************************)
@@ -127,14 +127,14 @@ Init == /\ bank_of_boat = "E"
 (* the missionaries in S.  The operator \subseteq is the subset relation,  *)
 (* and \cap is the set intersection operator.                              *)
 (***************************************************************************)
-IsSafe(S) == \/ S \subseteq Cannibals
-             \/ Cardinality(S \cap Cannibals) =< Cardinality(S \cap Missionaries)
+IsSafe(S) ≜ ∨ S ⊆ Cannibals
+            ∨ Cardinality(S ∩ Cannibals) ≤ Cardinality(S ∩ Missionaries)
 
 (***************************************************************************)
 (* We define OtherBank so that OtherBank("E") equals "W" and               *)
 (* OtherBank("W") equals "E".                                              *)
 (***************************************************************************)
-OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
+OtherBank(b) ≜ IF b = "E" THEN "W" ELSE "E"
 
 (***************************************************************************)
 (* We now define the formula Move(S,b) to describe a step s -> t that      *)
@@ -162,14 +162,14 @@ OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
 (* of the two variables (their values in state t) in terms of their old    *)
 (* values (their values in state s).                                       *)
 (***************************************************************************)
-Move(S,b) == /\ Cardinality(S) \in {1,2}
-             /\ LET newThisBank  == who_is_on_bank[b] \ S
-                    newOtherBank == who_is_on_bank[OtherBank(b)] \cup S
-                IN  /\ IsSafe(newThisBank) 
-                    /\ IsSafe(newOtherBank)
-                    /\ bank_of_boat' = OtherBank(b)
-                    /\ who_is_on_bank' = 
-                         [i \in {"E","W"} |-> IF i = b THEN newThisBank 
+Move(S,b) ≜ ∧ Cardinality(S) ∈ {1,2}
+            ∧ LET newThisBank  ≜ who_is_on_bank[b] \ S
+                    newOtherBank ≜ who_is_on_bank[OtherBank(b)] ∪ S
+                IN  ∧ IsSafe(newThisBank) 
+                    ∧ IsSafe(newOtherBank)
+                    ∧ bank_of_boat' = OtherBank(b)
+                    ∧ who_is_on_bank' = 
+                         [i ∈ {"E","W"} ↦ IF i = b THEN newThisBank 
                                                        ELSE newOtherBank]    
 
 (***************************************************************************)
@@ -185,7 +185,7 @@ Move(S,b) == /\ Cardinality(S) \in {1,2}
 (*                                                                         *)
 (* asserts that A(x) is true for at least one value x in the set T.        *)
 (***************************************************************************)
-Next == \E S \in SUBSET who_is_on_bank[bank_of_boat] : 
+Next ≜ ∃ S ∈ SUBSET who_is_on_bank[bank_of_boat] : 
             Move(S, bank_of_boat)
 
 (***************************************************************************)
@@ -217,7 +217,7 @@ Next == \E S \in SUBSET who_is_on_bank[bank_of_boat] :
 (* This problem was proposed to me by Jay Misra, who then suggested        *)
 (* improvements to my first version of the spec.                           *)
 (***************************************************************************)                  
-Solution == who_is_on_bank["E"] /= {}
+Solution ≜ who_is_on_bank["E"] ≠ {}
 
 =============================================================================
 \* Modification History

@@ -90,10 +90,10 @@ EXTENDS Integers, TLAPS
 (***************************************************************************)
 CONSTANT Value, Acceptor, Quorum
 
-ASSUME QA == /\ \A Q \in Quorum : Q \subseteq Acceptor 
-             /\ \A Q1, Q2 \in Quorum : Q1 \cap Q2 # {} 
+ASSUME QA ≜ ∧ ∀ Q ∈ Quorum : Q ⊆ Acceptor 
+            ∧ ∀ Q1, Q2 ∈ Quorum : Q1 ∩ Q2 ≠ {} 
                                                                      
-Ballot == Nat
+Ballot ≜ ℕ
 
 (***************************************************************************)
 (* We are going to have a leader process for each ballot and an acceptor   *)
@@ -103,12 +103,12 @@ Ballot == Nat
 (* good measure, we also assume that -1 is not an acceptor, although that  *)
 (* is probably not necessary.                                              *)
 (***************************************************************************)
-ASSUME BallotAssump == (Ballot \cup {-1}) \cap Acceptor = {}
+ASSUME BallotAssump ≜ (Ballot ∪ {-1}) ∩ Acceptor = {}
 
 (***************************************************************************)
 (* We define None to be an unspecified value that is not in the set Value. *)
 (***************************************************************************)
-None == CHOOSE v : v \notin Value
+None ≜ CHOOSE v : v ∉ Value
  
 (***************************************************************************)
 (* This is a message-passing algorithm, so we begin by defining the set    *)
@@ -116,12 +116,12 @@ None == CHOOSE v : v \notin Value
 (* with the actions that send them.  A message m with m.type = "1a" is     *)
 (* called a 1a message, and similarly for the other message types.         *)
 (***************************************************************************)
-Message ==      [type : {"1a"}, bal : Ballot]
-           \cup [type : {"1b"}, acc : Acceptor, bal : Ballot, 
-                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
-           \cup [type : {"1c"}, bal : Ballot, val : Value]
-           \cup [type : {"2a"}, bal : Ballot, val : Value]
-           \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
+Message ≜      [type : {"1a"}, bal : Ballot]
+           ∪ [type : {"1b"}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot ∪ {-1}, mval : Value ∪ {None}]
+           ∪ [type : {"1c"}, bal : Ballot, val : Value]
+           ∪ [type : {"2a"}, bal : Ballot, val : Value]
+           ∪ [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 -----------------------------------------------------------------------------
 
 
@@ -187,26 +187,26 @@ in the indicated order).
 Here is the PlusCal code for the algorithm, which we call PCon.
 
 --algorithm PCon {
-  variables maxBal  = [a \in Acceptor |-> -1] ,
-            maxVBal = [a \in Acceptor |-> -1] ,
-            maxVVal = [a \in Acceptor |-> None] ,
+  variables maxBal  = [a ∈ Acceptor ↦ -1] ,
+            maxVBal = [a ∈ Acceptor ↦ -1] ,
+            maxVVal = [a ∈ Acceptor ↦ None] ,
             msgs = {}
   define {
-    sentMsgs(t, b) == {m \in msgs : (m.type = t) /\ (m.bal = b)}
+    sentMsgs(t, b) ≜ {m ∈ msgs : (m.type = t) ∧ (m.bal = b)}
     
     (***********************************************************************)
     (* We define ShowsSafeAt so that ShowsSafeAt(Q, b, v) is true for a    *)
     (* quorum Q iff msgs contain ballot-b 1b messages from the acceptors   *)
     (* in Q showing that v is safe at b.                                   *)
     (***********************************************************************)
-    ShowsSafeAt(Q, b, v) ==
-      LET Q1b == {m \in sentMsgs("1b", b) : m.acc \in Q}
-      IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
-          /\ \/ \A m \in Q1b : m.mbal = -1
-             \/ \E m1c \in msgs :
-                  /\ m1c = [type |-> "1c", bal |-> m1c.bal, val |-> v] 
-                  /\ \A m \in Q1b : /\ m1c.bal \geq m.mbal 
-                                    /\ (m1c.bal = m.mbal) => (m.mval = v)
+    ShowsSafeAt(Q, b, v) ≜
+      LET Q1b ≜ {m ∈ sentMsgs("1b", b) : m.acc ∈ Q}
+      IN  ∧ ∀ a ∈ Q : ∃ m ∈ Q1b : m.acc = a 
+          ∧ ∨ ∀ m ∈ Q1b : m.mbal = -1
+            ∨ ∃ m1c ∈ msgs :
+                  ∧ m1c = [type ↦ "1c", bal ↦ m1c.bal, val ↦ v] 
+                  ∧ ∀ m ∈ Q1b : ∧ m1c.bal ≥ m.mbal 
+                                ∧ (m1c.bal = m.mbal) ⇒ (m.mval = v)
 
     }
   (*************************************************************************)
@@ -214,8 +214,8 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* respectively.  These macros are so simple that they're hardly worth   *)
   (* introducing, but they do make the processes a little easier to read.  *)
   (*************************************************************************)
-  macro SendMessage(m) { msgs := msgs \cup {m} }
-  macro SendSetOfMessages(S) { msgs := msgs \cup S }
+  macro SendMessage(m) { msgs ≔ msgs ∪ {m} }
+  macro SendSetOfMessages(S) { msgs ≔ msgs ∪ S }
   
   (*************************************************************************)
   (*                               The Actions                             *)
@@ -224,7 +224,7 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* The leader for process `self' can execute a Phase1a() action, which   *)
   (* sends the ballot `self' 1a message.                                   *)
   (*************************************************************************)
-  macro Phase1a() { SendMessage([type |-> "1a", bal |-> self])}
+  macro Phase1a() { SendMessage([type ↦ "1a", bal ↦ self])}
   
   (*************************************************************************)
   (* Acceptor `self' can perform a Phase1b(b) action, which is enabled iff *)
@@ -233,10 +233,10 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* and maxVVal[self].                                                    *)
   (*************************************************************************)
   macro Phase1b(b) {
-    when (b > maxBal[self]) /\ (sentMsgs("1a", b) # {});
-    maxBal[self] := b;
-    SendMessage([type |-> "1b", acc |-> self, bal |-> b, 
-                        mbal |-> maxVBal[self], mval |-> maxVVal[self]]) ;
+    when (b > maxBal[self]) ∧ (sentMsgs("1a", b) ≠ {});
+    maxBal[self] ≔ b;
+    SendMessage([type ↦ "1b", acc ↦ self, bal ↦ b, 
+                        mbal ↦ maxVBal[self], mval ↦ maxVVal[self]]) ;
    }
 
   (*************************************************************************)
@@ -252,8 +252,8 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* will, of course, be encoded in a single physical message.)            *)
   (*************************************************************************)
   macro Phase1c(S) {
-    when \A v \in S : \E Q \in Quorum : ShowsSafeAt(Q, self, v) ;
-    SendSetOfMessages({[type |-> "1c", bal |-> self, val |-> v] : v \in S}) 
+    when ∀ v ∈ S : ∃ Q ∈ Quorum : ShowsSafeAt(Q, self, v) ;
+    SendSetOfMessages({[type ↦ "1c", bal ↦ self, val ↦ v] : v ∈ S}) 
    }
 
   (*************************************************************************)
@@ -263,9 +263,9 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* field v.                                                              *)
   (*************************************************************************)
   macro Phase2a(v) {
-    when /\ sentMsgs("2a", self) = {} 
-         /\ [type |-> "1c", bal |-> self, val |-> v] \in msgs ;
-   SendMessage([type |-> "2a", bal |-> self, val |-> v]) 
+    when ∧ sentMsgs("2a", self) = {} 
+         ∧ [type ↦ "1c", bal ↦ self, val ↦ v] ∈ msgs ;
+   SendMessage([type ↦ "2a", bal ↦ self, val ↦ v]) 
    }
 
   (*************************************************************************)
@@ -275,12 +275,12 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* are stuttering steps that do not change the value of any variable.    *)
   (*************************************************************************)
   macro Phase2b(b) {
-    when b \geq maxBal[self] ;
-    with (m \in sentMsgs("2a", b)) {
-      maxBal[self]  := b ;
-      maxVBal[self] := b ;
-      maxVVal[self] := m.val;
-      SendMessage([type |-> "2b", acc |-> self, bal |-> b, val |-> m.val])
+    when b ≥ maxBal[self] ;
+    with (m ∈ sentMsgs("2a", b)) {
+      maxBal[self]  ≔ b ;
+      maxVBal[self] ≔ b ;
+      maxVVal[self] ≔ m.val;
+      SendMessage([type ↦ "2b", acc ↦ self, bal ↦ b, val ↦ m.val])
     }
    }
    
@@ -290,9 +290,9 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* or Phase2b action is enabled and executing that enabled action.  If   *)
   (* no such action is enabled, the acceptor does nothing.                 *)
   (*************************************************************************)
-  process (acceptor \in Acceptor) {
+  process (acceptor ∈ Acceptor) {
     acc: while (TRUE) { 
-           with (b \in Ballot) { either Phase1b(b) or Phase2b(b) 
+           with (b ∈ Ballot) { either Phase1b(b) or Phase2b(b) 
           }
     }
    }
@@ -303,11 +303,11 @@ Here is the PlusCal code for the algorithm, which we call PCon.
   (* and performs it atomically.  It does nothing if none of its actions   *)
   (* is enabled.                                                           *)
   (*************************************************************************)
-  process (leader \in Ballot) {
+  process (leader ∈ Ballot) {
     ldr: while (TRUE) {
           either Phase1a() 
-          or     with (S \in SUBSET Value) { Phase1c(S) }
-          or     with (v \in Value) { Phase2a(v) }
+          or     with (S ∈ SUBSET Value) { Phase1c(S) }
+          or     with (v ∈ Value) { Phase2a(v) }
          }
    }
 
@@ -320,57 +320,57 @@ Some blank lines have been deleted.
 VARIABLES maxBal, maxVBal, maxVVal, msgs
 
 (* define statement *)
-sentMsgs(t, b) == {m \in msgs : (m.type = t) /\ (m.bal = b)}
+sentMsgs(t, b) ≜ {m ∈ msgs : (m.type = t) ∧ (m.bal = b)}
 
-ShowsSafeAt(Q, b, v) ==
-  LET Q1b == {m \in sentMsgs("1b", b) : m.acc \in Q}
-  IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a
-      /\ \/ \A m \in Q1b : m.mbal = -1
-         \/ \E m1c \in msgs :
-              /\ m1c = [type |-> "1c", bal |-> m1c.bal, val |-> v]
-              /\ \A m \in Q1b : /\ m1c.bal \geq m.mbal
-                                /\ (m1c.bal = m.mbal) => (m.mval = v)
-
-
-vars == << maxBal, maxVBal, maxVVal, msgs >>
-
-ProcSet == (Acceptor) \cup (Ballot)
-
-Init == (* Global variables *)
-        /\ maxBal = [a \in Acceptor |-> -1]
-        /\ maxVBal = [a \in Acceptor |-> -1]
-        /\ maxVVal = [a \in Acceptor |-> None]
-        /\ msgs = {}
-
-acceptor(self) == \E b \in Ballot:
-                    \/ /\ (b > maxBal[self]) /\ (sentMsgs("1a", b) # {})
-                       /\ maxBal' = [maxBal EXCEPT ![self] = b]
-                       /\ msgs' = (msgs \cup {([type |-> "1b", acc |-> self, bal |-> b,
-                                                       mbal |-> maxVBal[self], mval |-> maxVVal[self]])})
-                       /\ UNCHANGED <<maxVBal, maxVVal>>
-                    \/ /\ b \geq maxBal[self]
-                       /\ \E m \in sentMsgs("2a", b):
-                            /\ maxBal' = [maxBal EXCEPT ![self] = b]
-                            /\ maxVBal' = [maxVBal EXCEPT ![self] = b]
-                            /\ maxVVal' = [maxVVal EXCEPT ![self] = m.val]
-                            /\ msgs' = (msgs \cup {([type |-> "2b", acc |-> self, bal |-> b, val |-> m.val])})
+ShowsSafeAt(Q, b, v) ≜
+  LET Q1b ≜ {m ∈ sentMsgs("1b", b) : m.acc ∈ Q}
+  IN  ∧ ∀ a ∈ Q : ∃ m ∈ Q1b : m.acc = a
+      ∧ ∨ ∀ m ∈ Q1b : m.mbal = -1
+        ∨ ∃ m1c ∈ msgs :
+              ∧ m1c = [type ↦ "1c", bal ↦ m1c.bal, val ↦ v]
+              ∧ ∀ m ∈ Q1b : ∧ m1c.bal ≥ m.mbal
+                            ∧ (m1c.bal = m.mbal) ⇒ (m.mval = v)
 
 
-leader(self) == /\ \/ /\ msgs' = (msgs \cup {([type |-> "1a", bal |-> self])})
-                   \/ /\ \E S \in SUBSET Value:
-                           /\ \A v \in S : \E Q \in Quorum : ShowsSafeAt(Q, self, v)
-                           /\ msgs' = (msgs \cup ({[type |-> "1c", bal |-> self, val |-> v] : v \in S}))
-                   \/ /\ \E v \in Value:
-                           /\ /\ sentMsgs("2a", self) = {}
-                              /\ [type |-> "1c", bal |-> self, val |-> v] \in msgs
-                           /\ msgs' = (msgs \cup {([type |-> "2a", bal |-> self, val |-> v])})
-                /\ UNCHANGED << maxBal, maxVBal, maxVVal >>
+vars ≜ ⟨ maxBal, maxVBal, maxVVal, msgs ⟩
+
+ProcSet ≜ (Acceptor) ∪ (Ballot)
+
+Init ≜ (* Global variables *)
+        ∧ maxBal = [a ∈ Acceptor ↦ -1]
+        ∧ maxVBal = [a ∈ Acceptor ↦ -1]
+        ∧ maxVVal = [a ∈ Acceptor ↦ None]
+        ∧ msgs = {}
+
+acceptor(self) ≜ ∃ b ∈ Ballot:
+                    ∨ ∧ (b > maxBal[self]) ∧ (sentMsgs("1a", b) ≠ {})
+                      ∧ maxBal' = [maxBal EXCEPT ![self] = b]
+                      ∧ msgs' = (msgs ∪ {([type ↦ "1b", acc ↦ self, bal ↦ b,
+                                                       mbal ↦ maxVBal[self], mval ↦ maxVVal[self]])})
+                      ∧ UNCHANGED ⟨maxVBal, maxVVal⟩
+                    ∨ ∧ b ≥ maxBal[self]
+                      ∧ ∃ m ∈ sentMsgs("2a", b):
+                            ∧ maxBal' = [maxBal EXCEPT ![self] = b]
+                            ∧ maxVBal' = [maxVBal EXCEPT ![self] = b]
+                            ∧ maxVVal' = [maxVVal EXCEPT ![self] = m.val]
+                            ∧ msgs' = (msgs ∪ {([type ↦ "2b", acc ↦ self, bal ↦ b, val ↦ m.val])})
 
 
-Next == (\E self \in Acceptor: acceptor(self))
-           \/ (\E self \in Ballot: leader(self))
+leader(self) ≜ ∧ ∨ ∧ msgs' = (msgs ∪ {([type ↦ "1a", bal ↦ self])})
+                 ∨ ∧ ∃ S ∈ SUBSET Value:
+                           ∧ ∀ v ∈ S : ∃ Q ∈ Quorum : ShowsSafeAt(Q, self, v)
+                           ∧ msgs' = (msgs ∪ ({[type ↦ "1c", bal ↦ self, val ↦ v] : v ∈ S}))
+                 ∨ ∧ ∃ v ∈ Value:
+                           ∧ ∧ sentMsgs("2a", self) = {}
+                             ∧ [type ↦ "1c", bal ↦ self, val ↦ v] ∈ msgs
+                           ∧ msgs' = (msgs ∪ {([type ↦ "2a", bal ↦ self, val ↦ v])})
+               ∧ UNCHANGED ⟨ maxBal, maxVBal, maxVVal ⟩
 
-Spec == Init /\ [][Next]_vars
+
+Next ≜ (∃ self ∈ Acceptor: acceptor(self))
+           ∨ (∃ self ∈ Ballot: leader(self))
+
+Spec ≜ Init ∧ □[Next]_vars
 
 \* END TRANSLATION
 -----------------------------------------------------------------------------
@@ -381,58 +381,58 @@ Spec == Init /\ [][Next]_vars
 (* which is the next-state relation we would have written had we specified *)
 (* the algorithm directly in TLA+ rather than in PlusCal.                  *)
 (***************************************************************************)
-Phase1a(self) ==
-  /\ msgs' = (msgs \cup {[type |-> "1a", bal |-> self]})
-  /\ UNCHANGED << maxBal, maxVBal, maxVVal >>
+Phase1a(self) ≜
+  ∧ msgs' = (msgs ∪ {[type ↦ "1a", bal ↦ self]})
+  ∧ UNCHANGED ⟨ maxBal, maxVBal, maxVVal ⟩
 
-Phase1c(self, S) ==
-  /\ \A v \in S : \E Q \in Quorum : ShowsSafeAt(Q, self, v)
-  /\ msgs' = (msgs \cup {[type |-> "1c", bal |-> self, val |-> v] : v \in S})
-  /\ UNCHANGED << maxBal, maxVBal, maxVVal >>
+Phase1c(self, S) ≜
+  ∧ ∀ v ∈ S : ∃ Q ∈ Quorum : ShowsSafeAt(Q, self, v)
+  ∧ msgs' = (msgs ∪ {[type ↦ "1c", bal ↦ self, val ↦ v] : v ∈ S})
+  ∧ UNCHANGED ⟨ maxBal, maxVBal, maxVVal ⟩
 
-Phase2a(self, v) ==
-  /\ sentMsgs("2a", self) = {}
-  /\ [type |-> "1c", bal |-> self, val |-> v] \in msgs
-  /\ msgs' = (msgs \cup {[type |-> "2a", bal |-> self, val |-> v]})
-  /\ UNCHANGED << maxBal, maxVBal, maxVVal >>
+Phase2a(self, v) ≜
+  ∧ sentMsgs("2a", self) = {}
+  ∧ [type ↦ "1c", bal ↦ self, val ↦ v] ∈ msgs
+  ∧ msgs' = (msgs ∪ {[type ↦ "2a", bal ↦ self, val ↦ v]})
+  ∧ UNCHANGED ⟨ maxBal, maxVBal, maxVVal ⟩
 
-Phase1b(self, b) ==
-  /\ b > maxBal[self]
-  /\ sentMsgs("1a", b) # {}
-  /\ maxBal' = [maxBal EXCEPT ![self] = b]
-  /\ msgs' = msgs \cup {[type |-> "1b", acc |-> self, bal |-> b,
-                         mbal |-> maxVBal[self], mval |-> maxVVal[self]]}
-  /\ UNCHANGED <<maxVBal, maxVVal>>
+Phase1b(self, b) ≜
+  ∧ b > maxBal[self]
+  ∧ sentMsgs("1a", b) ≠ {}
+  ∧ maxBal' = [maxBal EXCEPT ![self] = b]
+  ∧ msgs' = msgs ∪ {[type ↦ "1b", acc ↦ self, bal ↦ b,
+                         mbal ↦ maxVBal[self], mval ↦ maxVVal[self]]}
+  ∧ UNCHANGED ⟨maxVBal, maxVVal⟩
 
-Phase2b(self, b) ==
-  /\ b \geq maxBal[self]
-  /\ \E m \in sentMsgs("2a", b):
-       /\ maxBal' = [maxBal EXCEPT ![self] = b]
-       /\ maxVBal' = [maxVBal EXCEPT ![self] = b]
-       /\ maxVVal' = [maxVVal EXCEPT ![self] = m.val]
-       /\ msgs' = (msgs \cup {[type |-> "2b", acc |-> self,
-                               bal |-> b, val |-> m.val]})
+Phase2b(self, b) ≜
+  ∧ b ≥ maxBal[self]
+  ∧ ∃ m ∈ sentMsgs("2a", b):
+       ∧ maxBal' = [maxBal EXCEPT ![self] = b]
+       ∧ maxVBal' = [maxVBal EXCEPT ![self] = b]
+       ∧ maxVVal' = [maxVVal EXCEPT ![self] = m.val]
+       ∧ msgs' = (msgs ∪ {[type ↦ "2b", acc ↦ self,
+                               bal ↦ b, val ↦ m.val]})
 
-TLANext ==
-  \/ \E self \in Acceptor : 
-        \E b \in Ballot : \/ Phase1b(self, b) 
-                          \/ Phase2b(self,b) 
-  \/ \E self \in Ballot :
-        \/ Phase1a(self)
-        \/ \E S \in SUBSET Value : Phase1c(self, S)
-        \/ \E v \in Value : Phase2a(self, v)
+TLANext ≜
+  ∨ ∃ self ∈ Acceptor : 
+        ∃ b ∈ Ballot : ∨ Phase1b(self, b) 
+                       ∨ Phase2b(self,b) 
+  ∨ ∃ self ∈ Ballot :
+        ∨ Phase1a(self)
+        ∨ ∃ S ∈ SUBSET Value : Phase1c(self, S)
+        ∨ ∃ v ∈ Value : Phase2a(self, v)
 
 (***************************************************************************)
 (* The following theorem specifies the relation between the next-state     *)
 (* relation Next obtained by translating the PlusCal code and the          *)
 (* next-state relation TLANext.                                            *)
 (***************************************************************************)
-THEOREM NextDef == (Next <=> TLANext) 
-<1>2. ASSUME NEW self \in Acceptor
-      PROVE  acceptor(self) <=> TLANext!1!(self) 
+THEOREM NextDef ≜ (Next ⇔ TLANext) 
+<1>2. ASSUME NEW self ∈ Acceptor
+      PROVE  acceptor(self) ⇔ TLANext!1!(self) 
   BY <1>2, BallotAssump DEF acceptor, ProcSet, Phase1b, Phase2b
-<1>3. ASSUME NEW self \in Ballot
-      PROVE  leader(self) <=> TLANext!2!(self) 
+<1>3. ASSUME NEW self ∈ Ballot
+      PROVE  leader(self) ⇔ TLANext!2!(self) 
   BY <1>3, BallotAssump, Zenon DEF leader, ProcSet, Phase1a, Phase1c, Phase2a
 <1>4. QED
   BY <1>2, <1>3 DEF Next, TLANext
@@ -440,20 +440,20 @@ THEOREM NextDef == (Next <=> TLANext)
 (***************************************************************************)
 (* The type invariant.                                                     *)
 (***************************************************************************)
-TypeOK == /\ maxBal  \in [Acceptor -> Ballot \cup {-1}]
-          /\ maxVBal \in [Acceptor -> Ballot \cup {-1}]
-          /\ maxVVal \in [Acceptor -> Value \cup {None}]
-          /\ msgs \subseteq Message    
+TypeOK ≜ ∧ maxBal  ∈ [Acceptor → Ballot ∪ {-1}]
+         ∧ maxVBal ∈ [Acceptor → Ballot ∪ {-1}]
+         ∧ maxVVal ∈ [Acceptor → Value ∪ {None}]
+         ∧ msgs ⊆ Message    
 
 (***************************************************************************)
 (* Here is the definition of the state-function `chosen' that implements   *)
 (* the state-function of the same name in the voting algorithm.            *)
 (***************************************************************************)
-chosen == {v \in Value : \E Q \in Quorum, b \in Ballot :
-                           \A a \in Q : \E m \in msgs : /\ m.type = "2b"
-                                                        /\ m.acc  = a
-                                                        /\ m.bal  = b
-                                                        /\ m.val  = v} 
+chosen ≜ {v ∈ Value : ∃ Q ∈ Quorum, b ∈ Ballot :
+                           ∀ a ∈ Q : ∃ m ∈ msgs : ∧ m.type = "2b"
+                                                  ∧ m.acc  = a
+                                                  ∧ m.bal  = b
+                                                  ∧ m.val  = v} 
 ----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now define the refinement mapping under which this algorithm         *)
@@ -465,9 +465,9 @@ chosen == {v \in Value : \E Q \in Quorum, b \in Ballot :
 (* the array `votes' describing the votes cast by the acceptors is defined *)
 (* as follows.                                                             *)
 (***************************************************************************)
-votes == [a \in Acceptor |->  
-           {<<m.bal, m.val>> : m \in {mm \in msgs: /\ mm.type = "2b"
-                                                   /\ mm.acc = a }}]
+votes ≜ [a ∈ Acceptor ↦  
+           {⟨m.bal, m.val⟩ : m ∈ {mm ∈ msgs: ∧ mm.type = "2b"
+                                             ∧ mm.acc = a }}]
                                                    
 (***************************************************************************)
 (* We now instantiate module Voting, substituting:                         *)
@@ -478,7 +478,7 @@ votes == [a \in Acceptor |->
 (*  - The variable maxBal and the defined state function `votes' for the   *)
 (*    correspondingly-named variables of module Voting.                    *)
 (***************************************************************************)
-V == INSTANCE VoteProof 
+V ≜ INSTANCE VoteProof 
 
 -----------------------------------------------------------------------------
 (***************************************************************************)
@@ -488,43 +488,43 @@ V == INSTANCE VoteProof
 (* statement.  Whether PInv really is an inductive invariant will be       *)
 (* determined only by a rigorous proof.                                    *)
 (***************************************************************************)
-PAccInv == \A a \in Acceptor : 
-             /\ maxBal[a] >= maxVBal[a]
-             /\ \A b \in (maxVBal[a]+1)..(maxBal[a]-1) : V!DidNotVoteIn(a,b)
-             /\ (maxVBal[a] # -1) => V!VotedFor(a, maxVBal[a], maxVVal[a])
+PAccInv ≜ ∀ a ∈ Acceptor : 
+             ∧ maxBal[a] ≥ maxVBal[a]
+             ∧ ∀ b ∈ (maxVBal[a]+1)‥(maxBal[a]-1) : V!DidNotVoteIn(a,b)
+             ∧ (maxVBal[a] ≠ -1) ⇒ V!VotedFor(a, maxVBal[a], maxVVal[a])
              
-P1bInv == \A m \in msgs :
-             (m.type = "1b") => 
-               /\ (maxBal[m.acc] >= m.bal) /\ (m.bal > m.mbal)
-               /\ \A b \in (m.mbal+1)..(m.bal-1) : V!DidNotVoteIn(m.acc,b)
+P1bInv ≜ ∀ m ∈ msgs :
+             (m.type = "1b") ⇒ 
+               ∧ (maxBal[m.acc] ≥ m.bal) ∧ (m.bal > m.mbal)
+               ∧ ∀ b ∈ (m.mbal+1)‥(m.bal-1) : V!DidNotVoteIn(m.acc,b)
 
-P1cInv ==  \A m \in msgs : (m.type = "1c") => V!SafeAt(m.bal, m.val)
+P1cInv ≜  ∀ m ∈ msgs : (m.type = "1c") ⇒ V!SafeAt(m.bal, m.val)
 
-P2aInv == \A m \in msgs : 
-            (m.type = "2a") => \E m1c \in msgs : /\ m1c.type = "1c"
-                                                 /\ m1c.bal = m.bal 
-                                                 /\ m1c.val = m.val
+P2aInv ≜ ∀ m ∈ msgs : 
+            (m.type = "2a") ⇒ ∃ m1c ∈ msgs : ∧ m1c.type = "1c"
+                                             ∧ m1c.bal = m.bal 
+                                             ∧ m1c.val = m.val
 (***************************************************************************)
 (* The following theorem is interesting in its own right.  It essentially  *)
 (* asserts the correctness of the definition of ShowsSafeAt.               *)
 (***************************************************************************)
-THEOREM PT1 == TypeOK /\ P1bInv /\ P1cInv =>
-                 \A Q \in Quorum, b \in Ballot, v \in Value :
-                     ShowsSafeAt(Q, b, v) => V!SafeAt(b, v) 
+THEOREM PT1 ≜ TypeOK ∧ P1bInv ∧ P1cInv ⇒
+                 ∀ Q ∈ Quorum, b ∈ Ballot, v ∈ Value :
+                     ShowsSafeAt(Q, b, v) ⇒ V!SafeAt(b, v) 
 
-PInv == TypeOK /\ PAccInv /\ P1bInv /\ P1cInv /\ P2aInv  
+PInv ≜ TypeOK ∧ PAccInv ∧ P1bInv ∧ P1cInv ∧ P2aInv  
 
-THEOREM Invariance == Spec => []PInv
+THEOREM Invariance ≜ Spec ⇒ □PInv
 
-AbstractSpec == V!Spec
-THEOREM Implementation == Spec => V!Spec
+AbstractSpec ≜ V!Spec
+THEOREM Implementation ≜ Spec ⇒ V!Spec
 
 (***************************************************************************)
 (* The following result shows that our definition of `chosen' is the       *)
 (* correct one, because it implements the state-function `chosen' of the   *)
 (* voting algorithm.                                                       *)
 (***************************************************************************)
-THEOREM Spec => [](chosen = V!chosen)
+THEOREM Spec ⇒ □(chosen = V!chosen)
 
 (***************************************************************************)
 (* The four theorems above have been checked by TLC for a model with 3     *)
@@ -610,4 +610,3 @@ CSpec == /\ Init
                                /\ WF_vars(Phase2bForBallot(a, bb))
 
 CLiveness == (\A m \in msgs : (m.type = "1a") => (m.bal < bb))~>(chosen # {})
-

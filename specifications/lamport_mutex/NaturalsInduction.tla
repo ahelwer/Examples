@@ -24,18 +24,18 @@ EXTENDS Integers, TLAPS
 (* name), prove the two hypotheses of the theorem, and then hide the       *) 
 (* definition of P when using the theorem.                                 *)
 (***************************************************************************)
-THEOREM NatInduction == 
+THEOREM NatInduction ≜ 
   ASSUME NEW P(_),
          P(0),
-         \A n \in Nat : P(n) => P(n+1)
-  PROVE  \A n \in Nat : P(n)
+         ∀ n ∈ ℕ : P(n) ⇒ P(n+1)
+  PROVE  ∀ n ∈ ℕ : P(n)
 
 (***************************************************************************)
 (* A useful corollary of NatInduction                                      *)
 (***************************************************************************)
-THEOREM DownwardNatInduction == 
-  ASSUME NEW P(_), NEW m \in Nat, P(m),
-         \A n \in 1 .. m : P(n) => P(n-1)
+THEOREM DownwardNatInduction ≜ 
+  ASSUME NEW P(_), NEW m ∈ ℕ, P(m),
+         ∀ n ∈ 1 ‥ m : P(n) ⇒ P(n-1)
   PROVE  P(0)
 
 (***************************************************************************)
@@ -43,10 +43,10 @@ THEOREM DownwardNatInduction ==
 (* also known as course-of-values induction, where the induction           *)
 (* hypothesis is available for all strictly smaller natural numbers.       *)
 (***************************************************************************)
-THEOREM GeneralNatInduction ==
+THEOREM GeneralNatInduction ≜
           ASSUME NEW P(_),
-                 \A n \in Nat : (\A m \in 0..(n-1) : P(m)) => P(n)
-          PROVE  \A n \in Nat : P(n)
+                 ∀ n ∈ ℕ : (∀ m ∈ 0‥(n-1) : P(m)) ⇒ P(n)
+          PROVE  ∀ n ∈ ℕ : P(n)
 
 (***************************************************************************)
 (* The following theorem expresses the ``least-number principle'':         *)
@@ -55,35 +55,35 @@ THEOREM GeneralNatInduction ==
 (* module WellFoundedInduction as a corollary of the fact that the natural *)
 (* numbers are well ordered, but we give a direct proof.                   *)
 (***************************************************************************)
-THEOREM SmallestNatural ==
-  ASSUME NEW P(_), NEW n \in Nat, P(n)
-  PROVE  \E m \in Nat : /\ P(m)
-                        /\ \A k \in 0 .. m-1 : ~ P(k)
+THEOREM SmallestNatural ≜
+  ASSUME NEW P(_), NEW n ∈ ℕ, P(n)
+  PROVE  ∃ m ∈ ℕ : ∧ P(m)
+                   ∧ ∀ k ∈ 0 ‥ m-1 : ¬ P(k)
 
 (***************************************************************************)
 (* The following theorem says that a recursively defined function f over   *)
 (* the natural numbers is well-defined if for every n \in Nat the          *)
 (* definition of f[n] depends only on arguments smaller than n.            *)
 (***************************************************************************)
-THEOREM RecursiveFcnOfNat ==
+THEOREM RecursiveFcnOfNat ≜
   ASSUME NEW Def(_,_), 
-         ASSUME NEW n \in Nat, NEW g, NEW h,
-                \A i \in 0..(n-1) : g[i] = h[i] 
+         ASSUME NEW n ∈ ℕ, NEW g, NEW h,
+                ∀ i ∈ 0‥(n-1) : g[i] = h[i] 
          PROVE  Def(g, n) = Def(h, n)
-  PROVE  LET f[n \in Nat] == Def(f, n)
-         IN  f = [n \in Nat |-> Def(f, n)]
+  PROVE  LET f[n ∈ ℕ] ≜ Def(f, n)
+         IN  f = [n ∈ ℕ ↦ Def(f, n)]
 
 
 (***************************************************************************)
 (* The following theorem NatInductiveDef is what you use to justify a      *)
 (* function defined by primitive recursion over the naturals.              *)
 (***************************************************************************)
-NatInductiveDefHypothesis(f, f0, Def(_,_)) == 
-   (f =  CHOOSE g : g = [i \in Nat |-> IF i = 0 THEN f0 ELSE Def(g[i-1], i)])
-NatInductiveDefConclusion(f, f0, Def(_,_)) ==
-     f = [i \in Nat |-> IF i = 0 THEN f0 ELSE Def(f[i-1], i)]
+NatInductiveDefHypothesis(f, f0, Def(_,_)) ≜ 
+   (f =  CHOOSE g : g = [i ∈ ℕ ↦ IF i = 0 THEN f0 ELSE Def(g[i-1], i)])
+NatInductiveDefConclusion(f, f0, Def(_,_)) ≜
+     f = [i ∈ ℕ ↦ IF i = 0 THEN f0 ELSE Def(f[i-1], i)]
 
-THEOREM NatInductiveDef ==
+THEOREM NatInductiveDef ≜
   ASSUME NEW Def(_,_), NEW f, NEW f0,
          NatInductiveDefHypothesis(f, f0, Def)
   PROVE  NatInductiveDefConclusion(f, f0, Def)
@@ -93,33 +93,33 @@ THEOREM NatInductiveDef ==
 (* The following two theorems allow you to prove the type of a recursively *)
 (* defined function over the natural numbers.                              *)
 (***************************************************************************)
-THEOREM RecursiveFcnOfNatType ==
-  ASSUME NEW f, NEW S, NEW Def(_,_), f = [n \in Nat |-> Def(f,n)],
-         ASSUME NEW n \in Nat, NEW g, \A i \in 0 .. n-1 : g[i] \in S
-         PROVE  Def(g,n) \in S
-  PROVE  f \in [Nat -> S]
+THEOREM RecursiveFcnOfNatType ≜
+  ASSUME NEW f, NEW S, NEW Def(_,_), f = [n ∈ ℕ ↦ Def(f,n)],
+         ASSUME NEW n ∈ ℕ, NEW g, ∀ i ∈ 0 ‥ n-1 : g[i] ∈ S
+         PROVE  Def(g,n) ∈ S
+  PROVE  f ∈ [ℕ → S]
 
-THEOREM NatInductiveDefType ==
-  ASSUME NEW Def(_,_), NEW S, NEW f, NEW f0 \in S,
+THEOREM NatInductiveDefType ≜
+  ASSUME NEW Def(_,_), NEW S, NEW f, NEW f0 ∈ S,
          NatInductiveDefConclusion(f, f0, Def),
-         f0 \in S,
-         \A v \in S, n \in Nat \ {0} : Def(v, n) \in S
-  PROVE  f \in [Nat -> S]
+         f0 ∈ S,
+         ∀ v ∈ S, n ∈ ℕ \ {0} : Def(v, n) ∈ S
+  PROVE  f ∈ [ℕ → S]
 
 (***************************************************************************)
 (* The following theorems show uniqueness of functions recursively defined *)
 (* over Nat.                                                               *)
 (***************************************************************************)
-THEOREM RecursiveFcnOfNatUnique ==
+THEOREM RecursiveFcnOfNatUnique ≜
   ASSUME NEW Def(_,_), NEW f, NEW g,
-         f = [n \in Nat |-> Def(f,n)],
-         g = [n \in Nat |-> Def(g,n)],
-         ASSUME NEW n \in Nat, NEW ff, NEW gg,
-                \A i \in 0..(n-1) : ff[i] = gg[i] 
+         f = [n ∈ ℕ ↦ Def(f,n)],
+         g = [n ∈ ℕ ↦ Def(g,n)],
+         ASSUME NEW n ∈ ℕ, NEW ff, NEW gg,
+                ∀ i ∈ 0‥(n-1) : ff[i] = gg[i] 
          PROVE  Def(ff, n) = Def(gg, n)
   PROVE  f = g
 
-THEOREM NatInductiveUnique == 
+THEOREM NatInductiveUnique ≜ 
   ASSUME NEW Def(_,_), NEW f, NEW g, NEW f0,
          NatInductiveDefConclusion(f, f0, Def),
          NatInductiveDefConclusion(g, f0, Def)
@@ -130,24 +130,24 @@ THEOREM NatInductiveUnique ==
 (* functions defined over intervals of natural numbers.                    *)
 (***************************************************************************)
 
-FiniteNatInductiveDefHypothesis(f, c, Def(_,_), m, n) == 
-   (f =  CHOOSE g : g = [i \in m..n |-> IF i = m THEN c ELSE Def(g[i-1], i)])
-FiniteNatInductiveDefConclusion(f, c, Def(_,_), m, n) ==
-     f = [i \in m..n |-> IF i = m THEN c ELSE Def(f[i-1], i)]
+FiniteNatInductiveDefHypothesis(f, c, Def(_,_), m, n) ≜ 
+   (f =  CHOOSE g : g = [i ∈ m‥n ↦ IF i = m THEN c ELSE Def(g[i-1], i)])
+FiniteNatInductiveDefConclusion(f, c, Def(_,_), m, n) ≜
+     f = [i ∈ m‥n ↦ IF i = m THEN c ELSE Def(f[i-1], i)]
                                        
-THEOREM FiniteNatInductiveDef ==
-  ASSUME NEW Def(_,_), NEW f, NEW c, NEW m \in Nat, NEW n \in Nat,
+THEOREM FiniteNatInductiveDef ≜
+  ASSUME NEW Def(_,_), NEW f, NEW c, NEW m ∈ ℕ, NEW n ∈ ℕ,
          FiniteNatInductiveDefHypothesis(f, c, Def, m, n)
   PROVE  FiniteNatInductiveDefConclusion(f, c, Def, m, n)
 
-THEOREM FiniteNatInductiveDefType ==
-  ASSUME NEW S, NEW Def(_,_), NEW f, NEW c \in S, NEW m \in Nat, NEW n \in Nat,
+THEOREM FiniteNatInductiveDefType ≜
+  ASSUME NEW S, NEW Def(_,_), NEW f, NEW c ∈ S, NEW m ∈ ℕ, NEW n ∈ ℕ,
          FiniteNatInductiveDefConclusion(f, c, Def, m, n),
-         \A v \in S, i \in (m+1) .. n : Def(v,i) \in S
-  PROVE  f \in [m..n -> S]
+         ∀ v ∈ S, i ∈ (m+1) ‥ n : Def(v,i) ∈ S
+  PROVE  f ∈ [m‥n → S]
 
-THEOREM FiniteNatInductiveUnique == 
-  ASSUME NEW Def(_,_), NEW f, NEW g, NEW c, NEW m \in Nat, NEW n \in Nat,
+THEOREM FiniteNatInductiveUnique ≜ 
+  ASSUME NEW Def(_,_), NEW f, NEW g, NEW c, NEW m ∈ ℕ, NEW n ∈ ℕ,
          FiniteNatInductiveDefConclusion(f, c, Def, m, n),
          FiniteNatInductiveDefConclusion(g, c, Def, m, n)
   PROVE  f = g

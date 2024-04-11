@@ -3,38 +3,38 @@ EXTENDS Naturals
 CONSTANTS Data
 VARIABLES sBit, sAck, rBit, sent, rcvd  
 -------------------------------------------------------------
-ABCInit == /\ sBit \in {0, 1}
-           /\ sAck = sBit
-           /\ rBit = sBit
-           /\ sent \in Data
-           /\ rcvd \in Data
+ABCInit ≜ ∧ sBit ∈ {0, 1}
+          ∧ sAck = sBit
+          ∧ rBit = sBit
+          ∧ sent ∈ Data
+          ∧ rcvd ∈ Data
 
-CSndNewValue(d) == /\ sAck = sBit
-                   /\ sent' = d
-                   /\ sBit' = 1 - sBit
-                   /\ UNCHANGED <<sAck, rBit, rcvd>>
+CSndNewValue(d) ≜ ∧ sAck = sBit
+                  ∧ sent' = d
+                  ∧ sBit' = 1 - sBit
+                  ∧ UNCHANGED ⟨sAck, rBit, rcvd⟩
 
-CRcvMsg == /\ rBit # sBit 
-           /\ rBit' = sBit
-           /\ rcvd' = sent
-           /\ UNCHANGED <<sBit, sAck, sent>>
+CRcvMsg ≜ ∧ rBit ≠ sBit 
+          ∧ rBit' = sBit
+          ∧ rcvd' = sent
+          ∧ UNCHANGED ⟨sBit, sAck, sent⟩
 
-CRcvAck == /\ rBit # sAck
-           /\ sAck' = rBit
-           /\ UNCHANGED <<sBit, rBit, sent, rcvd>>
+CRcvAck ≜ ∧ rBit ≠ sAck
+          ∧ sAck' = rBit
+          ∧ UNCHANGED ⟨sBit, rBit, sent, rcvd⟩
 
-ABCNext == \/  \E d \in Data : CSndNewValue(d) 
-           \/  CRcvMsg \/ CRcvAck 
+ABCNext ≜ ∨  ∃ d ∈ Data : CSndNewValue(d) 
+          ∨  CRcvMsg ∨ CRcvAck 
 -------------------------------------------------------------
-cvars == <<sBit, sAck, rBit, sent, rcvd>>
+cvars ≜ ⟨sBit, sAck, rBit, sent, rcvd⟩
 
-TypeInv == /\ sBit \in {0, 1}
-           /\ sAck \in {0, 1}
-           /\ rBit \in {0, 1}
-           /\ sent \in Data
-           /\ rcvd \in Data
+TypeInv ≜ ∧ sBit ∈ {0, 1}
+          ∧ sAck ∈ {0, 1}
+          ∧ rBit ∈ {0, 1}
+          ∧ sent ∈ Data
+          ∧ rcvd ∈ Data
 
-ABCFairness == WF_cvars(CRcvMsg) /\ WF_cvars(CRcvAck)   
+ABCFairness ≜ WF_cvars(CRcvMsg) ∧ WF_cvars(CRcvAck)   
 
-ABCSpec == ABCInit /\ [][ABCNext]_cvars /\ ABCFairness
+ABCSpec ≜ ABCInit ∧ □[ABCNext]_cvars ∧ ABCFairness
 ==============================================================

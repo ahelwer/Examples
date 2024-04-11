@@ -12,23 +12,23 @@ EXTENDS Naturals, Sequences
 (***************************************************************************)
 
 CONSTANT N              \** number of queens and size of the board
-ASSUME N \in Nat \ {0}
+ASSUME N ∈ ℕ \ {0}
 
 (* The following predicate determines if queens i and j attack each other
    in a placement of queens (represented by a sequence as above). *)
-Attacks(queens,i,j) ==
-  \/ queens[i] = queens[j]                 \** same column
-  \/ queens[i] - queens[j] = i - j         \** first diagonal
-  \/ queens[j] - queens[i] = i - j         \** second diagonal
+Attacks(queens,i,j) ≜
+  ∨ queens[i] = queens[j]                 \** same column
+  ∨ queens[i] - queens[j] = i - j         \** first diagonal
+  ∨ queens[j] - queens[i] = i - j         \** second diagonal
 
 (* A placement represents a (partial) solution if no two different queens
    attack each other in it. *)
-IsSolution(queens) ==
-  \A i \in 1 .. Len(queens)-1 : \A j \in i+1 .. Len(queens) : 
-       ~ Attacks(queens,i,j) 
+IsSolution(queens) ≜
+  ∀ i ∈ 1 ‥ Len(queens)-1 : ∀ j ∈ i+1 ‥ Len(queens) : 
+       ¬ Attacks(queens,i,j) 
 
 (* Compute the set of solutions of the N-queens problem. *)
-Solutions == { queens \in [1..N -> 1..N] : IsSolution(queens) }
+Solutions ≜ { queens ∈ [1‥N → 1‥N] : IsSolution(queens) }
 
 (***************************************************************************)
 (* We now describe an algorithm that iteratively computes the set of       *)
@@ -44,40 +44,40 @@ Solutions == { queens \in [1..N -> 1..N] : IsSolution(queens) }
 
 VARIABLES todo, sols
 
-Init == /\ todo = { << >> }   \** << >> is a partial (but not full) solution
-        /\ sols = {}          \** no full solution found so far
+Init ≜ ∧ todo = { ⟨ ⟩ }   \** << >> is a partial (but not full) solution
+       ∧ sols = {}          \** no full solution found so far
 
-PlaceQueen == \E queens \in todo :
+PlaceQueen ≜ ∃ queens ∈ todo :
   \** extend some partial solution by placing the next queen
-  LET nxtQ == Len(queens) + 1   \** number of queen to place
-      cols == \** set of columns on which queen can be placed without any
+  LET nxtQ ≜ Len(queens) + 1   \** number of queen to place
+      cols ≜ \** set of columns on which queen can be placed without any
               \** conflict with some queen already placed
-              { c \in 1..N : ~ \E i \in 1 .. Len(queens) :
+              { c ∈ 1‥N : ¬ ∃ i ∈ 1 ‥ Len(queens) :
                                   Attacks( Append(queens, c), i, nxtQ ) }
-      exts == { Append(queens, c) : c \in cols }  \** possible extensions
+      exts ≜ { Append(queens, c) : c ∈ cols }  \** possible extensions
   IN  IF nxtQ = N  \** completed solution
-      THEN /\ todo' = todo \ {queens}
-           /\ sols' = sols \union exts
-      ELSE /\ todo' = (todo \ {queens}) \union exts
-           /\ sols' = sols
+      THEN ∧ todo' = todo \ {queens}
+           ∧ sols' = sols ∪ exts
+      ELSE ∧ todo' = (todo \ {queens}) ∪ exts
+           ∧ sols' = sols
 
-vars == <<todo,sols>>
-Spec == Init /\ [][PlaceQueen]_vars /\ WF_vars(PlaceQueen)
+vars ≜ ⟨todo,sols⟩
+Spec ≜ Init ∧ □[PlaceQueen]_vars ∧ WF_vars(PlaceQueen)
 
-TypeInvariant ==
-  /\ todo \in SUBSET Seq(1 .. N) /\ \A s \in todo : Len(s) < N
-  /\ sols \in SUBSET Seq(1 .. N) /\ \A s \in sols : Len(s) = N
+TypeInvariant ≜
+  ∧ todo ∈ SUBSET Seq(1 ‥ N) ∧ ∀ s ∈ todo : Len(s) < N
+  ∧ sols ∈ SUBSET Seq(1 ‥ N) ∧ ∀ s ∈ sols : Len(s) = N
 
 (* The set of sols contains only solutions, and contains all solutions
    when todo is empty. *)
-Invariant ==
-  /\ sols \subseteq Solutions
-  /\ todo = {} => Solutions \subseteq sols
+Invariant ≜
+  ∧ sols ⊆ Solutions
+  ∧ todo = {} ⇒ Solutions ⊆ sols
 
-Termination == <>(todo = {})
+Termination ≜ ◇(todo = {})
 
 (* Assert that no solutions are ever computed so that TLC displays one *)
-NoSolutions == sols = {}
+NoSolutions ≜ sols = {}
 
 =============================================================================
 \* Modification History

@@ -1,17 +1,17 @@
 ------------------------------ MODULE Naturals ------------------------------ 
-LOCAL R == INSTANCE ProtoReals
+LOCAL R ≜ INSTANCE ProtoReals
 
-Nat == R!Nat
+Nat ≜ R!Nat
 
-a + b == R!+(a, b)
-a - b == R!-(a, b)
-a * b == R!*(a, b)
-a ^ b == R!^(a, b)
-a \leq b == R!\leq(a, b)
-a \geq b == b \leq a
-a < b == (a \leq b) /\ (a # b)
-a > b == b < a
-a .. b == {i \in R!Int : (a \leq i) /\ (i \leq b)}
-a \div b == CHOOSE n \in R!Int : \E r \in 0 .. (b-1) : a =  b * n + r
-a % b    ==  a  -  b * (a \div b)
+a + b ≜ R!+(a, b)
+a - b ≜ R!-(a, b)
+a * b ≜ R!*(a, b)
+a ^ b ≜ R!^(a, b)
+a ≤ b ≜ R!≤(a, b)
+a ≥ b ≜ b ≤ a
+a < b ≜ (a ≤ b) ∧ (a ≠ b)
+a > b ≜ b < a
+a ‥ b ≜ {i ∈ R!Int : (a ≤ i) ∧ (i ≤ b)}
+a ÷ b ≜ CHOOSE n ∈ R!Int : ∃ r ∈ 0 ‥ (b-1) : a =  b * n + r
+a % b    ≜  a  -  b * (a ÷ b)
 =============================================================================

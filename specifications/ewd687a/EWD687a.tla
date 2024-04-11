@@ -106,14 +106,14 @@ CONSTANTS Procs, Leader, Edges
 (* the set of all pairs <<q, p>> such that q can send a computation        *)
 (* message to p.                                                           *)
 (***************************************************************************)
-InEdges(p)  == {e \in Edges : e[2] = p}
+InEdges(p)  ≜ {e ∈ Edges : e[2] = p}
 
 (***************************************************************************)
 (* OutEdges(p) is the set of edges pointing from p.  That is, it is the    *)
 (* set of all pairs <<p, q>> such that p can send computation messages to  *)
 (* q (and q can send acks to p).                                           *)
 (***************************************************************************)
-OutEdges(p) == {e \in Edges : e[1] = p}
+OutEdges(p) ≜ {e ∈ Edges : e[1] = p}
 
 (***************************************************************************)
 (* The following assumption asserts what we have stated in the comments    *)
@@ -123,13 +123,13 @@ OutEdges(p) == {e \in Edges : e[1] = p}
 (* something that was not stated explicitly: that a process can't send     *)
 (* messages to itself, so an edge joins two different processes.           *)
 (***************************************************************************)
-ASSUME  /\ \* Every edge is a pair of distinct processes
-           \A e \in Edges :
-             /\ (e \in Procs \X Procs)
-             /\ (e[1] # e[2])
-        /\ \* The leader is one of the processes.
-           Leader \in Procs        
-        /\ \* The leader has only outgoing edges, so it can't
+ASSUME  ∧ \* Every edge is a pair of distinct processes
+           ∀ e ∈ Edges :
+             ∧ (e ∈ Procs × Procs)
+             ∧ (e[1] ≠ e[2])
+        ∧ \* The leader is one of the processes.
+           Leader ∈ Procs        
+        ∧ \* The leader has only outgoing edges, so it can't
            \* receive computation messages. 
            InEdges(Leader) = {}
 
@@ -144,7 +144,7 @@ ASSUME  /\ \* Every edge is a pair of distinct processes
 (* ordered pair.  The simplest such value is the empty sequence            *)
 (* (zero-tuple) << >>.                                                     *)
 (***************************************************************************)
-NotAnEdge  == << >>
+NotAnEdge  ≜ ⟨ ⟩
 
 (***************************************************************************)
 (* We declare the following variables:                                     *)
@@ -238,7 +238,7 @@ VARIABLES
     (* message ordering does not matter for the correctness of this algo.  *)
     (***********************************************************************)
 
-vars == <<active, msgs, acks, sentUnacked, rcvdUnacked, upEdge>>
+vars ≜ ⟨active, msgs, acks, sentUnacked, rcvdUnacked, upEdge⟩
 
 (***************************************************************************)
 (* TypeOK asserts the "types" of all variables.  The value of variable     *)
@@ -251,23 +251,23 @@ vars == <<active, msgs, acks, sentUnacked, rcvdUnacked, upEdge>>
 (* an edge in Edges.  Moreover, that edge is joining some (other) process  *)
 (* to process p.                                                           *)
 (***************************************************************************)
-TypeOK == /\ active \in [Procs -> BOOLEAN]
-          /\ msgs \in [Edges -> Nat]
-          /\ acks \in [Edges -> Nat]
-          /\ sentUnacked \in [Edges -> Nat]
-          /\ rcvdUnacked \in [Edges -> Nat]
-          /\ upEdge \in [Procs \ {Leader} -> Edges \cup {NotAnEdge}]
-          /\ \A p \in Procs \ {Leader} :
-                upEdge[p] # NotAnEdge => upEdge[p][2] = p
+TypeOK ≜ ∧ active ∈ [Procs → BOOLEAN]
+         ∧ msgs ∈ [Edges → ℕ]
+         ∧ acks ∈ [Edges → ℕ]
+         ∧ sentUnacked ∈ [Edges → ℕ]
+         ∧ rcvdUnacked ∈ [Edges → ℕ]
+         ∧ upEdge ∈ [Procs \ {Leader} → Edges ∪ {NotAnEdge}]
+         ∧ ∀ p ∈ Procs \ {Leader} :
+                upEdge[p] ≠ NotAnEdge ⇒ upEdge[p][2] = p
 
 (***************************************************************************)
 (* A process p is neutral, iff it is idle (not computing) and has received *)
 (* an ack for every message it has sent, and it has sent an ack for every  *)
 (* message it has received.                                                *)
 (***************************************************************************)
-neutral(p) == /\ ~ active[p]
-              /\ \A e \in InEdges(p) : rcvdUnacked[e] = 0
-              /\ \A e \in OutEdges(p) : sentUnacked[e] = 0 
+neutral(p) ≜ ∧ ¬ active[p]
+             ∧ ∀ e ∈ InEdges(p) : rcvdUnacked[e] = 0
+             ∧ ∀ e ∈ OutEdges(p) : sentUnacked[e] = 0 
  
 (***************************************************************************)
 (* The initial predicate Init defines the values of all variables when the *)
@@ -278,12 +278,12 @@ neutral(p) == /\ ~ active[p]
 (* For every non-leader p, the initial value of upEdge[p] is equal to      *)
 (* NotAnEdge.  Thus, the overlay tree is empty.                            *)
 (***************************************************************************)
-Init == /\ active = [p \in Procs |-> p = Leader]
-        /\ msgs = [e \in Edges |-> 0]
-        /\ acks = [e \in Edges |-> 0]
-        /\ sentUnacked = [e \in Edges |-> 0]
-        /\ rcvdUnacked = [e \in Edges |-> 0]
-        /\ upEdge = [p \in Procs \ {Leader} |-> NotAnEdge]
+Init ≜ ∧ active = [p ∈ Procs ↦ p = Leader]
+       ∧ msgs = [e ∈ Edges ↦ 0]
+       ∧ acks = [e ∈ Edges ↦ 0]
+       ∧ sentUnacked = [e ∈ Edges ↦ 0]
+       ∧ rcvdUnacked = [e ∈ Edges ↦ 0]
+       ∧ upEdge = [p ∈ Procs \ {Leader} ↦ NotAnEdge]
  
 ----------------------------------------------------------------------------
 
@@ -295,11 +295,11 @@ Init == /\ active = [p \in Procs |-> p = Leader]
 (* message causes p to expect the receipt of an ack on the same edge on    *)
 (* which p sent the (computational) message.                               *)
 (***************************************************************************)
-SendMsg(p) == /\ active[p]
-              /\ \E e \in OutEdges(p) : 
-                     /\ sentUnacked' = [sentUnacked EXCEPT ![e] = @ + 1] 
-                     /\ msgs' = [msgs EXCEPT ![e] = @ + 1]
-              /\ UNCHANGED <<active, acks, rcvdUnacked, upEdge>>
+SendMsg(p) ≜ ∧ active[p]
+             ∧ ∃ e ∈ OutEdges(p) : 
+                     ∧ sentUnacked' = [sentUnacked EXCEPT ![e] = @ + 1] 
+                     ∧ msgs' = [msgs EXCEPT ![e] = @ + 1]
+             ∧ UNCHANGED ⟨active, acks, rcvdUnacked, upEdge⟩
                   
 (***************************************************************************)
 (* The  RcvAck  subaction describes what a process p does when an ack is   *)
@@ -307,11 +307,11 @@ SendMsg(p) == /\ active[p]
 (* receipt of the acknowledgment also makes p decrement the number of      *)
 (* expected acks on that edge.                                             *)
 (***************************************************************************)
-RcvAck(p) == \E e \in OutEdges(p) :
-                  /\ acks[e] > 0
-                  /\ acks' = [acks EXCEPT ![e] = @ - 1]
-                  /\ sentUnacked' = [sentUnacked EXCEPT ![e] = @ - 1]
-                  /\ UNCHANGED <<active, msgs, rcvdUnacked, upEdge>>
+RcvAck(p) ≜ ∃ e ∈ OutEdges(p) :
+                  ∧ acks[e] > 0
+                  ∧ acks' = [acks EXCEPT ![e] = @ - 1]
+                  ∧ sentUnacked' = [sentUnacked EXCEPT ![e] = @ - 1]
+                  ∧ UNCHANGED ⟨active, msgs, rcvdUnacked, upEdge⟩
 
 ----------------------------------------------------------------------------
 
@@ -333,24 +333,24 @@ RcvAck(p) == \E e \in OutEdges(p) :
 (* it removes itself from the overlay tree by setting the value of         *)
 (* upEdge[p] to NotAnEdge.                                                 *)
 (***************************************************************************)
-SendAck(p) == /\ \E e \in InEdges(p) :
-                     /\ rcvdUnacked[e] > 0
+SendAck(p) ≜ ∧ ∃ e ∈ InEdges(p) :
+                     ∧ rcvdUnacked[e] > 0
                      \* 1. q *not* the parent of p (intentionally vacuously true).
-                     /\ (e = upEdge[p]) =>
+                     ∧ (e = upEdge[p]) ⇒
                         \* 2a. q parent and q is expecting more than one ack from p.
-                        \/ rcvdUnacked[e] > 1
+                        ∨ rcvdUnacked[e] > 1
                         \* 2b. q parent and p is neutral after sending the ack
                         \*     (neutral(p)' implied by neutral(p) while e is ignored).
-                        \/ /\ ~ active[p]
-                           /\ \A d \in InEdges(p) \ {e} : rcvdUnacked[d] = 0
-                           /\ \A d \in OutEdges(p) : sentUnacked[d] = 0
+                        ∨ ∧ ¬ active[p]
+                          ∧ ∀ d ∈ InEdges(p) \ {e} : rcvdUnacked[d] = 0
+                          ∧ ∀ d ∈ OutEdges(p) : sentUnacked[d] = 0
                            \* Observe the similarity of the above three conjuncts with neutral(p) above.
-                     /\ rcvdUnacked' = [rcvdUnacked EXCEPT ![e] = @ - 1] 
-                     /\ acks' = [acks EXCEPT ![e] = @ + 1]
-              /\ UNCHANGED <<active, msgs, sentUnacked>>
+                     ∧ rcvdUnacked' = [rcvdUnacked EXCEPT ![e] = @ - 1] 
+                     ∧ acks' = [acks EXCEPT ![e] = @ + 1]
+             ∧ UNCHANGED ⟨active, msgs, sentUnacked⟩
               \* Note that no check for p = Leader is needed because the
               \* leader never sends acks, due to  InEdges(Leader) = {} .
-              /\ UP:: upEdge' = IF neutral(p)' THEN [upEdge EXCEPT ![p] = NotAnEdge]
+             ∧ UP∷ upEdge' = IF neutral(p)' THEN [upEdge EXCEPT ![p] = NotAnEdge]
                                                ELSE upEdge
  
 (***************************************************************************)
@@ -364,16 +364,16 @@ SendAck(p) == /\ \E e \in InEdges(p) :
 (* message, the edge e becomes p's upEdge.  In other words, process        *)
 (* upEdge[p][1] becomes the parent of process p in the overlay tree.       *)
 (***************************************************************************)
-RcvMsg(p) == \E e \in InEdges(p) : 
-                  /\ msgs[e] > 0  
-                  /\ msgs' = [msgs EXCEPT ![e] = @ - 1]  
-                  /\ rcvdUnacked' = [rcvdUnacked EXCEPT ![e] = @ + 1]
-                  /\ active' = [active EXCEPT ![p] = TRUE]
+RcvMsg(p) ≜ ∃ e ∈ InEdges(p) : 
+                  ∧ msgs[e] > 0  
+                  ∧ msgs' = [msgs EXCEPT ![e] = @ - 1]  
+                  ∧ rcvdUnacked' = [rcvdUnacked EXCEPT ![e] = @ + 1]
+                  ∧ active' = [active EXCEPT ![p] = TRUE]
                   \* If the process p is neutral, process q becomes the
                   \* parent of p in the overlay tree.
-                  /\ upEdge' = IF neutral(p) THEN [upEdge EXCEPT ![p] = e]
+                  ∧ upEdge' = IF neutral(p) THEN [upEdge EXCEPT ![p] = e]
                                              ELSE upEdge
-                  /\ UNCHANGED <<acks, sentUnacked>>
+                  ∧ UNCHANGED ⟨acks, sentUnacked⟩
  
 (***************************************************************************)
 (* A process p may finish its computation and become idle at any time.     *)
@@ -382,15 +382,15 @@ RcvMsg(p) == \E e \in InEdges(p) :
 (* that p was not a node of the overlay tree when it became idle.  Thus,   *)
 (* there is no need to change upEdge[p] in the  Idle  subaction.           *)
 (***************************************************************************)
-Idle(p) == /\ active' = [active EXCEPT ![p] = FALSE]
-           /\ UNCHANGED <<msgs, acks, sentUnacked, rcvdUnacked, upEdge>>
+Idle(p) ≜ ∧ active' = [active EXCEPT ![p] = FALSE]
+          ∧ UNCHANGED ⟨msgs, acks, sentUnacked, rcvdUnacked, upEdge⟩
 
 ----------------------------------------------------------------------------
            
-Next == \E p \in Procs : SendMsg(p) \/ SendAck(p) \/ RcvMsg(p) \/ RcvAck(p)
-                             \/ Idle(p)
+Next ≜ ∃ p ∈ Procs : SendMsg(p) ∨ SendAck(p) ∨ RcvMsg(p) ∨ RcvAck(p)
+                             ∨ Idle(p)
 
-Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
+Spec ≜ Init ∧ □[Next]_vars ∧ WF_vars(Next)
  
 ----------------------------------------------------------------------------
  
@@ -399,10 +399,10 @@ Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 (* have to be consistent, i.e., the sum of msgs[e], acks[e], and           *)
 (* rcvdUnacked[e] equals sentUnacked[e], for any e in Edges.               *)
 (***************************************************************************)
-CountersConsistent ==
-    [] \A e \in Edges: sentUnacked[e] = rcvdUnacked[e] + acks[e] + msgs[e]
+CountersConsistent ≜
+    □ ∀ e ∈ Edges: sentUnacked[e] = rcvdUnacked[e] + acks[e] + msgs[e]
 
-THEOREM Spec => CountersConsistent
+THEOREM Spec ⇒ CountersConsistent
 
 (***************************************************************************)
 (* The overlay tree is a tree of non-neutral nodes rooted in the leader,   *)
@@ -416,18 +416,18 @@ THEOREM Spec => CountersConsistent
 (* past.  Consequently, the conjunct labelled  N   would have to be        *)
 (* removed from the property  TreeWithRoot  .                              *)
 (***************************************************************************)
-TreeWithRoot ==
-    LET E == {upEdge[p] : p \in DOMAIN upEdge} \ {NotAnEdge}
-        N == {e[1] : e \in E} \cup {e[2] : e \in E}
-        G == INSTANCE Graphs
-        O == G!Transpose([edge |-> E, node |-> N])
-    IN [](
+TreeWithRoot ≜
+    LET E ≜ {upEdge[p] : p ∈ DOMAIN upEdge} \ {NotAnEdge}
+        N ≜ {e[1] : e ∈ E} ∪ {e[2] : e ∈ E}
+        G ≜ INSTANCE Graphs
+        O ≜ G!Transpose([edge ↦ E, node ↦ N])
+    IN □(
           \* O is a tree rooted in the leader.
-          /\ O.edge # {} => G!IsTreeWithRoot(O, Leader)
+          ∧ O.edge ≠ {} ⇒ G!IsTreeWithRoot(O, Leader)
           \* All nodes of the overlay tree are non-neutral.
-          /\ N:: \A n \in O.node: ~neutral(n))
+          ∧ N∷ ∀ n ∈ O.node: ¬neutral(n))
 
-THEOREM Spec => TreeWithRoot
+THEOREM Spec ⇒ TreeWithRoot
 
 ---------------------------------------------------------------------------
 
@@ -436,34 +436,34 @@ THEOREM Spec => TreeWithRoot
 (* The leader detects that the computation has terminated only if (global) *)
 (* termination has actually occurred.                                      *)
 (***************************************************************************)
-DT1Inv == neutral(Leader) => \A p \in Procs \ {Leader} : neutral(p)
+DT1Inv ≜ neutral(Leader) ⇒ ∀ p ∈ Procs \ {Leader} : neutral(p)
 
-THEOREM Spec => []DT1Inv
+THEOREM Spec ⇒ □DT1Inv
 
 (***************************************************************************)
 (* The computation has terminated if all processes (including the leader)  *)
 (* are idle, and there are no messages pending (globally).                 *)
 (***************************************************************************)
-Terminated == /\ \A p \in Procs : ~active[p]
-              /\ \A e \in Edges : msgs[e] = 0
+Terminated ≜ ∧ ∀ p ∈ Procs : ¬active[p]
+             ∧ ∀ e ∈ Edges : msgs[e] = 0
                
 (***************************************************************************)
 (* Main liveness property:                                                 *)
 (* If the computation terminates, then the leader eventually detects it.   *)
 (***************************************************************************)
-DT2 == Terminated ~> neutral(Leader)
+DT2 ≜ Terminated ↝ neutral(Leader)
 
-THEOREM Spec => DT2
+THEOREM Spec ⇒ DT2
 
 -----------------------------------------------------------------------------
 \* Counter-examples to the non-property below can be helpful to understand 
 \* the algorithm.
 
-StableUpEdge ==
+StableUpEdge ≜
     (* The parent of a process in the overlay tree never changes.   This  *)
     (* property is not a property of the algorithm, i.e., a theorem.      *)
-    [][ \A p \in Procs \ {Leader} :
-        (upEdge[p] # NotAnEdge) => upEdge[p] = upEdge'[p] ]_upEdge
+    □[ ∀ p ∈ Procs \ {Leader} :
+        (upEdge[p] ≠ NotAnEdge) ⇒ upEdge[p] = upEdge'[p] ]_upEdge
 
 =============================================================================
 \* Modification History

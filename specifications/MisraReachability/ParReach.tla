@@ -28,11 +28,11 @@ EXTENDS Reachability, Integers, FiniteSets
 (***************************************************************************)
 CONSTANT Root, Procs
 
-ASSUME RootAssump == Root \in Nodes
-ASSUME ProcsAssump == /\ Procs # {}
-                      /\ IsFiniteSet(Procs)
+ASSUME RootAssump ≜ Root ∈ Nodes
+ASSUME ProcsAssump ≜ ∧ Procs ≠ {}
+                     ∧ IsFiniteSet(Procs)
 
-Reachable == ReachableFrom({Root})
+Reachable ≜ ReachableFrom({Root})
   (*************************************************************************)
   (* This definition is copied from module Reachable.  (We don't want to   *)
   (* extend that module because it would lead to name conflicts with the   *)
@@ -69,20 +69,20 @@ simpler.
 
 --algorithm ParallelReachability {
   variables marked = {}, vroot = {Root};
-  fair process (p \in Procs) 
+  fair process (p ∈ Procs) 
     variables u = Root, toVroot = {} ;
-    { a: while (vroot /= {}) 
-       {    with (v \in vroot) { u := v };
-         b: if (u \notin marked)
-              {    marked := marked \cup {u};
-                   toVroot := Succ[u] ;
-                c: while (toVroot /= {})
-                     { with (w \in toVroot) {
-                         vroot := vroot \cup {w} ;
-                         toVroot := toVroot \ {w} }
+    { a: while (vroot ≠ {}) 
+       {    with (v ∈ vroot) { u ≔ v };
+         b: if (u ∉ marked)
+              {    marked ≔ marked ∪ {u};
+                   toVroot ≔ Succ[u] ;
+                c: while (toVroot ≠ {})
+                     { with (w ∈ toVroot) {
+                         vroot ≔ vroot ∪ {w} ;
+                         toVroot ≔ toVroot \ {w} }
                      }
                }
-             else { vroot := vroot \ {u} }     
+             else { vroot ≔ vroot \ {u} }     
        }
     }
 }
@@ -93,61 +93,61 @@ simpler.
 \* BEGIN TRANSLATION   Here is the TLA+ translation of the PlusCal code.
 VARIABLES marked, vroot, pc, u, toVroot
 
-vars == << marked, vroot, pc, u, toVroot >>
+vars ≜ ⟨ marked, vroot, pc, u, toVroot ⟩
 
-ProcSet == (Procs)
+ProcSet ≜ (Procs)
 
-Init == (* Global variables *)
-        /\ marked = {}
-        /\ vroot = {Root}
+Init ≜ (* Global variables *)
+        ∧ marked = {}
+        ∧ vroot = {Root}
         (* Process p *)
-        /\ u = [self \in Procs |-> Root]
-        /\ toVroot = [self \in Procs |-> {}]
-        /\ pc = [self \in ProcSet |-> "a"]
+        ∧ u = [self ∈ Procs ↦ Root]
+        ∧ toVroot = [self ∈ Procs ↦ {}]
+        ∧ pc = [self ∈ ProcSet ↦ "a"]
 
-a(self) == /\ pc[self] = "a"
-           /\ IF vroot /= {}
-                 THEN /\ \E v \in vroot:
+a(self) ≜ ∧ pc[self] = "a"
+          ∧ IF vroot ≠ {}
+                 THEN ∧ ∃ v ∈ vroot:
                            u' = [u EXCEPT ![self] = v]
-                      /\ pc' = [pc EXCEPT ![self] = "b"]
-                 ELSE /\ pc' = [pc EXCEPT ![self] = "Done"]
-                      /\ u' = u
-           /\ UNCHANGED << marked, vroot, toVroot >>
+                      ∧ pc' = [pc EXCEPT ![self] = "b"]
+                 ELSE ∧ pc' = [pc EXCEPT ![self] = "Done"]
+                      ∧ u' = u
+          ∧ UNCHANGED ⟨ marked, vroot, toVroot ⟩
 
-b(self) == /\ pc[self] = "b"
-           /\ IF u[self] \notin marked
-                 THEN /\ marked' = (marked \cup {u[self]})
-                      /\ toVroot' = [toVroot EXCEPT ![self] = Succ[u[self]]]
-                      /\ pc' = [pc EXCEPT ![self] = "c"]
-                      /\ vroot' = vroot
-                 ELSE /\ vroot' = vroot \ {u[self]}
-                      /\ pc' = [pc EXCEPT ![self] = "a"]
-                      /\ UNCHANGED << marked, toVroot >>
-           /\ u' = u
+b(self) ≜ ∧ pc[self] = "b"
+          ∧ IF u[self] ∉ marked
+                 THEN ∧ marked' = (marked ∪ {u[self]})
+                      ∧ toVroot' = [toVroot EXCEPT ![self] = Succ[u[self]]]
+                      ∧ pc' = [pc EXCEPT ![self] = "c"]
+                      ∧ vroot' = vroot
+                 ELSE ∧ vroot' = vroot \ {u[self]}
+                      ∧ pc' = [pc EXCEPT ![self] = "a"]
+                      ∧ UNCHANGED ⟨ marked, toVroot ⟩
+          ∧ u' = u
 
-c(self) == /\ pc[self] = "c"
-           /\ IF toVroot[self] /= {}
-                 THEN /\ \E w \in toVroot[self]:
-                           /\ vroot' = (vroot \cup {w})
-                           /\ toVroot' = [toVroot EXCEPT ![self] = toVroot[self] \ {w}]
-                      /\ pc' = [pc EXCEPT ![self] = "c"]
-                 ELSE /\ pc' = [pc EXCEPT ![self] = "a"]
-                      /\ UNCHANGED << vroot, toVroot >>
-           /\ UNCHANGED << marked, u >>
+c(self) ≜ ∧ pc[self] = "c"
+          ∧ IF toVroot[self] ≠ {}
+                 THEN ∧ ∃ w ∈ toVroot[self]:
+                           ∧ vroot' = (vroot ∪ {w})
+                           ∧ toVroot' = [toVroot EXCEPT ![self] = toVroot[self] \ {w}]
+                      ∧ pc' = [pc EXCEPT ![self] = "c"]
+                 ELSE ∧ pc' = [pc EXCEPT ![self] = "a"]
+                      ∧ UNCHANGED ⟨ vroot, toVroot ⟩
+          ∧ UNCHANGED ⟨ marked, u ⟩
 
-p(self) == a(self) \/ b(self) \/ c(self)
+p(self) ≜ a(self) ∨ b(self) ∨ c(self)
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
-Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
-               /\ UNCHANGED vars
+Terminating ≜ ∧ ∀ self ∈ ProcSet: pc[self] = "Done"
+              ∧ UNCHANGED vars
 
-Next == (\E self \in Procs: p(self))
-           \/ Terminating
+Next ≜ (∃ self ∈ Procs: p(self))
+           ∨ Terminating
 
-Spec == /\ Init /\ [][Next]_vars
-        /\ \A self \in Procs : WF_vars(p(self))
+Spec ≜ ∧ Init ∧ □[Next]_vars
+       ∧ ∀ self ∈ Procs : WF_vars(p(self))
 
-Termination == <>(\A self \in ProcSet: pc[self] = "Done")
+Termination ≜ ◇(∀ self ∈ ProcSet: pc[self] = "Done")
 
 \* END TRANSLATION
 
@@ -170,13 +170,13 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 (* algorithm is correct, given the correctness of Misra's algorithm, is to *)
 (* show that it implements Misra's algorithm.                              *)
 (***************************************************************************)
-Inv == /\ marked \in SUBSET Nodes
-       /\ vroot \in SUBSET Nodes
-       /\ u \in [Procs -> Nodes]
-       /\ toVroot \in [Procs -> SUBSET Nodes]
-       /\ pc \in [Procs -> {"a", "b", "c", "Done"}]
-       /\ \A q \in Procs : /\ (pc[q] \in {"a", "b", "Done"}) => (toVroot[q] = {})
-                           /\ (pc[q] = "b") => (u[q] \in vroot \cup marked)
+Inv ≜ ∧ marked ∈ SUBSET Nodes
+      ∧ vroot ∈ SUBSET Nodes
+      ∧ u ∈ [Procs → Nodes]
+      ∧ toVroot ∈ [Procs → SUBSET Nodes]
+      ∧ pc ∈ [Procs → {"a", "b", "c", "Done"}]
+      ∧ ∀ q ∈ Procs : ∧ (pc[q] ∈ {"a", "b", "Done"}) ⇒ (toVroot[q] = {})
+                      ∧ (pc[q] = "b") ⇒ (u[q] ∈ vroot ∪ marked)
                            
 (***************************************************************************)
 (* To define a refinement mapping from states of the parallel algorithm to *)
@@ -194,16 +194,16 @@ Inv == /\ marked \in SUBSET Nodes
 (* steps implement stuttering steps of Misra's algorithm.) This leads us   *)
 (* to the following definition of vrootBar.                                *)
 (***************************************************************************) 
-vrootBar == vroot \cup UNION {toVroot[i] : i \in Procs}
+vrootBar ≜ vroot ∪ UNION {toVroot[i] : i ∈ Procs}
 
 (***************************************************************************)
 (* Since the variable pc of Misra's algorithm always equals "a" or "Done", *)
 (* and we want it to equal "Done" if and only if the parallel algorithm    *)
 (* has terminated, the definition of pcBar is obvious.                     *)
 (***************************************************************************)
-pcBar == IF \A q \in Procs : pc[q] = "Done" THEN "Done" ELSE "a"
+pcBar ≜ IF ∀ q ∈ Procs : pc[q] = "Done" THEN "Done" ELSE "a"
 
-R == INSTANCE Reachable WITH vroot <- vrootBar, pc <- pcBar
+R ≜ INSTANCE Reachable WITH vroot ← vrootBar, pc ← pcBar
   (*************************************************************************)
   (* For every definition Op in module Reachable, this statement defines   *)
   (* the operator R!Op in the current module to have as its definition the *)
@@ -219,8 +219,8 @@ R == INSTANCE Reachable WITH vroot <- vrootBar, pc <- pcBar
 (* it, use models with behavior specification spec that check the temporal *)
 (* property R!Spec.)                                                       *)
 (***************************************************************************)
-Refines == R!Spec
-THEOREM Spec => Refines
+Refines ≜ R!Spec
+THEOREM Spec ⇒ Refines
 
 (***************************************************************************)
 (* By the definition of formula Spec of module Reachable, this theorem     *)
@@ -231,8 +231,8 @@ THEOREM Spec => Refines
 (* termination).  Module ParReachProofs contains a TLAPS checked proof of  *)
 (* the first theorem.                                                      *)
 (***************************************************************************)
-THEOREM Spec => R!Init /\ [][R!Next]_R!vars
-THEOREM Spec => WF_R!vars(R!Next)
+THEOREM Spec ⇒ R!Init ∧ □[R!Next]_R!vars
+THEOREM Spec ⇒ WF_R!vars(R!Next)
 =============================================================================
 \* Modification History
 \* Last modified Tue Aug 27 14:58:47 PDT 2019 by loki

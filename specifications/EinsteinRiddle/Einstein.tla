@@ -40,29 +40,29 @@
 
 EXTENDS Naturals, FiniteSets
 
-House == 1..5
+House ≜ 1‥5
 
 \* Note that TLC!Permutations has a Java module override and, thus,
 \* would be evaluated faster.  However, TLC!Permutations equals a
 \* set of records whereas Permutation below equals a set of tuples/
 \* sequences.  Also, Permutation expects Cardinality(S) = 5.
-Permutation(S) ==
-    { p \in [ House -> S ] :
-        /\ p[2] \in S \ {p[1]}
-        /\ p[3] \in S \ {p[1], p[2]}
-        /\ p[4] \in S \ {p[1], p[2], p[3]}
-        /\ p[5] \in S \ {p[1], p[2], p[3], p[4]} }
+Permutation(S) ≜
+    { p ∈ [ House → S ] :
+        ∧ p[2] ∈ S \ {p[1]}
+        ∧ p[3] ∈ S \ {p[1], p[2]}
+        ∧ p[4] ∈ S \ {p[1], p[2], p[3]}
+        ∧ p[5] ∈ S \ {p[1], p[2], p[3], p[4]} }
                 
 \* In most specs, the following parameterization would be defined as
 \* constants.  Given that Einstein's riddle has only this
 \* parameterization, the constants are replaced with constant-level
 \* operators.  As a side-effect, TLC evaluates them eagerly at startup, 
 \* and Apalache successfully determines their types.
-NATIONALITIES == Permutation({ "brit", "swede", "dane", "norwegian", "german" })
-DRINKS == Permutation({ "beer", "coffee", "mylk", "tea", "water" })
-COLORS == Permutation({ "red", "white", "blue", "green", "yellow" })
-PETS == Permutation({ "bird", "cat", "dog", "fish", "horse" })
-CIGARS == Permutation({ "blend", "bm", "dh", "pm", "prince" })
+NATIONALITIES ≜ Permutation({ "brit", "swede", "dane", "norwegian", "german" })
+DRINKS ≜ Permutation({ "beer", "coffee", "mylk", "tea", "water" })
+COLORS ≜ Permutation({ "red", "white", "blue", "green", "yellow" })
+PETS ≜ Permutation({ "bird", "cat", "dog", "fish", "horse" })
+CIGARS ≜ Permutation({ "blend", "bm", "dh", "pm", "prince" })
 
 VARIABLES
     \* @type: Int -> Str;
@@ -82,44 +82,44 @@ VARIABLES
 (* Rules *)
 (*********)
 
-BritLivesInTheRedHouse == \E i \in 2..5 : nationality[i] = "brit" /\ colors[i] = "red"
+BritLivesInTheRedHouse ≜ ∃ i ∈ 2‥5 : nationality[i] = "brit" ∧ colors[i] = "red"
 
-SwedeKeepsDogs == \E i \in 2..5 : nationality[i] = "swede" /\ pets[i] = "dog"
+SwedeKeepsDogs ≜ ∃ i ∈ 2‥5 : nationality[i] = "swede" ∧ pets[i] = "dog"
 
-DaneDrinksTea == \E i \in 2..5 : nationality[i] = "dane" /\ drinks[i] = "tea"
+DaneDrinksTea ≜ ∃ i ∈ 2‥5 : nationality[i] = "dane" ∧ drinks[i] = "tea"
 
-GreenLeftOfWhite == \E i \in 1..4 : colors[i] = "green" /\ colors[i + 1] = "white"
+GreenLeftOfWhite ≜ ∃ i ∈ 1‥4 : colors[i] = "green" ∧ colors[i + 1] = "white"
 
-GreenOwnerDrinksCoffee == \E i \in 1..5 \ {3} : colors[i] = "green" /\ drinks[i] = "coffee"
+GreenOwnerDrinksCoffee ≜ ∃ i ∈ 1‥5 \ {3} : colors[i] = "green" ∧ drinks[i] = "coffee"
 
-SmokesPallmallRearsBirds == \E i \in 1..5 : cigars[i] = "pm" /\ pets[i] = "bird"
+SmokesPallmallRearsBirds ≜ ∃ i ∈ 1‥5 : cigars[i] = "pm" ∧ pets[i] = "bird"
 
-YellowOwnerSmokesDunhill == \E i \in 1..5 : colors[i] = "yellow" /\ cigars[i] = "dh"
+YellowOwnerSmokesDunhill ≜ ∃ i ∈ 1‥5 : colors[i] = "yellow" ∧ cigars[i] = "dh"
 
-CenterDrinksMylk == drinks[3] = "mylk"
+CenterDrinksMylk ≜ drinks[3] = "mylk"
 
-NorwegianFirstHouse == nationality[1] = "norwegian"
+NorwegianFirstHouse ≜ nationality[1] = "norwegian"
 
-BlendSmokerLivesNextToCatOwner ==
-    \E i \in 1..4 :
-        \/ cigars[i] = "blend" /\ pets[i + 1] = "cat"
-        \/ pets[i] = "cat" /\ cigars[i + 1] = "blend"
+BlendSmokerLivesNextToCatOwner ≜
+    ∃ i ∈ 1‥4 :
+        ∨ cigars[i] = "blend" ∧ pets[i + 1] = "cat"
+        ∨ pets[i] = "cat" ∧ cigars[i + 1] = "blend"
 
-HorseKeeperLivesNextToDunhillSmoker ==
-    \E i \in 1..4 :
-        \/ cigars[i] = "dh" /\ pets[i + 1] = "horse"
-        \/ pets[i] = "horse" /\ cigars[i + 1] = "dh"
+HorseKeeperLivesNextToDunhillSmoker ≜
+    ∃ i ∈ 1‥4 :
+        ∨ cigars[i] = "dh" ∧ pets[i + 1] = "horse"
+        ∨ pets[i] = "horse" ∧ cigars[i + 1] = "dh"
 
-BluemasterSmokerDrinksBeer == \E i \in 1..5 : cigars[i] = "bm" /\ drinks[i] = "beer"
+BluemasterSmokerDrinksBeer ≜ ∃ i ∈ 1‥5 : cigars[i] = "bm" ∧ drinks[i] = "beer"
 
-GermanSmokesPrince == \E i \in 2..5 : nationality[i] = "german" /\ cigars[i] = "prince"
+GermanSmokesPrince ≜ ∃ i ∈ 2‥5 : nationality[i] = "german" ∧ cigars[i] = "prince"
 
-NorwegianLivesNextToBlueHouse == colors[2] = "blue" \* since the norwegian lives in the first house
+NorwegianLivesNextToBlueHouse ≜ colors[2] = "blue" \* since the norwegian lives in the first house
 
-BlendSmokerHasWaterDrinkingNeighbor ==
-    \E i \in 1..4 :
-        \/ cigars[i] = "blend" /\ drinks[i + 1] = "water"
-        \/ drinks[i] = "water" /\ cigars[i + 1] = "blend"
+BlendSmokerHasWaterDrinkingNeighbor ≜
+    ∃ i ∈ 1‥4 :
+        ∨ cigars[i] = "blend" ∧ drinks[i + 1] = "water"
+        ∨ drinks[i] = "water" ∧ cigars[i + 1] = "blend"
 
 ------------------------------------------------------------
 
@@ -127,41 +127,41 @@ BlendSmokerHasWaterDrinkingNeighbor ==
 (* Solution *)
 (************)
 
-Init ==
-    /\ drinks \in { p \in DRINKS : p[3] = "mylk" }
-    /\ nationality \in { p \in NATIONALITIES : p[1] = "norwegian" }
-    /\ colors \in { p \in COLORS : p[2] = "blue" }
-    /\ pets \in PETS
-    /\ cigars \in CIGARS
+Init ≜
+    ∧ drinks ∈ { p ∈ DRINKS : p[3] = "mylk" }
+    ∧ nationality ∈ { p ∈ NATIONALITIES : p[1] = "norwegian" }
+    ∧ colors ∈ { p ∈ COLORS : p[2] = "blue" }
+    ∧ pets ∈ PETS
+    ∧ cigars ∈ CIGARS
 
 \* Apalache cannot infer the type of `vars' because it could be a sequence or a tuple.
 \* So we explicitely tell Apalache that it is a sequence by adding the following annotation:
 \* @type: Seq(Int -> Str);
-vars == <<nationality, colors, cigars, pets, drinks>>
+vars ≜ ⟨nationality, colors, cigars, pets, drinks⟩
 
-Next ==
+Next ≜
     UNCHANGED vars
 
-Spec == Init /\ [][Next]_vars
+Spec ≜ Init ∧ □[Next]_vars
 
-Solution ==
-    /\ BritLivesInTheRedHouse
-    /\ SwedeKeepsDogs
-    /\ DaneDrinksTea
-    /\ GreenLeftOfWhite
-    /\ GreenOwnerDrinksCoffee
-    /\ SmokesPallmallRearsBirds
-    /\ YellowOwnerSmokesDunhill
-    /\ CenterDrinksMylk
-    /\ NorwegianFirstHouse
-    /\ BlendSmokerLivesNextToCatOwner
-    /\ HorseKeeperLivesNextToDunhillSmoker
-    /\ BluemasterSmokerDrinksBeer
-    /\ GermanSmokesPrince
-    /\ NorwegianLivesNextToBlueHouse
-    /\ BlendSmokerHasWaterDrinkingNeighbor
+Solution ≜
+    ∧ BritLivesInTheRedHouse
+    ∧ SwedeKeepsDogs
+    ∧ DaneDrinksTea
+    ∧ GreenLeftOfWhite
+    ∧ GreenOwnerDrinksCoffee
+    ∧ SmokesPallmallRearsBirds
+    ∧ YellowOwnerSmokesDunhill
+    ∧ CenterDrinksMylk
+    ∧ NorwegianFirstHouse
+    ∧ BlendSmokerLivesNextToCatOwner
+    ∧ HorseKeeperLivesNextToDunhillSmoker
+    ∧ BluemasterSmokerDrinksBeer
+    ∧ GermanSmokesPrince
+    ∧ NorwegianLivesNextToBlueHouse
+    ∧ BlendSmokerHasWaterDrinkingNeighbor
 
-FindSolution == ~Solution
+FindSolution ≜ ¬Solution
 
 \* To find the solution with the `^Apalache^' model-checker, run:
 \* `^apalache-mc check --init=Init --inv=FindSolution --length=0 --run-dir=./outout Einstein.tla^'

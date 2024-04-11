@@ -28,11 +28,11 @@ VARIABLES
     received                \* The blocks received but not yet validated
 
 ASSUME
-    /\ \A data, oldHash, newHash :
-        /\ CalculateHash(data, oldHash, newHash) \in BOOLEAN
-    /\ KeyPair \in [PrivateKey -> PublicKey]
-    /\ GenesisBalance \in Nat
-    /\ Ownership \in [Node -> PrivateKey]
+    ∧ ∀ data, oldHash, newHash :
+        ∧ CalculateHash(data, oldHash, newHash) ∈ BOOLEAN
+    ∧ KeyPair ∈ [PrivateKey → PublicKey]
+    ∧ GenesisBalance ∈ ℕ
+    ∧ Ownership ∈ [Node → PrivateKey]
 
 -----------------------------------------------------------------------------
 
@@ -41,16 +41,16 @@ ASSUME
 (* against public key.                                                     *)
 (***************************************************************************)
 
-SignHash(hash, privateKey) ==
-    [data       |-> hash,
-    signedWith  |-> privateKey]
+SignHash(hash, privateKey) ≜
+    [data       ↦ hash,
+    signedWith  ↦ privateKey]
 
-ValidateSignature(signature, expectedPublicKey, expectedHash) ==
-    LET publicKey == KeyPair[signature.signedWith] IN
-    /\ publicKey = expectedPublicKey
-    /\ signature.data = expectedHash
+ValidateSignature(signature, expectedPublicKey, expectedHash) ≜
+    LET publicKey ≜ KeyPair[signature.signedWith] IN
+    ∧ publicKey = expectedPublicKey
+    ∧ signature.data = expectedHash
 
-Signature ==
+Signature ≜
     [data       : Hash,
     signedWith  : PrivateKey]
 
@@ -58,186 +58,186 @@ Signature ==
 (* Defines the set of protocol-conforming blocks.                          *)
 (***************************************************************************)
 
-AccountBalance == 0 .. GenesisBalance
+AccountBalance ≜ 0 ‥ GenesisBalance
 
-GenesisBlock ==
+GenesisBlock ≜
     [type       : {"genesis"},
     account     : PublicKey,
     balance     : {GenesisBalance}]
 
-SendBlock ==
+SendBlock ≜
     [previous   : Hash,
     balance     : AccountBalance,
     destination : PublicKey,
     type        : {"send"}]
 
-OpenBlock ==
+OpenBlock ≜
     [account    : PublicKey,
     source      : Hash,
     rep         : PublicKey,
     type        : {"open"}]
 
-ReceiveBlock ==
+ReceiveBlock ≜
     [previous   : Hash,
     source      : Hash,
     type        : {"receive"}]
 
-ChangeRepBlock ==
+ChangeRepBlock ≜
     [previous   : Hash,
     rep         : PublicKey,
     type        : {"change"}]
 
-Block ==
+Block ≜
     GenesisBlock
-    \cup SendBlock
-    \cup OpenBlock
-    \cup ReceiveBlock
-    \cup ChangeRepBlock
+    ∪ SendBlock
+    ∪ OpenBlock
+    ∪ ReceiveBlock
+    ∪ ChangeRepBlock
 
-SignedBlock ==
+SignedBlock ≜
     [block      : Block,
     signature   : Signature]
 
-NoBlock == CHOOSE b : b \notin SignedBlock
+NoBlock ≜ CHOOSE b : b ∉ SignedBlock
 
-NoHash == CHOOSE h : h \notin Hash
+NoHash ≜ CHOOSE h : h ∉ Hash
 
-Ledger == [Hash -> SignedBlock \cup {NoBlock}]
+Ledger ≜ [Hash → SignedBlock ∪ {NoBlock}]
 
 (***************************************************************************)
 (* Utility functions to calculate block lattice properties.                *)
 (***************************************************************************)
 
-GenesisBlockExists ==
-    /\ lastHash /= NoHash
+GenesisBlockExists ≜
+    ∧ lastHash ≠ NoHash
 
-IsAccountOpen(ledger, publicKey) ==
-    /\ \E hash \in Hash :
-        LET signedBlock == ledger[hash] IN
-        /\ signedBlock /= NoBlock
-        /\ signedBlock.block.type \in {"genesis", "open"}
-        /\ signedBlock.block.account = publicKey
+IsAccountOpen(ledger, publicKey) ≜
+    ∧ ∃ hash ∈ Hash :
+        LET signedBlock ≜ ledger[hash] IN
+        ∧ signedBlock ≠ NoBlock
+        ∧ signedBlock.block.type ∈ {"genesis", "open"}
+        ∧ signedBlock.block.account = publicKey
 
-IsSendReceived(ledger, sourceHash) ==
-    /\ \E hash \in Hash :
-        LET signedBlock == ledger[hash] IN
-        /\ signedBlock /= NoBlock
-        /\ signedBlock.block.type \in {"open", "receive"}
-        /\ signedBlock.block.source = sourceHash
+IsSendReceived(ledger, sourceHash) ≜
+    ∧ ∃ hash ∈ Hash :
+        LET signedBlock ≜ ledger[hash] IN
+        ∧ signedBlock ≠ NoBlock
+        ∧ signedBlock.block.type ∈ {"open", "receive"}
+        ∧ signedBlock.block.source = sourceHash
 
 RECURSIVE PublicKeyOf(_,_)
-PublicKeyOf(ledger, blockHash) ==
+PublicKeyOf(ledger, blockHash) ≜
     LET
-      signedBlock == ledger[blockHash]
-      block == signedBlock.block
+      signedBlock ≜ ledger[blockHash]
+      block ≜ signedBlock.block
     IN
-    IF block.type \in {"genesis", "open"}
+    IF block.type ∈ {"genesis", "open"}
     THEN block.account
     ELSE PublicKeyOf(ledger, block.previous)
 
-TopBlock(ledger, publicKey) ==
-    CHOOSE hash \in Hash :
-        LET signedBlock == ledger[hash] IN
-        /\ signedBlock /= NoBlock
-        /\ PublicKeyOf(ledger, hash) = publicKey
-        /\ ~\E otherHash \in Hash :
-            LET otherSignedBlock == ledger[otherHash] IN
-            /\ otherSignedBlock /= NoBlock
-            /\ otherSignedBlock.block.type \in {"send", "receive", "change"}
-            /\ otherSignedBlock.block.previous = hash
+TopBlock(ledger, publicKey) ≜
+    CHOOSE hash ∈ Hash :
+        LET signedBlock ≜ ledger[hash] IN
+        ∧ signedBlock ≠ NoBlock
+        ∧ PublicKeyOf(ledger, hash) = publicKey
+        ∧ ¬∃ otherHash ∈ Hash :
+            LET otherSignedBlock ≜ ledger[otherHash] IN
+            ∧ otherSignedBlock ≠ NoBlock
+            ∧ otherSignedBlock.block.type ∈ {"send", "receive", "change"}
+            ∧ otherSignedBlock.block.previous = hash
 
 RECURSIVE BalanceAt(_, _)
 RECURSIVE ValueOfSendBlock(_, _)
 
-BalanceAt(ledger, hash) ==
+BalanceAt(ledger, hash) ≜
     LET
-      signedBlock == ledger[hash]
-      block == signedBlock.block
+      signedBlock ≜ ledger[hash]
+      block ≜ signedBlock.block
     IN
-    CASE block.type = "open" -> ValueOfSendBlock(ledger, block.source)
-    [] block.type = "send" -> block.balance
-    [] block.type = "receive" ->
+    CASE block.type = "open" → ValueOfSendBlock(ledger, block.source)
+    □ block.type = "send" → block.balance
+    □ block.type = "receive" →
         BalanceAt(ledger, block.previous)
         + ValueOfSendBlock(ledger, block.source)
-    [] block.type = "change" -> BalanceAt(ledger, block.previous)
-    [] block.type = "genesis" -> block.balance
+    □ block.type = "change" → BalanceAt(ledger, block.previous)
+    □ block.type = "genesis" → block.balance
 
-ValueOfSendBlock(ledger, hash) ==
+ValueOfSendBlock(ledger, hash) ≜
     LET
-      signedBlock == ledger[hash]
-      block == signedBlock.block
+      signedBlock ≜ ledger[hash]
+      block ≜ signedBlock.block
     IN BalanceAt(ledger, block.previous) - block.balance
  
 (***************************************************************************)
 (* The type & safety invariants.                                           *)
 (***************************************************************************)
 
-TypeInvariant ==
-    /\ lastHash \in Hash \cup {NoHash}
-    /\ distributedLedger \in [Node -> Ledger]
-    /\ received \in [Node -> SUBSET SignedBlock]
+TypeInvariant ≜
+    ∧ lastHash ∈ Hash ∪ {NoHash}
+    ∧ distributedLedger ∈ [Node → Ledger]
+    ∧ received ∈ [Node → SUBSET SignedBlock]
 
-CryptographicInvariant ==
-    /\ \A node \in Node :
-        LET ledger == distributedLedger[node] IN
-        /\ \A hash \in Hash :
-            LET signedBlock == ledger[hash] IN
-            /\ signedBlock /= NoBlock =>
-                LET publicKey == PublicKeyOf(ledger, hash) IN
-                /\ ValidateSignature(
+CryptographicInvariant ≜
+    ∧ ∀ node ∈ Node :
+        LET ledger ≜ distributedLedger[node] IN
+        ∧ ∀ hash ∈ Hash :
+            LET signedBlock ≜ ledger[hash] IN
+            ∧ signedBlock ≠ NoBlock ⇒
+                LET publicKey ≜ PublicKeyOf(ledger, hash) IN
+                ∧ ValidateSignature(
                     signedBlock.signature,
                     publicKey,
                     hash)
 
 RECURSIVE SumBag(_)
-SumBag(B) ==
-    LET S == BagToSet(B) IN
+SumBag(B) ≜
+    LET S ≜ BagToSet(B) IN
     IF S = {}
     THEN 0
     ELSE
-        LET e == CHOOSE x \in S : TRUE IN
-        e + SumBag(B (-) SetToBag({e}))
+        LET e ≜ CHOOSE x ∈ S : TRUE IN
+        e + SumBag(B ⊖ SetToBag({e}))
 
-BalanceInvariant ==
-    /\ \A node \in Node :
+BalanceInvariant ≜
+    ∧ ∀ node ∈ Node :
         LET
-          ledger == distributedLedger[node]
-          openAccounts == {account \in PublicKey : IsAccountOpen(ledger, account)}
-          topBlocks == {TopBlock(ledger, account) : account \in openAccounts}
-          accountBalances ==
-            LET ledgerBalanceAt(hash) == BalanceAt(ledger, hash) IN
+          ledger ≜ distributedLedger[node]
+          openAccounts ≜ {account ∈ PublicKey : IsAccountOpen(ledger, account)}
+          topBlocks ≜ {TopBlock(ledger, account) : account ∈ openAccounts}
+          accountBalances ≜
+            LET ledgerBalanceAt(hash) ≜ BalanceAt(ledger, hash) IN
             BagOfAll(ledgerBalanceAt, SetToBag(topBlocks))
         IN
-        /\ GenesisBlockExists =>
-            /\ SumBag(accountBalances) <= GenesisBalance
+        ∧ GenesisBlockExists ⇒
+            ∧ SumBag(accountBalances) ≤ GenesisBalance
 
-SafetyInvariant ==
-    /\ CryptographicInvariant
+SafetyInvariant ≜
+    ∧ CryptographicInvariant
 
 (***************************************************************************)
 (* Creates the genesis block.                                              *)
 (***************************************************************************)
 
-CreateGenesisBlock(privateKey) ==
+CreateGenesisBlock(privateKey) ≜
     LET
-      publicKey == KeyPair[privateKey]
-      genesisBlock ==
-        [type   |-> "genesis",
-        account |-> publicKey,
-        balance |-> GenesisBalance]
+      publicKey ≜ KeyPair[privateKey]
+      genesisBlock ≜
+        [type   ↦ "genesis",
+        account ↦ publicKey,
+        balance ↦ GenesisBalance]
     IN
-    /\ ~GenesisBlockExists
-    /\ CalculateHash(genesisBlock, lastHash, lastHash')
-    /\ distributedLedger' =
-        LET signedGenesisBlock ==
-            [block      |-> genesisBlock,
-            signature   |-> SignHash(lastHash', privateKey)]
+    ∧ ¬GenesisBlockExists
+    ∧ CalculateHash(genesisBlock, lastHash, lastHash')
+    ∧ distributedLedger' =
+        LET signedGenesisBlock ≜
+            [block      ↦ genesisBlock,
+            signature   ↦ SignHash(lastHash', privateKey)]
         IN
-        [n \in Node |->
+        [n ∈ Node ↦
             [distributedLedger[n] EXCEPT
                 ![lastHash'] =
                     signedGenesisBlock]]
-    /\ UNCHANGED received
+    ∧ UNCHANGED received
 
 (***************************************************************************)
 (* Creation, validation, and confirmation of open blocks. Checks include:  *)
@@ -246,47 +246,47 @@ CreateGenesisBlock(privateKey) ==
 (*  - The source block is a send block to the account being opened         *)
 (***************************************************************************)
 
-ValidateOpenBlock(ledger, block) ==
-    /\ block.type = "open"
-    /\ ledger[block.source] /= NoBlock
-    /\ ledger[block.source].block.type = "send"
-    /\ ledger[block.source].block.destination = block.account
+ValidateOpenBlock(ledger, block) ≜
+    ∧ block.type = "open"
+    ∧ ledger[block.source] ≠ NoBlock
+    ∧ ledger[block.source].block.type = "send"
+    ∧ ledger[block.source].block.destination = block.account
 
-CreateOpenBlock(node) ==
+CreateOpenBlock(node) ≜
     LET
-      privateKey == Ownership[node]
-      publicKey == KeyPair[privateKey]
-      ledger == distributedLedger[node]
+      privateKey ≜ Ownership[node]
+      publicKey ≜ KeyPair[privateKey]
+      ledger ≜ distributedLedger[node]
     IN
-    /\ \E repPublicKey \in PublicKey :
-        /\ \E srcHash \in Hash :
-            LET newOpenBlock ==
-                [account    |-> publicKey,
-                source      |-> srcHash,
-                rep         |-> repPublicKey,
-                type        |-> "open"]
+    ∧ ∃ repPublicKey ∈ PublicKey :
+        ∧ ∃ srcHash ∈ Hash :
+            LET newOpenBlock ≜
+                [account    ↦ publicKey,
+                source      ↦ srcHash,
+                rep         ↦ repPublicKey,
+                type        ↦ "open"]
             IN
-            /\ ValidateOpenBlock(ledger, newOpenBlock)
-            /\ CalculateHash(newOpenBlock, lastHash, lastHash')
-            /\ received' =
-                LET signedOpenBlock ==
-                    [block      |-> newOpenBlock,
-                    signature   |-> SignHash(lastHash', privateKey)]
+            ∧ ValidateOpenBlock(ledger, newOpenBlock)
+            ∧ CalculateHash(newOpenBlock, lastHash, lastHash')
+            ∧ received' =
+                LET signedOpenBlock ≜
+                    [block      ↦ newOpenBlock,
+                    signature   ↦ SignHash(lastHash', privateKey)]
                 IN
-                [n \in Node |->
-                    received[n] \cup {signedOpenBlock}]
-            /\ UNCHANGED distributedLedger
+                [n ∈ Node ↦
+                    received[n] ∪ {signedOpenBlock}]
+            ∧ UNCHANGED distributedLedger
 
-ProcessOpenBlock(node, signedBlock) ==
+ProcessOpenBlock(node, signedBlock) ≜
     LET
-      ledger == distributedLedger[node]
-      block == signedBlock.block
+      ledger ≜ distributedLedger[node]
+      block ≜ signedBlock.block
     IN
-    /\ ValidateOpenBlock(ledger, block)
-    /\ ~IsAccountOpen(ledger, block.account)
-    /\ CalculateHash(block, lastHash, lastHash')
-    /\ ValidateSignature(signedBlock.signature, block.account, lastHash')
-    /\ distributedLedger' =
+    ∧ ValidateOpenBlock(ledger, block)
+    ∧ ¬IsAccountOpen(ledger, block.account)
+    ∧ CalculateHash(block, lastHash, lastHash')
+    ∧ ValidateSignature(signedBlock.signature, block.account, lastHash')
+    ∧ distributedLedger' =
         [distributedLedger EXCEPT
             ![node][lastHash'] = signedBlock]
 
@@ -297,51 +297,51 @@ ProcessOpenBlock(node, signedBlock) ==
 (*  - The value sent is non-negative                                       *)
 (***************************************************************************)
 
-ValidateSendBlock(ledger, block) ==
-    /\ block.type = "send"
-    /\ ledger[block.previous] /= NoBlock
-    /\ block.balance <= BalanceAt(ledger, block.previous)
+ValidateSendBlock(ledger, block) ≜
+    ∧ block.type = "send"
+    ∧ ledger[block.previous] ≠ NoBlock
+    ∧ block.balance ≤ BalanceAt(ledger, block.previous)
 
-CreateSendBlock(node) ==
+CreateSendBlock(node) ≜
     LET
-      privateKey == Ownership[node]
-      publicKey == KeyPair[privateKey]
-      ledger == distributedLedger[node]
+      privateKey ≜ Ownership[node]
+      publicKey ≜ KeyPair[privateKey]
+      ledger ≜ distributedLedger[node]
     IN
-    /\ \E prevHash \in Hash :
-        /\ ledger[prevHash] /= NoBlock
-        /\ PublicKeyOf(ledger, prevHash) = publicKey
-        /\ \E recipient \in PublicKey :
-            /\ \E newBalance \in AccountBalance :
-                LET newSendBlock ==
-                    [previous   |-> prevHash,
-                    balance     |-> newBalance,
-                    destination |-> recipient,
-                    type        |-> "send"]
+    ∧ ∃ prevHash ∈ Hash :
+        ∧ ledger[prevHash] ≠ NoBlock
+        ∧ PublicKeyOf(ledger, prevHash) = publicKey
+        ∧ ∃ recipient ∈ PublicKey :
+            ∧ ∃ newBalance ∈ AccountBalance :
+                LET newSendBlock ≜
+                    [previous   ↦ prevHash,
+                    balance     ↦ newBalance,
+                    destination ↦ recipient,
+                    type        ↦ "send"]
                 IN
-                /\ ValidateSendBlock(ledger, newSendBlock)
-                /\ CalculateHash(newSendBlock, lastHash, lastHash')
-                /\ received' =
-                    LET signedSendBlock ==
-                        [block      |-> newSendBlock,
-                        signature   |-> SignHash(lastHash', privateKey)]
+                ∧ ValidateSendBlock(ledger, newSendBlock)
+                ∧ CalculateHash(newSendBlock, lastHash, lastHash')
+                ∧ received' =
+                    LET signedSendBlock ≜
+                        [block      ↦ newSendBlock,
+                        signature   ↦ SignHash(lastHash', privateKey)]
                     IN
-                    [n \in Node |->
-                        received[n] \cup {signedSendBlock}]
-                /\ UNCHANGED distributedLedger
+                    [n ∈ Node ↦
+                        received[n] ∪ {signedSendBlock}]
+                ∧ UNCHANGED distributedLedger
 
-ProcessSendBlock(node, signedBlock) ==
+ProcessSendBlock(node, signedBlock) ≜
     LET
-      ledger == distributedLedger[node]
-      block == signedBlock.block
+      ledger ≜ distributedLedger[node]
+      block ≜ signedBlock.block
     IN
-    /\ ValidateSendBlock(ledger, block)
-    /\ CalculateHash(block, lastHash, lastHash')
-    /\ ValidateSignature(
+    ∧ ValidateSendBlock(ledger, block)
+    ∧ CalculateHash(block, lastHash, lastHash')
+    ∧ ValidateSignature(
         signedBlock.signature,
         PublicKeyOf(ledger, block.previous),
         lastHash')
-    /\ distributedLedger' =
+    ∧ distributedLedger' =
         [distributedLedger EXCEPT
             ![node][lastHash'] = signedBlock]
 
@@ -353,53 +353,53 @@ ProcessSendBlock(node, signedBlock) ==
 (*  - The source block does not already have a corresponding receive/open  *)
 (***************************************************************************)
 
-ValidateReceiveBlock(ledger, block) ==
-    /\ block.type = "receive"
-    /\ ledger[block.previous] /= NoBlock
-    /\ ledger[block.source] /= NoBlock
-    /\ ledger[block.source].block.type = "send"
-    /\ ledger[block.source].block.destination =
+ValidateReceiveBlock(ledger, block) ≜
+    ∧ block.type = "receive"
+    ∧ ledger[block.previous] ≠ NoBlock
+    ∧ ledger[block.source] ≠ NoBlock
+    ∧ ledger[block.source].block.type = "send"
+    ∧ ledger[block.source].block.destination =
         PublicKeyOf(ledger, block.previous)
 
-CreateReceiveBlock(node) ==
+CreateReceiveBlock(node) ≜
     LET
-      privateKey == Ownership[node]
-      publicKey == KeyPair[privateKey]
-      ledger == distributedLedger[node]
+      privateKey ≜ Ownership[node]
+      publicKey ≜ KeyPair[privateKey]
+      ledger ≜ distributedLedger[node]
     IN
-    /\ \E prevHash \in Hash : 
-        /\ ledger[prevHash] /= NoBlock
-        /\ PublicKeyOf(ledger, prevHash) = publicKey
-        /\ \E srcHash \in Hash :
-            LET newRcvBlock ==
-                [previous   |-> prevHash,
-                source      |-> srcHash,
-                type        |-> "receive"]
+    ∧ ∃ prevHash ∈ Hash : 
+        ∧ ledger[prevHash] ≠ NoBlock
+        ∧ PublicKeyOf(ledger, prevHash) = publicKey
+        ∧ ∃ srcHash ∈ Hash :
+            LET newRcvBlock ≜
+                [previous   ↦ prevHash,
+                source      ↦ srcHash,
+                type        ↦ "receive"]
             IN
-            /\ ValidateReceiveBlock(ledger, newRcvBlock)
-            /\ CalculateHash(newRcvBlock, lastHash, lastHash')
-            /\ received' =
-                LET signedRcvBlock ==
-                    [block      |-> newRcvBlock,
-                    signature   |-> SignHash(lastHash', privateKey)]
+            ∧ ValidateReceiveBlock(ledger, newRcvBlock)
+            ∧ CalculateHash(newRcvBlock, lastHash, lastHash')
+            ∧ received' =
+                LET signedRcvBlock ≜
+                    [block      ↦ newRcvBlock,
+                    signature   ↦ SignHash(lastHash', privateKey)]
                 IN
-                [n \in Node |->
-                    received[n] \cup {signedRcvBlock}]
-            /\ UNCHANGED distributedLedger
+                [n ∈ Node ↦
+                    received[n] ∪ {signedRcvBlock}]
+            ∧ UNCHANGED distributedLedger
 
-ProcessReceiveBlock(node, signedBlock) ==
+ProcessReceiveBlock(node, signedBlock) ≜
     LET
-      block == signedBlock.block
-      ledger == distributedLedger[node]
+      block ≜ signedBlock.block
+      ledger ≜ distributedLedger[node]
     IN
-    /\ ValidateReceiveBlock(ledger, block)
-    /\ ~IsSendReceived(ledger, block.source)
-    /\ CalculateHash(block, lastHash, lastHash')
-    /\ ValidateSignature(
+    ∧ ValidateReceiveBlock(ledger, block)
+    ∧ ¬IsSendReceived(ledger, block.source)
+    ∧ CalculateHash(block, lastHash, lastHash')
+    ∧ ValidateSignature(
         signedBlock.signature,
         PublicKeyOf(ledger, block.previous),
         lastHash')
-    /\ distributedLedger' =
+    ∧ distributedLedger' =
         [distributedLedger EXCEPT
             ![node][lastHash'] = signedBlock]
 
@@ -409,83 +409,82 @@ ProcessReceiveBlock(node, signedBlock) ==
 (*  - The block is signed by the correct account                           *)
 (***************************************************************************)
 
-ValidateChangeBlock(ledger, block) ==
-    /\ block.type = "change"
-    /\ ledger[block.previous] /= NoBlock
+ValidateChangeBlock(ledger, block) ≜
+    ∧ block.type = "change"
+    ∧ ledger[block.previous] ≠ NoBlock
 
-CreateChangeRepBlock(node) ==
+CreateChangeRepBlock(node) ≜
     LET
-      privateKey == Ownership[node]
-      publicKey == KeyPair[privateKey]
-      ledger == distributedLedger[node]
+      privateKey ≜ Ownership[node]
+      publicKey ≜ KeyPair[privateKey]
+      ledger ≜ distributedLedger[node]
     IN
-    /\ \E prevHash \in Hash :
-        /\ ledger[prevHash] /= NoBlock
-        /\ PublicKeyOf(ledger, prevHash) = publicKey
-        /\ \E newRep \in PublicKey :
-            LET newChangeRepBlock ==
-                [previous   |-> prevHash,
-                rep         |-> newRep,
-                type        |-> "change"]
+    ∧ ∃ prevHash ∈ Hash :
+        ∧ ledger[prevHash] ≠ NoBlock
+        ∧ PublicKeyOf(ledger, prevHash) = publicKey
+        ∧ ∃ newRep ∈ PublicKey :
+            LET newChangeRepBlock ≜
+                [previous   ↦ prevHash,
+                rep         ↦ newRep,
+                type        ↦ "change"]
             IN
-            /\ ValidateChangeBlock(ledger, newChangeRepBlock)
-            /\ CalculateHash(newChangeRepBlock, lastHash, lastHash')
-            /\ received' =
-                LET signedChangeRepBlock ==
-                    [block      |-> newChangeRepBlock,
-                    signature   |-> SignHash(lastHash', privateKey)]
+            ∧ ValidateChangeBlock(ledger, newChangeRepBlock)
+            ∧ CalculateHash(newChangeRepBlock, lastHash, lastHash')
+            ∧ received' =
+                LET signedChangeRepBlock ≜
+                    [block      ↦ newChangeRepBlock,
+                    signature   ↦ SignHash(lastHash', privateKey)]
                 IN
-                [n \in Node |->
-                    received[n] \cup {signedChangeRepBlock}]
-            /\ UNCHANGED distributedLedger
+                [n ∈ Node ↦
+                    received[n] ∪ {signedChangeRepBlock}]
+            ∧ UNCHANGED distributedLedger
 
-ProcessChangeRepBlock(node, signedBlock) ==
+ProcessChangeRepBlock(node, signedBlock) ≜
     LET
-      block == signedBlock.block
-      ledger == distributedLedger[node]
+      block ≜ signedBlock.block
+      ledger ≜ distributedLedger[node]
     IN
-    /\ ValidateChangeBlock(ledger, block)
-    /\ CalculateHash(block, lastHash, lastHash')
-    /\ ValidateSignature(
+    ∧ ValidateChangeBlock(ledger, block)
+    ∧ CalculateHash(block, lastHash, lastHash')
+    ∧ ValidateSignature(
         signedBlock.signature,
         PublicKeyOf(ledger, block.previous),
         lastHash')
-    /\ distributedLedger' =
+    ∧ distributedLedger' =
         [distributedLedger EXCEPT
             ![node][lastHash'] = signedBlock]
 
 (***************************************************************************)
 (* Top-level actions.                                                      *)
 (***************************************************************************)
-CreateBlock(node) ==
-    \/ CreateOpenBlock(node)
-    \/ CreateSendBlock(node)
-    \/ CreateReceiveBlock(node)
-    \/ CreateChangeRepBlock(node)
+CreateBlock(node) ≜
+    ∨ CreateOpenBlock(node)
+    ∨ CreateSendBlock(node)
+    ∨ CreateReceiveBlock(node)
+    ∨ CreateChangeRepBlock(node)
 
-ProcessBlock(node) ==
-    /\ \E block \in received[node] :
-        /\  \/ ProcessOpenBlock(node, block)
-            \/ ProcessSendBlock(node, block)
-            \/ ProcessReceiveBlock(node, block)
-            \/ ProcessChangeRepBlock(node, block)
-        /\ received' = [received EXCEPT ![node] = @ \ {block}]
+ProcessBlock(node) ≜
+    ∧ ∃ block ∈ received[node] :
+        ∧  ∨ ProcessOpenBlock(node, block)
+           ∨ ProcessSendBlock(node, block)
+           ∨ ProcessReceiveBlock(node, block)
+           ∨ ProcessChangeRepBlock(node, block)
+        ∧ received' = [received EXCEPT ![node] = @ \ {block}]
 
-Init ==
-    /\ lastHash = NoHash
-    /\ distributedLedger = [n \in Node |-> [h \in Hash |-> NoBlock]]
-    /\ received = [n \in Node |-> {}]
+Init ≜
+    ∧ lastHash = NoHash
+    ∧ distributedLedger = [n ∈ Node ↦ [h ∈ Hash ↦ NoBlock]]
+    ∧ received = [n ∈ Node ↦ {}]
 
-Next ==
-    \/ \E account \in PrivateKey : CreateGenesisBlock(account)
-    \/ \E node \in Node : CreateBlock(node)
-    \/ \E node \in Node : ProcessBlock(node)
+Next ≜
+    ∨ ∃ account ∈ PrivateKey : CreateGenesisBlock(account)
+    ∨ ∃ node ∈ Node : CreateBlock(node)
+    ∨ ∃ node ∈ Node : ProcessBlock(node)
 
-Spec ==
-    /\ Init
-    /\ [][Next]_<<lastHash, distributedLedger, received>>
+Spec ≜
+    ∧ Init
+    ∧ □[Next]_⟨lastHash, distributedLedger, received⟩
 
-THEOREM Safety == Spec => TypeInvariant /\ SafetyInvariant
+THEOREM Safety ≜ Spec ⇒ TypeInvariant ∧ SafetyInvariant
 
 =============================================================================
-

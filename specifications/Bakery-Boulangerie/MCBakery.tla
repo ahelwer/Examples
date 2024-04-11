@@ -1,7 +1,6 @@
 ---------------------------- MODULE MCBakery --------------------------------
 EXTENDS Bakery
 CONSTANT MaxNat
-ASSUME MaxNat \in Nat
-NatOverride == 0 .. MaxNat
+ASSUME MaxNat ∈ ℕ
+NatOverride ≜ 0 ‥ MaxNat
 =============================================================================
-

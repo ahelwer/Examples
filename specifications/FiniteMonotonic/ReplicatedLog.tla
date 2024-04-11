@@ -5,35 +5,34 @@ CONSTANTS Node, Transaction
 
 VARIABLES log, executed
 
-vars == <<log, executed>>
+vars ≜ ⟨log, executed⟩
 
-TypeOK ==
-  /\ log \in Seq(Transaction)
-  /\ executed \in [Node -> Nat]
+TypeOK ≜
+  ∧ log ∈ Seq(Transaction)
+  ∧ executed ∈ [Node → ℕ]
 
-Convergence == \A n \in Node : executed[n] = Len(log)
+Convergence ≜ ∀ n ∈ Node : executed[n] = Len(log)
 
-Init ==
-  /\ log = <<>>
-  /\ executed = [n \in Node |-> 0]
+Init ≜
+  ∧ log = ⟨⟩
+  ∧ executed = [n ∈ Node ↦ 0]
 
-WriteTx(n, tx) ==
-  /\ executed[n] = Len(log)
-  /\ log' = Append(log, tx)
-  /\ executed' = [executed EXCEPT ![n] = @ + 1]
+WriteTx(n, tx) ≜
+  ∧ executed[n] = Len(log)
+  ∧ log' = Append(log, tx)
+  ∧ executed' = [executed EXCEPT ![n] = @ + 1]
 
-ExecuteTx(n) ==
-  /\ executed[n] < Len(log)
-  /\ executed' = [executed EXCEPT ![n] = @ + 1]
-  /\ UNCHANGED log
+ExecuteTx(n) ≜
+  ∧ executed[n] < Len(log)
+  ∧ executed' = [executed EXCEPT ![n] = @ + 1]
+  ∧ UNCHANGED log
 
-Next ==
-  \/ \E n \in Node : \E tx \in Transaction: WriteTx(n, tx)
-  \/ \E n \in Node : ExecuteTx(n)
+Next ≜
+  ∨ ∃ n ∈ Node : ∃ tx ∈ Transaction: WriteTx(n, tx)
+  ∨ ∃ n ∈ Node : ExecuteTx(n)
 
-Spec ==
-  /\ Init
-  /\ [][Next]_vars
+Spec ≜
+  ∧ Init
+  ∧ □[Next]_vars
 
 =============================================================================
-

@@ -22,44 +22,44 @@ VARIABLES pc,     (* program counters            *)
           fd      (* a failure detector reporting to every process 
                      whether some process has crashed              *)
 
-ASSUME N \in Nat
+ASSUME N ∈ ℕ
 
-Proc == 1 .. N    (* all processes, including the crashed ones   *)
+Proc ≜ 1 ‥ N    (* all processes, including the crashed ones   *)
     
 
-M == { "YES", "NO" }
+M ≜ { "YES", "NO" }
 
-vars == << pc, rcvd, sent, fd >>
+vars ≜ ⟨ pc, rcvd, sent, fd ⟩
 
 (* Receive new messages *)
-Receive(self) ==
-  \E r \in SUBSET (Proc \times M):
-        /\ r \subseteq sent
-        /\ rcvd[self] \subseteq r
-        /\ rcvd' = [rcvd EXCEPT ![self] = r ]
+Receive(self) ≜
+  ∃ r ∈ SUBSET (Proc × M):
+        ∧ r ⊆ sent
+        ∧ rcvd[self] ⊆ r
+        ∧ rcvd' = [rcvd EXCEPT ![self] = r ]
 
 (* The failure detectore sends a nondeterministically new prediction to process self. *)
-UpdateFailureDetector(self) ==
-  \/  fd' = [fd EXCEPT ![self] = FALSE ]
-  \/  fd' = [fd EXCEPT ![self] = TRUE ]
+UpdateFailureDetector(self) ≜
+  ∨  fd' = [fd EXCEPT ![self] = FALSE ]
+  ∨  fd' = [fd EXCEPT ![self] = TRUE ]
 
 (* Process self becomes crash. *)
-UponCrash(self) ==
-  /\ pc[self] # "CRASH"
-  /\ pc' = [pc EXCEPT ![self] = "CRASH"]
-  /\ sent' = sent
+UponCrash(self) ≜
+  ∧ pc[self] ≠ "CRASH"
+  ∧ pc' = [pc EXCEPT ![self] = "CRASH"]
+  ∧ sent' = sent
 
 (* Sends a YES message *)
-UponYes(self) ==
-  /\ pc[self] = "YES"
-  /\ pc' = [pc EXCEPT ![self] = "SENT"]
-  /\ sent' = sent \cup { <<self, "YES">> }
+UponYes(self) ≜
+  ∧ pc[self] = "YES"
+  ∧ pc' = [pc EXCEPT ![self] = "SENT"]
+  ∧ sent' = sent ∪ { ⟨self, "YES"⟩ }
 
 (* Sends a NO message *)
-UponNo(self) ==
-  /\ pc[self] = "NO"
-  /\ pc' = [pc EXCEPT ![self] = "SENT"]
-  /\ sent' = sent \cup { <<self, "NO">> }
+UponNo(self) ≜
+  ∧ pc[self] = "NO"
+  ∧ pc' = [pc EXCEPT ![self] = "SENT"]
+  ∧ sent' = sent ∪ { ⟨self, "NO"⟩ }
 
 (* - If process self voted and received a NO messages, it aborts.
    - If process self voted and thinks that some process has crashed,
@@ -67,59 +67,59 @@ UponNo(self) ==
    - If process self voted, received only YES messages from all processes, and 
      thinks that all processes are still correct, it commits.
  *)
-UponSent(self) ==
-  /\ pc[self] = "SENT"
-  /\ ( \/ ( /\ fd'[self] = TRUE
-            /\ pc' = [pc EXCEPT ![self] = "ABORT"] )
-       \/ ( /\ \E msg \in rcvd[self] : msg[2] = "NO"
-            /\ pc' = [pc EXCEPT ![self] = "ABORT"] )
-       \/ ( /\ fd'[self] = FALSE
-            /\ { p \in Proc : ( \E msg \in rcvd'[self] : msg[1] = p /\ msg[2] = "YES") } = Proc
-            /\ pc' = [pc EXCEPT ![self] = "COMMIT"] ) )   
-  /\ sent' = sent
+UponSent(self) ≜
+  ∧ pc[self] = "SENT"
+  ∧ ( ∨ ( ∧ fd'[self] = TRUE
+          ∧ pc' = [pc EXCEPT ![self] = "ABORT"] )
+      ∨ ( ∧ ∃ msg ∈ rcvd[self] : msg[2] = "NO"
+          ∧ pc' = [pc EXCEPT ![self] = "ABORT"] )
+      ∨ ( ∧ fd'[self] = FALSE
+          ∧ { p ∈ Proc : ( ∃ msg ∈ rcvd'[self] : msg[1] = p ∧ msg[2] = "YES") } = Proc
+          ∧ pc' = [pc EXCEPT ![self] = "COMMIT"] ) )   
+  ∧ sent' = sent
         
-Step(self) ==   
-  /\ Receive(self)
-  /\ UpdateFailureDetector(self)
-  /\ \/ UponYes(self)
-     \/ UponNo(self)
-     \/ UponCrash(self)
-     \/ UponSent(self)
-     \/ pc' = pc /\ sent' = sent    (* Do nothing but we need this to avoid deadlock *)
+Step(self) ≜   
+  ∧ Receive(self)
+  ∧ UpdateFailureDetector(self)
+  ∧ ∨ UponYes(self)
+    ∨ UponNo(self)
+    ∨ UponCrash(self)
+    ∨ UponSent(self)
+    ∨ pc' = pc ∧ sent' = sent    (* Do nothing but we need this to avoid deadlock *)
 
 (* Some processes vote YES. Others vote NO. *)
-Init == 
-  /\ sent = {}
-  /\ pc \in [ Proc -> {"YES", "NO"} ]
-  /\ rcvd = [ i \in Proc |-> {} ]
-  /\ fd \in [ Proc -> {FALSE, TRUE} ]
+Init ≜ 
+  ∧ sent = {}
+  ∧ pc ∈ [ Proc → {"YES", "NO"} ]
+  ∧ rcvd = [ i ∈ Proc ↦ {} ]
+  ∧ fd ∈ [ Proc → {FALSE, TRUE} ]
 
 (* All processes vote YES. *)
-InitAllYes == 
-  /\ sent = {}
-  /\ pc = [ Proc |-> "YES" ]
-  /\ rcvd = [ i \in Proc |-> {} ]
-  /\ fd \in [ i \in Proc |-> {TRUE} ]
+InitAllYes ≜ 
+  ∧ sent = {}
+  ∧ pc = [ Proc ↦ "YES" ]
+  ∧ rcvd = [ i ∈ Proc ↦ {} ]
+  ∧ fd ∈ [ i ∈ Proc ↦ {TRUE} ]
       
-Next ==  (\E self \in Proc : Step(self))
+Next ≜  (∃ self ∈ Proc : Step(self))
 
 (* Add the weak fainress condition *)
-Spec == Init /\ [][Next]_vars
-             /\ WF_vars(\E self \in Proc : /\ Receive(self)
-                                           /\ \/ UponYes(self)
-                                              \/ UponNo(self)
-                                              \/ UponSent(self))
+Spec ≜ Init ∧ □[Next]_vars
+             ∧ WF_vars(∃ self ∈ Proc : ∧ Receive(self)
+                                       ∧ ∨ UponYes(self)
+                                         ∨ UponNo(self)
+                                         ∨ UponSent(self))
 
 
-TypeOK == 
-  /\ sent \subseteq Proc \times M
-  /\ pc \in [ Proc -> {"NO", "YES", "ABORT", "COMMIT", "SENT", "CRASH"} ]
-  /\ rcvd \in [ Proc -> SUBSET (Proc \times M) ]
-  /\ fd \in [ Proc -> BOOLEAN ]
+TypeOK ≜ 
+  ∧ sent ⊆ Proc × M
+  ∧ pc ∈ [ Proc → {"NO", "YES", "ABORT", "COMMIT", "SENT", "CRASH"} ]
+  ∧ rcvd ∈ [ Proc → SUBSET (Proc × M) ]
+  ∧ fd ∈ [ Proc → BOOLEAN ]
           
-Validity == 
-  \/ \A i \in Proc : pc[i] = "YES"
-  \/ \A i \in Proc : pc[i] # "COMMIT"
+Validity ≜ 
+  ∨ ∀ i ∈ Proc : pc[i] = "YES"
+  ∨ ∀ i ∈ Proc : pc[i] ≠ "COMMIT"
  
  (*
 NonTriv ==   

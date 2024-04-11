@@ -23,7 +23,7 @@
 (***************************************************************************)
 EXTENDS Integers, Sequences, FiniteSets, TLC
 
-Support(R) == {r[1] : r \in R} \cup {r[2] : r \in R}
+Support(R) ≜ {r[1] : r ∈ R} ∪ {r[2] : r ∈ R}
 
 (***************************************************************************)
 (* A relation R defines a directed graph on its support, where there is an *)
@@ -33,13 +33,13 @@ Support(R) == {r[1] : r \in R} \cup {r[2] : r \in R}
 (* of the path (the number of edges) is one greater than the length of the *)
 (* sequence.  We then get the following definition of TC.                  *)
 (***************************************************************************)
-TC(R) == 
-  LET S == Support(R)     
-  IN  {<<s, t>> \in S \X S :
-        \E p \in Seq(S) : /\ Len(p) > 1
-                          /\ p[1] = s
-                          /\ p[Len(p)] = t
-                          /\ \A i \in  1..(Len(p)-1) : <<p[i], p[i+1]>> \in R}
+TC(R) ≜ 
+  LET S ≜ Support(R)     
+  IN  {⟨s, t⟩ ∈ S × S :
+        ∃ p ∈ Seq(S) : ∧ Len(p) > 1
+                       ∧ p[1] = s
+                       ∧ p[Len(p)] = t
+                       ∧ ∀ i ∈  1‥(Len(p)-1) : ⟨p[i], p[i+1]⟩ ∈ R}
 
 (***************************************************************************)
 (* This definition can't be evaluated by TLC because Seq(S) is an infinite *)
@@ -50,15 +50,15 @@ TC(R) ==
 (* The LET expression defines BoundedSeq(S, n) to be the set of all        *)
 (* sequences in Seq(S) of length at most n.                                *)
 (***************************************************************************)
-TC1(R) == 
-  LET BoundedSeq(S, n) == UNION {[1..i -> S] : i \in 0..n}
-      S == Support(R)     
-  IN  {<<s, t>> \in S \X S :
-                    \E p \in BoundedSeq(S, Cardinality(S)+1) : 
-                            /\ Len(p) > 1
-                            /\ p[1] = s
-                            /\ p[Len(p)] = t
-                            /\ \A i \in  1..(Len(p)-1) : <<p[i], p[i+1]>> \in R}
+TC1(R) ≜ 
+  LET BoundedSeq(S, n) ≜ UNION {[1‥i → S] : i ∈ 0‥n}
+      S ≜ Support(R)     
+  IN  {⟨s, t⟩ ∈ S × S :
+                    ∃ p ∈ BoundedSeq(S, Cardinality(S)+1) : 
+                            ∧ Len(p) > 1
+                            ∧ p[1] = s
+                            ∧ p[Len(p)] = t
+                            ∧ ∀ i ∈  1‥(Len(p)-1) : ⟨p[i], p[i+1]⟩ ∈ R}
 
 (***************************************************************************)
 (* This naive method used by TLC to evaluate expressions makes this        *)
@@ -67,10 +67,10 @@ TC1(R) ==
 (* efficiently, let's look at the closure operation more algebraically.    *)
 (* Let's define the composition of two relations R and T as follows.       *)
 (***************************************************************************)
-R ** T == LET SR == Support(R)
-              ST == Support(T)
-          IN  {<<r, t>> \in SR \X ST : 
-                \E s \in SR \cap ST : (<<r, s>> \in R) /\ (<<s, t>> \in T)}
+R ** T ≜ LET SR ≜ Support(R)
+              ST ≜ Support(T)
+          IN  {⟨r, t⟩ ∈ SR × ST : 
+                ∃ s ∈ SR ∩ ST : (⟨r, s⟩ ∈ R) ∧ (⟨s, t⟩ ∈ T)}
                                          
 (***************************************************************************)
 (* We can then define the closure of R to equal                            *)
@@ -81,9 +81,9 @@ R ** T == LET SR == Support(R)
 (* number of terms equals the cardinality of the support of R.  This leads *)
 (* to the following definition.                                            *)
 (***************************************************************************)
-TC2(R) ==
-  LET C[n \in Nat] == IF n = 0 THEN R
-                               ELSE C[n-1] \cup (C[n-1] ** R)
+TC2(R) ≜
+  LET C[n ∈ ℕ] ≜ IF n = 0 THEN R
+                               ELSE C[n-1] ∪ (C[n-1] ** R)
   IN  IF R = {} THEN {} ELSE C[Cardinality(Support(R)) - 1] 
 
 (***************************************************************************)
@@ -96,8 +96,8 @@ TC2(R) ==
 (* recursive calls.                                                        *)
 (***************************************************************************)
 RECURSIVE TC3(_)
-TC3(R) == LET RR == R ** R
-          IN  IF RR \subseteq R THEN R ELSE TC3(R \cup RR)
+TC3(R) ≜ LET RR ≜ R ** R
+          IN  IF RR ⊆ R THEN R ELSE TC3(R ∪ RR)
 
 (***************************************************************************)
 (* The preceding two definitions can be made slightly more efficient to    *)
@@ -111,15 +111,15 @@ TC3(R) == LET RR == R ** R
 (* for the case of a relation on a set i..j of integers, when the relation *)
 (* is represented as a Boolean-valued function.)                           *)
 (***************************************************************************)
-TC4(R) ==
-  LET S == Support(R)
+TC4(R) ≜
+  LET S ≜ Support(R)
       RECURSIVE TCR(_)
-      TCR(T) == IF T = {} 
+      TCR(T) ≜ IF T = {} 
                   THEN R
-                  ELSE LET r == CHOOSE s \in T : TRUE
-                           RR == TCR(T \ {r})
-                       IN  RR \cup {<<s, t>> \in S \X S : 
-                                      <<s, r>> \in RR /\ <<r, t>> \in RR}
+                  ELSE LET r ≜ CHOOSE s ∈ T : TRUE
+                           RR ≜ TCR(T \ {r})
+                       IN  RR ∪ {⟨s, t⟩ ∈ S × S : 
+                                      ⟨s, r⟩ ∈ RR ∧ ⟨r, t⟩ ∈ RR}
   IN  TCR(S)
   
 (***************************************************************************)
@@ -127,10 +127,10 @@ TC4(R) ==
 (* unlikely that all four are wrong in the same way, their equivalence     *)
 (* makes it highly probable that they're correct.                          *)
 (***************************************************************************)
-ASSUME \A N \in 0..3 : 
-          \A R \in SUBSET ((1..N) \X (1..N)) : /\ TC1(R) = TC2(R)
-                                               /\ TC2(R) = TC3(R) 
-                                               /\ TC3(R) = TC4(R)
+ASSUME ∀ N ∈ 0‥3 : 
+          ∀ R ∈ SUBSET ((1‥N) × (1‥N)) : ∧ TC1(R) = TC2(R)
+                                         ∧ TC2(R) = TC3(R) 
+                                         ∧ TC3(R) = TC4(R)
 
 (***************************************************************************)
 (* Sometimes we want to represent a relation as a Boolean-valued operator, *)
@@ -153,22 +153,22 @@ ASSUME \A N \in 0..3 :
 (* for all s, t.  Here is the definition.  (This assumes that for an       *)
 (* operator R on a set S, R(s, t) equals FALSE for all s and t not in S.)  *)
 (***************************************************************************)
-TC5(R(_,_), S, s, t) ==
-  LET CR[n \in Nat, v \in S] == 
+TC5(R(_,_), S, s, t) ≜
+  LET CR[n ∈ ℕ, v ∈ S] ≜ 
           IF n = 0 THEN R(s, v)
-                   ELSE \/ CR[n-1, v] 
-                        \/ \E u \in S : CR[n-1, u] /\ R(u, v)
-  IN  /\ s \in S
-      /\ t \in S
-      /\ CR[Cardinality(S)-1, t]
+                   ELSE ∨ CR[n-1, v] 
+                        ∨ ∃ u ∈ S : CR[n-1, u] ∧ R(u, v)
+  IN  ∧ s ∈ S
+      ∧ t ∈ S
+      ∧ CR[Cardinality(S)-1, t]
 
 (***************************************************************************)
 (* Finally, the following assumption checks that our definition TC5 agrees *)
 (* with our definition TC1.                                                *)
 (***************************************************************************)
-ASSUME \A N \in 0..3 : \A R \in SUBSET ((1..N) \X (1..N)) :
-         LET RR(s, t) == <<s, t>> \in R
-             S == Support(R)
-         IN  \A s, t \in S : 
-                TC5(RR, S, s, t) <=> (<<s, t>> \in TC1(R))
+ASSUME ∀ N ∈ 0‥3 : ∀ R ∈ SUBSET ((1‥N) × (1‥N)) :
+         LET RR(s, t) ≜ ⟨s, t⟩ ∈ R
+             S ≜ Support(R)
+         IN  ∀ s, t ∈ S : 
+                TC5(RR, S, s, t) ⇔ (⟨s, t⟩ ∈ TC1(R))
 =============================================================================

@@ -12,9 +12,9 @@
 (***************************************************************************)
 EXTENDS Prisoners
 
-InductiveInvariant == TypeOK /\ CountInvariant
+InductiveInvariant ≜ TypeOK ∧ CountInvariant
 
-InvTestSpec == InductiveInvariant /\ [][Next]_vars
+InvTestSpec ≜ InductiveInvariant ∧ □[Next]_vars
   (*************************************************************************)
   (* InductiveInvariant is an invariant of this specification iff it is an *)
   (* inductive invariant of Next.                                          *)

@@ -58,29 +58,29 @@
                          (****************************)
                          (* Some Useful Definitions  *)
                          (****************************)
- NumMax(i, j) == IF i > j THEN i ELSE j
+ NumMax(i, j) ≜ IF i > j THEN i ELSE j
  \* Max is apparently defined in the TLC overridden Naturals module
    (*************************************************************************)
    (* The maximum of the number i and j.                                    *)
    (*************************************************************************)
 
- SetMax(S) ==  IF S = {} THEN 0
-                         ELSE CHOOSE x \in S : \A y \in S : x \geq y
+ SetMax(S) ≜  IF S = {} THEN 0
+                         ELSE CHOOSE x ∈ S : ∀ y ∈ S : x ≥ y
    (*************************************************************************)
    (* The maximum of the set S of natural numbers.                          *)
    (*************************************************************************)
 
- RecordCombine(S, T) ==
+ RecordCombine(S, T) ≜
    (*************************************************************************)
    (* If S and T are sets of records, then this equals the set of all       *)
    (* records rc(s,t) with s in S and t in T, where rc(s,t) is the record   *)
    (* obtained by "merging" s and t--that is, forming the record whose set  *)
    (* of fields is the union of the sets of fields of the two records.      *)
    (*************************************************************************)
-   LET rc(s, t) ==
-        [i \in (DOMAIN s) \cup (DOMAIN t) |-> IF i \in DOMAIN s THEN s[i]
+   LET rc(s, t) ≜
+        [i ∈ (DOMAIN s) ∪ (DOMAIN t) ↦ IF i ∈ DOMAIN s THEN s[i]
                                                                 ELSE t[i]]
-   IN  {rc(s, t) : s \in S, t \in T}
+   IN  {rc(s, t) : s ∈ S, t ∈ T}
  -----------------------------------------------------------------------------
  CONSTANT  NodeId, Node
    (*************************************************************************)
@@ -93,7 +93,7 @@
    (* of all possible semantic nodes.                                       *)
    (*************************************************************************)
 
- Null == CHOOSE n : n \notin NodeId
+ Null ≜ CHOOSE n : n ∉ NodeId
    (*************************************************************************)
    (* A value that is not a node id.                                        *)
    (*************************************************************************)
@@ -138,29 +138,29 @@
  (* semantic node has a kind field and an xxxNode object has kind field     *)
  (* equal to "xxxNode".                                                     *)
  (***************************************************************************)
- Ref(str) == {id \in NodeId : Node[id].kind = str}
+ Ref(str) ≜ {id ∈ NodeId : Node[id].kind = str}
 
- ModuleNodeId        == Ref("ModuleNode")
- InstanceNodeId      == Ref("InstanceNodeId")
- OpDefNodeId         == Ref("OpDefNode")
- ConstantDeclNodeId  == Ref("ConstantDeclNode")
- VariableDeclNodeId  == Ref("VariableDeclNode")
- OpDeclNodeId        == ConstantDeclNodeId \cup VariableDeclNodeId
- OpApplNodeId        == Ref("OpApplNode")
- SubstitutionNodeId  == Ref("SubstitutionNode")
- BoundSymbolNodeId   == Ref("BoundSymbolNode")
- LetInNodeId         == Ref("LetInNode")
- ValueNodeId         == Ref("ValueNode")
- IdentifierNodeId    == Ref("IdentifierNode")
- OpDefOrDeclNodeId   == OpDefNodeId \cup OpDeclNodeId
- ExprNodeId          == OpApplNodeId \cup LetInNodeId  \cup ValueNodeId
-                          \cup IdentifierNodeId
+ ModuleNodeId        ≜ Ref("ModuleNode")
+ InstanceNodeId      ≜ Ref("InstanceNodeId")
+ OpDefNodeId         ≜ Ref("OpDefNode")
+ ConstantDeclNodeId  ≜ Ref("ConstantDeclNode")
+ VariableDeclNodeId  ≜ Ref("VariableDeclNode")
+ OpDeclNodeId        ≜ ConstantDeclNodeId ∪ VariableDeclNodeId
+ OpApplNodeId        ≜ Ref("OpApplNode")
+ SubstitutionNodeId  ≜ Ref("SubstitutionNode")
+ BoundSymbolNodeId   ≜ Ref("BoundSymbolNode")
+ LetInNodeId         ≜ Ref("LetInNode")
+ ValueNodeId         ≜ Ref("ValueNode")
+ IdentifierNodeId    ≜ Ref("IdentifierNode")
+ OpDefOrDeclNodeId   ≜ OpDefNodeId ∪ OpDeclNodeId
+ ExprNodeId          ≜ OpApplNodeId ∪ LetInNodeId  ∪ ValueNodeId
+                          ∪ IdentifierNodeId
  -----------------------------------------------------------------------------
                       (**************************)
                       (* Level Data Structures  *)
                       (**************************)
 
- LevelValue == 0..3
+ LevelValue ≜ 0‥3
    (*************************************************************************)
    (* The set of levels, where                                              *)
    (*    0 = constant                                                       *)
@@ -277,29 +277,29 @@
  (* done by keeping track of sets of objects of the following types.        *)
  (***************************************************************************)
 
- LevelConstraint == [param : ConstantDeclNodeId, level : LevelValue]
+ LevelConstraint ≜ [param : ConstantDeclNodeId, level : LevelValue]
    (*************************************************************************)
    (* A level constraint lc indicates that the parameter with id lc.param   *)
    (* can be instantiated only with an expression of level at most          *)
    (* lc.level.                                                             *)
    (*************************************************************************)
 
- ArgLevelConstraint ==
+ ArgLevelConstraint ≜
    (*************************************************************************)
    (* An arg-level constraint alc indicates that the operator parameter     *)
    (* with id alc.param can be instantiated with an operator op only if the *)
    (* alc.idx-th argument of op can have level at least alc.level.  This    *)
    (* constraint is vacuous iff alc.level = 0.                              *)
    (*************************************************************************)
-   [param : ConstantDeclNodeId,  idx : Nat \ {0},  level : LevelValue]
+   [param : ConstantDeclNodeId,  idx : ℕ \ {0},  level : LevelValue]
 
- ArgLevelParam ==
+ ArgLevelParam ≜
    (*************************************************************************)
    (* An arg-level parameter alp indicates that the parameter with id       *)
    (* alp.param appears in the alp.idx-th argument of the operator with id  *)
    (* alp.op.                                                               *)
    (*************************************************************************)
-   [op : NodeId, idx : Nat \ {0}, param : NodeId]
+   [op : NodeId, idx : ℕ \ {0}, param : NodeId]
 
 
  (***************************************************************************)
@@ -307,21 +307,21 @@
  (* types.                                                                  *)
  (***************************************************************************)
 
- MinLevelConstraint(id, LC) ==
+ MinLevelConstraint(id, LC) ≜
    (*************************************************************************)
    (* If LC is a set of level constraints and id a ConstantDeclNodeId, then *)
    (* this equals the minimum level constraint on id implied by the         *)
    (* elements of LC. (This is 3 if there is none.)                         *)
    (*************************************************************************)
-   IF \E lc \in LC : lc.param = id
-     THEN LET minLC == CHOOSE lc \in LC :
-                         /\ lc.param = id
-                         /\ \A olc \in LC :
-                              (olc.param = id) => (olc.level \geq lc.level)
+   IF ∃ lc ∈ LC : lc.param = id
+     THEN LET minLC ≜ CHOOSE lc ∈ LC :
+                         ∧ lc.param = id
+                         ∧ ∀ olc ∈ LC :
+                              (olc.param = id) ⇒ (olc.level ≥ lc.level)
           IN  minLC.level
      ELSE 3
 
- MaxArgLevelConstraints(id, ALC) ==
+ MaxArgLevelConstraints(id, ALC) ≜
    (*************************************************************************)
    (* If ALC is a set of arg-level constraints and id a ConstantDeclNodeId, *)
    (* then this equals the tuple <<lev_1, ..., lev_n>>, where n is the      *)
@@ -330,19 +330,19 @@
    (* must be able to take an i-th operator of level at least lev_i, for    *)
    (* each i.                                                               *)
    (*************************************************************************)
-   LET n == Node[id].numberOfArgs
-       minALC(i) ==
-         LET isALC(lc) == (lc.param = id) /\ (lc.idx = i)
-         IN  IF \E lc \in ALC : isALC(lc)
-               THEN LET max == CHOOSE lc \in ALC :
-                                 /\ isALC(lc)
-                                 /\ \A olc \in ALC :
-                                      isALC(olc) => (olc.level \leq lc.level)
+   LET n ≜ Node[id].numberOfArgs
+       minALC(i) ≜
+         LET isALC(lc) ≜ (lc.param = id) ∧ (lc.idx = i)
+         IN  IF ∃ lc ∈ ALC : isALC(lc)
+               THEN LET max ≜ CHOOSE lc ∈ ALC :
+                                 ∧ isALC(lc)
+                                 ∧ ∀ olc ∈ ALC :
+                                      isALC(olc) ⇒ (olc.level ≤ lc.level)
                     IN  max.level
                ELSE 0
-   IN [i \in 1..n |-> minALC(i)]
+   IN [i ∈ 1‥n ↦ minALC(i)]
 
- LevelConstraintFields ==
+ LevelConstraintFields ≜
    (*************************************************************************)
    (* A record whose fields consist of fields used for level computations.  *)
    (* These fields are common to all semantic nodes of type Expr that       *)
@@ -422,7 +422,7 @@
  (* checking (but is relevant to correctness of the module).                *)
  (***************************************************************************)
 
- ModuleNode ==
+ ModuleNode ≜
    (*************************************************************************)
    (* A semantic node representing a module.                                *)
    (*************************************************************************)
@@ -502,7 +502,7 @@
       (*        ELSE 0                                                      *)
       (**********************************************************************)
 
- OpDefOrDeclNodeFields ==
+ OpDefOrDeclNodeFields ≜
    (*************************************************************************)
    (* This defines the fields that are common to the OpDeclNode and         *)
    (* OpDefNode types.                                                      *)
@@ -514,7 +514,7 @@
       (* running tests of the spec with TLC.)                               *)
       (**********************************************************************)
 
-    numberOfArgs : Nat,
+    numberOfArgs : ℕ,
       (**********************************************************************)
       (* The number of arguments of the operator.  Operators that can take  *)
       (* an arbitrary number of arguments are represented by an infinite    *)
@@ -531,14 +531,14 @@
       (* The meaning of op.level for an OpDefNode is described above.       *)
       (**********************************************************************)
 
- OpDeclNode ==
+ OpDeclNode ≜
    (*************************************************************************)
    (* Represents a declared constant or variable.                           *)
    (*************************************************************************)
    RecordCombine([kind : {"ConstantDeclNode", "VariableDeclNode"}],
                  OpDefOrDeclNodeFields)
 
- OpDefNode ==
+ OpDefNode ≜
    (*************************************************************************)
    (* Represents a definition, for example the definition of the symbol Foo *)
    (* in Foo(A, B) == expr.  We also assume imaginary definitions of        *)
@@ -597,7 +597,7 @@
         (* argument of opArg.  As we'll see, this information is needed for *)
         (* keeping track of level constraints.                              *)
         (********************************************************************)
-      body : ExprNodeId \cup {Null},
+      body : ExprNodeId ∪ {Null},
         (********************************************************************)
         (* The body of the definition.  For a built-in operator, it's Null. *)
         (********************************************************************)
@@ -639,7 +639,7 @@
         (********************************************************************)
      RecordCombine(OpDefOrDeclNodeFields, LevelConstraintFields))
 
- InstanceNode ==
+ InstanceNode ≜
    (*************************************************************************)
    (* Represents a statement of the form                                    *)
    (*                                                                       *)
@@ -669,7 +669,7 @@
         (* substitution with subFor and subWith fields equal to the empty   *)
         (* sequence.                                                        *)
         (********************************************************************)
-    numberOfArgs : Nat,
+    numberOfArgs : ℕ,
     levelConstraints    : SUBSET LevelConstraint,
     argLevelConstraints : SUBSET ArgLevelConstraint,
     argLevelParams      : SUBSET ArgLevelParam]
@@ -678,9 +678,9 @@
       (* no level parameters for the InstanceNode itself.)                  *)
       (**********************************************************************)
 
- OpDefOrDeclNode == OpDefNode \cup OpDeclNode
+ OpDefOrDeclNode ≜ OpDefNode ∪ OpDeclNode
 
- OpApplNode ==
+ OpApplNode ≜
    (*************************************************************************)
    (* An OppApplNode represents an operator application.  Examples of       *)
    (* expressions that such a node can represent are:                       *)
@@ -705,7 +705,7 @@
         (********************************************************************)
         (* The (id of the) OpDefOrDecl node of the operator.                *)
         (********************************************************************)
-      args : Seq(ExprNodeId) \ {<<>>},
+      args : Seq(ExprNodeId) \ {⟨⟩},
         (********************************************************************)
         (* An OpApplNode has a nonempty sequence of arguments.              *)
         (********************************************************************)
@@ -716,7 +716,7 @@
       level : LevelValue],
      LevelConstraintFields)
 
- SubstitutionNode ==
+ SubstitutionNode ≜
    (*************************************************************************)
    (* The Substitution object s that represents the WITH clause             *)
    (*                                                                       *)
@@ -739,7 +739,7 @@
     subFor  : Seq(OpDeclNodeId),
     subWith : Seq(ExprNodeId)]
 
- IdentifierNode ==
+ IdentifierNode ≜
     (************************************************************************)
     (* An IdentifierNode is an ExprNode with a ref field.  It represents an *)
     (* expression that consists of a single symbol.  For example, the       *)
@@ -750,11 +750,11 @@
     (************************************************************************)
     RecordCombine(
      [kind : {"IdentifierNode"},
-      ref  : OpDefOrDeclNodeId \cup BoundSymbolNodeId,
+      ref  : OpDefOrDeclNodeId ∪ BoundSymbolNodeId,
       level : LevelValue],
      LevelConstraintFields)
 
- BoundSymbolNode ==
+ BoundSymbolNode ≜
    (*************************************************************************)
    (* Represents a bounded identifier, like the x in {x \in S : x > 0}.  It *)
    (* has level 0 except for the bounded symbols introduced by \EE and \AA, *)
@@ -764,7 +764,7 @@
     name  : STRING,
     level : {0,1}]
 
- LetInNode ==
+ LetInNode ≜
    (*************************************************************************)
    (* This node represents a LET expression, for example                    *)
    (*                                                                       *)
@@ -783,7 +783,7 @@
       level: LevelValue],
      LevelConstraintFields)
 
- ValueNode == RecordCombine(
+ ValueNode ≜ RecordCombine(
    (*************************************************************************)
    (* This node type represents the NumeralNode, DecimalNode, and           *)
    (* StringNode, of the actual api.                                        *)
@@ -792,69 +792,69 @@
       level : {0}],
      LevelConstraintFields)
 
- ExprNode == OpApplNode \cup LetInNode \cup ValueNode \cup IdentifierNode
+ ExprNode ≜ OpApplNode ∪ LetInNode ∪ ValueNode ∪ IdentifierNode
 
- SemNode ==
+ SemNode ≜
    (*************************************************************************)
    (* The type (set of all possible) semantic nodes.                        *)
    (*************************************************************************)
-   ModuleNode \cup OpDefOrDeclNode \cup InstanceNode \cup
-      ExprNode \cup SubstitutionNode \cup BoundSymbolNode
+   ModuleNode ∪ OpDefOrDeclNode ∪ InstanceNode ∪
+      ExprNode ∪ SubstitutionNode ∪ BoundSymbolNode
 
  -----------------------------------------------------------------------------
  (***************************************************************************)
  (*                            "Type Correctness"                           *)
  (***************************************************************************)
- TypeOK ==
+ TypeOK ≜
    (*************************************************************************)
    (* This expresses the basic type of Node, and also some relations among  *)
    (* the various fields of semantic nodes that aren't implied by the       *)
    (* simple data type definitions.                                         *)
    (*************************************************************************)
-   /\ Node \in [NodeId -> SemNode]
-   /\ \A id \in NodeId :
-        LET n == Node[id]
-        IN  /\ (n \in OpDefNode) =>
-                 /\ Len(n.maxLevels) = n.numberOfArgs
-                 /\ Len(n.weights)   = n.numberOfArgs
-                 /\ Len(n.params) = n.numberOfArgs
-                 /\ Len(n.minMaxLevel) = n.numberOfArgs
-                 /\ Len(n.opLevelCond) = n.numberOfArgs
-                 /\ \A i \in 1..n.numberOfArgs :
-                      /\ Len(n.minMaxLevel[i]) = Node[n.params[i]].numberOfArgs
-                      /\ Len(n.opLevelCond[i]) = n.numberOfArgs
-                      /\ \A j \in 1..n.numberOfArgs :
+   ∧ Node ∈ [NodeId → SemNode]
+   ∧ ∀ id ∈ NodeId :
+        LET n ≜ Node[id]
+        IN  ∧ (n ∈ OpDefNode) ⇒
+                 ∧ Len(n.maxLevels) = n.numberOfArgs
+                 ∧ Len(n.weights)   = n.numberOfArgs
+                 ∧ Len(n.params) = n.numberOfArgs
+                 ∧ Len(n.minMaxLevel) = n.numberOfArgs
+                 ∧ Len(n.opLevelCond) = n.numberOfArgs
+                 ∧ ∀ i ∈ 1‥n.numberOfArgs :
+                      ∧ Len(n.minMaxLevel[i]) = Node[n.params[i]].numberOfArgs
+                      ∧ Len(n.opLevelCond[i]) = n.numberOfArgs
+                      ∧ ∀ j ∈ 1‥n.numberOfArgs :
                            Len(n.opLevelCond[i][j]) =
                               Node[n.params[i]].numberOfArgs
 
-            /\ (n \in OpDeclNode) =>
-                 /\ (n.kind = "ConstantDeclNode") => (n.level = 0)
-                 /\ (n.kind = "VariableDeclNode") => /\ n.level = 1
-                                                     /\ n.numberOfArgs = 0
+            ∧ (n ∈ OpDeclNode) ⇒
+                 ∧ (n.kind = "ConstantDeclNode") ⇒ (n.level = 0)
+                 ∧ (n.kind = "VariableDeclNode") ⇒ ∧ n.level = 1
+                                                   ∧ n.numberOfArgs = 0
 
-            /\ (n \in OpApplNode) =>
+            ∧ (n ∈ OpApplNode) ⇒
                  (Len(n.args) = Node[n.operator].numberOfArgs)
 
-            /\ (n \in SubstitutionNode) => (Len(n.subFor) = Len(n.subWith))
+            ∧ (n ∈ SubstitutionNode) ⇒ (Len(n.subFor) = Len(n.subWith))
 
-            /\ (n \in InstanceNode) =>
-                 /\ n.numberOfArgs = Len(n.params)
-                 /\ (********************************************************)
+            ∧ (n ∈ InstanceNode) ⇒
+                 ∧ n.numberOfArgs = Len(n.params)
+                 ∧ (********************************************************)
                     (* There is a WITH substitution for every parameter of  *)
                     (* the instantiated module.                             *)
                     (********************************************************)
-                    LET mparamid ==
+                    LET mparamid ≜
                           (**************************************************)
                           (* Defines the mparamid[i] to be the parameter    *)
                           (* ids of the WITH clause.                        *)
                           (**************************************************)
-                          [i \in 1..Len(Node[n.substitution].subFor) |->
+                          [i ∈ 1‥Len(Node[n.substitution].subFor) ↦
                               Node[n.substitution].subFor[i]]
-                        M == Node[n.module]
+                        M ≜ Node[n.module]
                            (*************************************************)
                            (* The ModuleNode of the instantiated module.    *)
                            (*************************************************)
-                    IN  M.opDecls = {mparamid[i] : i \in 1..Len(mparamid)}
+                    IN  M.opDecls = {mparamid[i] : i ∈ 1‥Len(mparamid)}
 
  -----------------------------------------------------------------------------
  (***************************************************************************)
@@ -870,13 +870,13 @@
  (* definition of LevelCorrect.                                             *)
  (***************************************************************************)
 
- IsOpArg(op, k) == Node[op.params[k]].numberOfArgs > 0
+ IsOpArg(op, k) ≜ Node[op.params[k]].numberOfArgs > 0
    (*************************************************************************)
    (* If op is an OpDefNode and k \in 1..op.numberOfArgs, then this is true *)
    (* iff the k-th argument of op is an operator argument.                  *)
    (*************************************************************************)
 
- SubstituteInLevelConstraint(rcd, subst) ==
+ SubstituteInLevelConstraint(rcd, subst) ≜
    (*************************************************************************)
    (* If rcd is a record containing level-constraint fields and subst is a  *)
    (* substitution, then this is the record consisting of the               *)
@@ -886,50 +886,50 @@
    (* record of level constraints for the expression obtained from expr by  *)
    (* the substitution subst.                                               *)
    (*************************************************************************)
-   LET paramNums == 1..Len(subst.subFor)
+   LET paramNums ≜ 1‥Len(subst.subFor)
          (*******************************************************************)
          (* The set of substitution parameter numbers.                      *)
          (*******************************************************************)
 
-       ParamSubst(id) ==
+       ParamSubst(id) ≜
          (*******************************************************************)
          (* The set of "substitute parameters" of the parameter whose       *)
          (* NodeId is id.  If id is one of the parameters being substituted *)
          (* for in subst, then this is the set of LevelParams of the        *)
          (* expression being substituted for it; otherwise, it equals {id}. *)
          (*******************************************************************)
-         IF \E i \in paramNums : subst.subFor[i] = id
-           THEN LET subExpNum == CHOOSE i \in paramNums : subst.subFor[i] = id
+         IF ∃ i ∈ paramNums : subst.subFor[i] = id
+           THEN LET subExpNum ≜ CHOOSE i ∈ paramNums : subst.subFor[i] = id
                 IN  Node[subst.subWith[subExpNum]].levelParams
            ELSE {id}
 
-       IsOpParam(i) == Node[subst.subFor[i]].numberOfArgs > 0
+       IsOpParam(i) ≜ Node[subst.subFor[i]].numberOfArgs > 0
          (*******************************************************************)
          (* True iff substitution parameter i is an operator parameter.     *)
          (*******************************************************************)
 
-       argNums == 1..Len(subst.subFor)
+       argNums ≜ 1‥Len(subst.subFor)
          (*******************************************************************)
          (* The set of parameter numbers.                                   *)
          (*******************************************************************)
 
-       SubOp(opid) ==
+       SubOp(opid) ≜
          (*******************************************************************)
          (* If opid is the NodeId of an operator parameter, then this       *)
          (* equals the NodeId of the operator with which this operator is   *)
          (* substituted for by subst, which is opid itself if subst does    *)
          (* not substitute for opid.                                        *)
          (*******************************************************************)
-         IF \E i \in paramNums : subst.subFor[i] = opid
-           THEN LET subExpNum ==
-                      CHOOSE i \in paramNums : subst.subFor[i] = opid
+         IF ∃ i ∈ paramNums : subst.subFor[i] = opid
+           THEN LET subExpNum ≜
+                      CHOOSE i ∈ paramNums : subst.subFor[i] = opid
                 IN  Node[subst.subWith[subExpNum]].ref
            ELSE opid
 
-   IN  [levelParams |->
-          UNION {ParamSubst(id) : id \in rcd.levelParams},
+   IN  [levelParams ↦
+          UNION {ParamSubst(id) : id ∈ rcd.levelParams},
 
-        levelConstraints |->
+        levelConstraints ↦
           (******************************************************************)
           (* There are two kinds of level constraints obtained after        *)
           (* substitution: ones that come from rcd.levelConstraints via     *)
@@ -939,55 +939,55 @@
           (* defOp.maxLevels[alp.idx] implies level constraints on some     *)
           (* parameter in the expression substituted for alp.param.         *)
           (******************************************************************)
-          LET Sub(lc) ==
+          LET Sub(lc) ≜
                 (************************************************************)
                 (* If lc is a level constraint on a parameter param, then   *)
                 (* this is the set of level constraints that implies        *)
                 (* because param might be substituted for.                  *)
                 (************************************************************)
                 {[lc EXCEPT !.param = par] :
-                    par \in ParamSubst(lc.param)}
+                    par ∈ ParamSubst(lc.param)}
 
-              ALP(i) ==
+              ALP(i) ≜
                 (************************************************************)
                 (* The set of arg-level parameters alp such that alp.op is  *)
                 (* the substitution parameter i.                            *)
                 (************************************************************)
-                {alp \in rcd.argLevelParams : alp.op = subst.subFor[i]}
+                {alp ∈ rcd.argLevelParams : alp.op = subst.subFor[i]}
 
-             SubInALP(alp) ==
+             SubInALP(alp) ≜
                (*************************************************************)
                (* The set of arg-level parameters obtained from arg-level   *)
                (* parameter alp by replacing alp.param with each of its     *)
                (* substitute parameters.                                    *)
                (*************************************************************)
                 {[alp EXCEPT !.param = par] :
-                    par \in ParamSubst(alp.param)}
+                    par ∈ ParamSubst(alp.param)}
 
-              SubALP(i) == UNION {SubInALP(alp) : alp \in ALP(i)}
+              SubALP(i) ≜ UNION {SubInALP(alp) : alp ∈ ALP(i)}
                 (************************************************************)
                 (* The set of all SubInALP(alp) with alp in ALP(i).         *)
                 (************************************************************)
 
-              LC(i, alp) ==
+              LC(i, alp) ≜
                 (************************************************************)
                 (* The level constraint implied by an element alp of        *)
                 (* SubALP(i), if parameter i is an operator parameter       *)
                 (* instantiated by a defined operator.                      *)
                 (************************************************************)
-                [param |-> alp.param,
-                 level |->
+                [param ↦ alp.param,
+                 level ↦
                    Node[Node[subst.subWith[i]].ref].maxLevels[alp.idx]]
 
-              OpDefParams ==
-                {i \in paramNums : /\ IsOpParam(i)
-                                   /\ Node[subst.subWith[i]].ref \in
+              OpDefParams ≜
+                {i ∈ paramNums : ∧ IsOpParam(i)
+                                 ∧ Node[subst.subWith[i]].ref ∈
                                         OpDefNodeId}
-          IN  UNION {Sub(lc) : lc \in rcd.levelConstraints}
-                \cup
-              UNION { {LC(i, alp) : alp \in SubALP(i)} : i \in OpDefParams },
+          IN  UNION {Sub(lc) : lc ∈ rcd.levelConstraints}
+                ∪
+              UNION { {LC(i, alp) : alp ∈ SubALP(i)} : i ∈ OpDefParams },
 
-        argLevelConstraints |->
+        argLevelConstraints ↦
           (******************************************************************)
           (* There are two kinds of arg-level constraints produced by the   *)
           (* substitution: ones obtained by substitution from               *)
@@ -1001,32 +1001,32 @@
           (* for alp.param, then it is a parameter that has level 0, so it  *)
           (* generates no non-trivial arg-level constraint.)                *)
           (******************************************************************)
-          LET Sub(alc) ==
+          LET Sub(alc) ≜
                 (************************************************************)
                 (* The set of arg-level constraints that come from the      *)
                 (* element alc.  This set contains zero or one element.     *)
                 (* Note that if subst.subFor[i] is an operator parameter,   *)
                 (* then subst.subWith[i] is an IdentifierNodeId.            *)
                 (************************************************************)
-                IF \E i \in 1..Len(subst.subFor) : subst.subFor[i] = alc.param
-                  THEN LET subExpNum ==
-                              CHOOSE i \in argNums :
+                IF ∃ i ∈ 1‥Len(subst.subFor) : subst.subFor[i] = alc.param
+                  THEN LET subExpNum ≜
+                              CHOOSE i ∈ argNums :
                                          subst.subFor[i] = alc.param
-                       IN  IF Node[subst.subWith[subExpNum]].ref \in
+                       IN  IF Node[subst.subWith[subExpNum]].ref ∈
                                 OpDeclNodeId
                              THEN {[alc EXCEPT !.param =
                                          Node[subst.subWith[subExpNum]].ref]}
                              ELSE {}
                   ELSE {alc}
 
-             SubParamALP(i) ==
+             SubParamALP(i) ≜
                (*************************************************************)
                (* The set of elements alp of rcd.argLevelParams such that   *)
                (* alp.param is substitution parameter number i.             *)
                (*************************************************************)
-               {alp \in rcd.argLevelParams : alp.param = subst.subFor[i]}
+               {alp ∈ rcd.argLevelParams : alp.param = subst.subFor[i]}
 
-             ALC(alp, i) ==
+             ALC(alp, i) ≜
                (*************************************************************)
                (* The set of arg-level constraints (containing 0 or one     *)
                (* constraint) implied by an arg-level constraint alp in     *)
@@ -1034,23 +1034,23 @@
                (* constraint iff SubOp(alp.op) is a declared (and not       *)
                (* defined) operator.                                        *)
                (*************************************************************)
-               IF SubOp(alp.op) \in OpDeclNodeId
-                 THEN {[param |-> SubOp(alp.op),
-                        idx   |-> alp.idx,
-                        level |-> Node[subst.subWith[i]].level]}
+               IF SubOp(alp.op) ∈ OpDeclNodeId
+                 THEN {[param ↦ SubOp(alp.op),
+                        idx   ↦ alp.idx,
+                        level ↦ Node[subst.subWith[i]].level]}
                  ELSE {}
 
-             ALCSet(i) == UNION {ALC(alp, i) : alp \in SubParamALP(i)}
+             ALCSet(i) ≜ UNION {ALC(alp, i) : alp ∈ SubParamALP(i)}
                (*************************************************************)
                (* The set of all level constraints implied by elements of   *)
                (* SubParamALP(i).                                           *)
                (*************************************************************)
 
-          IN  UNION {Sub(alc) : alc \in rcd.argLevelConstraints}
-                \cup
-              UNION {ALCSet(i) : i \in paramNums},
+          IN  UNION {Sub(alc) : alc ∈ rcd.argLevelConstraints}
+                ∪
+              UNION {ALCSet(i) : i ∈ paramNums},
 
-        argLevelParams |->
+        argLevelParams ↦
           (******************************************************************)
           (* The set of arg-level parameters implied by rcd.argLevelParams  *)
           (* after performing the substitution.  If arg-level parameter alp *)
@@ -1063,18 +1063,18 @@
           (* legality condition on the substitution, rather than a new      *)
           (* arg-level parameter.                                           *)
           (******************************************************************)
-          LET Sub(alp) ==
+          LET Sub(alp) ≜
                 (************************************************************)
                 (* The set of elements in SubArgLevelParams(ALP, subst)     *)
                 (* that come from the element alp.                          *)
                 (************************************************************)
-                IF SubOp(alp.op) \in OpDeclNodeId
+                IF SubOp(alp.op) ∈ OpDeclNodeId
                   THEN {[alp EXCEPT !.op = SubOp(alp.op), !.param = pId] :
-                           pId \in ParamSubst(alp.param)}
+                           pId ∈ ParamSubst(alp.param)}
                   ELSE {}
-          IN  UNION {Sub(alp) : alp \in rcd.argLevelParams} ]
+          IN  UNION {Sub(alp) : alp ∈ rcd.argLevelParams} ]
 
- ReducedLevelConstraint(rcd, paramSet) ==
+ ReducedLevelConstraint(rcd, paramSet) ≜
    (*************************************************************************)
    (* If rcd is a record with level-constraint fields, then this is the     *)
    (* record obtained by removing from those level-constraint fields all    *)
@@ -1082,10 +1082,10 @@
    (*************************************************************************)
    [rcd EXCEPT
      !.levelParams = @ \ paramSet,
-     !.levelConstraints  = {lc \in @ : lc.param \notin paramSet},
-     !.argLevelConstraints = {alc \in @ : alc.param \notin paramSet},
-     !.argLevelParams = {alp \in @ : /\ alp.op \notin paramSet
-                                     /\ alp.param \notin paramSet}]
+     !.levelConstraints  = {lc ∈ @ : lc.param ∉ paramSet},
+     !.argLevelConstraints = {alc ∈ @ : alc.param ∉ paramSet},
+     !.argLevelParams = {alp ∈ @ : ∧ alp.op ∉ paramSet
+                                   ∧ alp.param ∉ paramSet}]
 
 
  -----------------------------------------------------------------------------
@@ -1098,7 +1098,7 @@
  (* level-correctness of the child nodes is assumed when expressing         *)
  (* level-correctness of a node.                                            *)
  (***************************************************************************)
- ModuleNodeLevelCorrect(n) ==
+ ModuleNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* We assume n is a ModuleNode.  It is level-correct iff all the         *)
    (* definitions, instances, theorems, and assumes are, and all the        *)
@@ -1107,33 +1107,33 @@
    (* The level constraints come from the level constraints of the          *)
    (* definitions, instances, theorems, and assumes in the obvious way.     *)
    (*************************************************************************)
-   LET defParams(opid) ==
+   LET defParams(opid) ≜
          (*******************************************************************)
          (* The set of node ids of the formal parameter of the definition   *)
          (* represented by the node with id opid.                           *)
          (*******************************************************************)
-         {Node[opid].params[i] : i \in 1..Node[opid].numberOfArgs}
+         {Node[opid].params[i] : i ∈ 1‥Node[opid].numberOfArgs}
 
-       nonDefs == n.instances \cup n.theorems \cup n.assumes
+       nonDefs ≜ n.instances ∪ n.theorems ∪ n.assumes
          (*******************************************************************)
          (* All nodes contributing to the level constraints other than      *)
          (* OpDef nodes.                                                    *)
          (*******************************************************************)
 
-       allDefs == n.opDefs \cup nonDefs
+       allDefs ≜ n.opDefs ∪ nonDefs
 
-   IN  /\ (******************************************************************)
+   IN  ∧ (******************************************************************)
           (* Level correctness.                                             *)
           (******************************************************************)
-          \A id \in n.assumes : Node[id].level = 0
+          ∀ id ∈ n.assumes : Node[id].level = 0
 
-       /\ n.levelConstraints =
-            UNION {Node[opid].levelConstraints : opid \in allDefs}
+       ∧ n.levelConstraints =
+            UNION {Node[opid].levelConstraints : opid ∈ allDefs}
 
-       /\ n.argLevelConstraints =
-            UNION {Node[opid].argLevelConstraints : opid \in allDefs}
+       ∧ n.argLevelConstraints =
+            UNION {Node[opid].argLevelConstraints : opid ∈ allDefs}
 
-       /\ n.argLevelParams =
+       ∧ n.argLevelParams =
             (****************************************************************)
             (* We must remove the constraints on formal parameters of the   *)
             (* definitions.                                                 *)
@@ -1141,67 +1141,67 @@
             (UNION {ReducedLevelConstraint(
                         Node[opid],
                         defParams(opid)).argLevelParams :
-                     opid \in n.opDefs})
-             \cup
-            UNION {Node[opid].argLevelParams : opid \in nonDefs}
+                     opid ∈ n.opDefs})
+             ∪
+            UNION {Node[opid].argLevelParams : opid ∈ nonDefs}
 
 
- InstanceNodeLevelCorrect(n) ==
+ InstanceNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* We assume n is an InstanceNode representing                           *)
    (*                                                                       *)
    (*   I(param[1], ... , param[p]) ==                                      *)
    (*     INSTANCE M WITH mparam[1] <- mexp[1], ... , mparam[r] <- mexp[r]  *)
    (*************************************************************************)
-   LET r == Len(Node[n.substitution].subWith)
-       mexp == [i \in 1..r |-> Node[Node[n.substitution].subWith[i]]]
+   LET r ≜ Len(Node[n.substitution].subWith)
+       mexp ≜ [i ∈ 1‥r ↦ Node[Node[n.substitution].subWith[i]]]
          (*******************************************************************)
          (* mexp[i] is an Expr node.                                        *)
          (*******************************************************************)
-       paramIds == {n.params[i] : i \in 1..n.numberOfArgs}
+       paramIds ≜ {n.params[i] : i ∈ 1‥n.numberOfArgs}
          (*******************************************************************)
          (* The set of node ids {param[1], ... , param[p]}.                 *)
          (*******************************************************************)
-       redMexp ==
+       redMexp ≜
          (*******************************************************************)
          (* Defines redMexp[i] to be the record that's the same as mexp[i]  *)
          (* except with all constraints on the param[i] removed.            *)
          (*******************************************************************)
-         [i \in 1..r |-> ReducedLevelConstraint(mexp[i], paramIds)]
-       M == Node[n.module]
+         [i ∈ 1‥r ↦ ReducedLevelConstraint(mexp[i], paramIds)]
+       M ≜ Node[n.module]
          (*******************************************************************)
          (* M is the ModuleNode of the instantiated module.                 *)
          (*******************************************************************)
-       mparamId == [i \in 1..r |-> Node[n.substitution].subFor[i]]
+       mparamId ≜ [i ∈ 1‥r ↦ Node[n.substitution].subFor[i]]
          (*******************************************************************)
          (* Defines mparamId[i] to be the NodeId for mparam[i].             *)
          (*******************************************************************)
-       mparam == [i \in 1..r |-> Node[mparamId[i]]]
+       mparam ≜ [i ∈ 1‥r ↦ Node[mparamId[i]]]
          (*******************************************************************)
          (* Defines mparam[i] to be the OpDeclNode for this parameter of M. *)
          (*******************************************************************)
-       mOpArg(i) == Node[mexp[i].ref]
+       mOpArg(i) ≜ Node[mexp[i].ref]
          (*******************************************************************)
          (* If mparam[i] is an operator argument, then mexp[i] is an        *)
          (* Identifier node for the OpDefOrDeclNode mOpArg(i).              *)
          (*******************************************************************)
-       subst == Node[n.substitution]
+       subst ≜ Node[n.substitution]
          (*******************************************************************)
          (* The substitution node.                                          *)
          (*******************************************************************)
-       MSubConstraints ==
+       MSubConstraints ≜
          (*******************************************************************)
          (* A record consisting of the constraints obtained from M after    *)
          (* performing the substitutions.  The level parameters of M are    *)
          (* its declared constants.                                         *)
          (*******************************************************************)
          SubstituteInLevelConstraint(
-           [levelParams         |-> {op \in M.opDecls : Node[op].level = 0},
-            levelConstraints    |-> M.levelConstraints,
-            argLevelConstraints |-> M.argLevelConstraints,
-            argLevelParams      |-> M.argLevelParams],
+           [levelParams         ↦ {op ∈ M.opDecls : Node[op].level = 0},
+            levelConstraints    ↦ M.levelConstraints,
+            argLevelConstraints ↦ M.argLevelConstraints,
+            argLevelParams      ↦ M.argLevelParams],
            subst)
-       redMSubConstraints ==
+       redMSubConstraints ≜
          (*******************************************************************)
          (* The constraint record MSubConstraints with the constraints on   *)
          (* the param[i] removed.                                           *)
@@ -1216,53 +1216,53 @@
        (* is a nonconstant module, so they apply only when M is a constant  *)
        (* module.                                                           *)
        (*********************************************************************)
-       /\ (******************************************************************)
+       ∧ (******************************************************************)
           (* If M is a nonconstant module, then declared constants of M can *)
           (* be instantiated only with constant expressions, and the        *)
           (* declared variables only with expressions of level 1.           *)
           (******************************************************************)
-          ~M.isConstant =>
-             \A i \in 1..r : mexp[i].level \leq mparam[i].level
+          ¬M.isConstant ⇒
+             ∀ i ∈ 1‥r : mexp[i].level ≤ mparam[i].level
 
-       /\ (******************************************************************)
+       ∧ (******************************************************************)
           (* A level-constraint on mparam[i] implies a condition on         *)
           (* mexp[i].                                                       *)
           (******************************************************************)
-          \A i \in 1..r :
-             mexp[i].level \leq
+          ∀ i ∈ 1‥r :
+             mexp[i].level ≤
                   MinLevelConstraint(mparamId[i], M.levelConstraints)
 
-       /\ (******************************************************************)
+       ∧ (******************************************************************)
           (* If mexp[i] is a defined operator argument, then an arg-level   *)
           (* constraint on mparam[i] implies a condition on mexp[i].        *)
           (******************************************************************)
-          \A i \in 1..r :
-             /\ mparam[i].numberOfArgs > 0
-             /\ mOpArg(i) \in OpDefNode
+          ∀ i ∈ 1‥r :
+             ∧ mparam[i].numberOfArgs > 0
+             ∧ mOpArg(i) ∈ OpDefNode
              (***************************************************************)
              (* IF param[i] is an operator argument and mexp[i] is a        *)
              (* defined operator,                                           *)
              (***************************************************************)
-             => (************************************************************)
+             ⇒ (************************************************************)
                 (* THEN the operator mexp[i] must satisfy the arg-level     *)
                 (* constraints on param[i].                                 *)
                 (************************************************************)
-                \A j \in 1..mOpArg(i).numberOfArgs :
-                   mOpArg(i).maxLevels[j] \geq
+                ∀ j ∈ 1‥mOpArg(i).numberOfArgs :
+                   mOpArg(i).maxLevels[j] ≥
                       MaxArgLevelConstraints(mparamId[i],
                                              M.argLevelConstraints)[j]
-       /\ (******************************************************************)
+       ∧ (******************************************************************)
           (* An arg-level parameter of M asserting that param[j] appears in *)
           (* an argument of operator parameter param[i], where mexp[i] is a *)
           (* defined operator, implies a condition relating mexp[i] and     *)
           (* mexp[j].                                                       *)
           (******************************************************************)
-          \A alp \in M.argLevelParams :
-            \A i, j \in 1..r :
-               /\ alp.op    = mparamId[i]
-               /\ alp.param = mparamId[j]
-               /\ mOpArg(i) \in OpDefNode
-               => (mexp[j].level \leq mOpArg(i).maxLevels[alp.idx])
+          ∀ alp ∈ M.argLevelParams :
+            ∀ i, j ∈ 1‥r :
+               ∧ alp.op    = mparamId[i]
+               ∧ alp.param = mparamId[j]
+               ∧ mOpArg(i) ∈ OpDefNode
+               ⇒ (mexp[j].level ≤ mOpArg(i).maxLevels[alp.idx])
 
        (*********************************************************************)
        (* The level constraints for InstanceNode n are the ones that come   *)
@@ -1270,17 +1270,17 @@
        (* and from the mexp[i], except with constraints on the param[j]     *)
        (* removed.                                                          *)
        (*********************************************************************)
-       /\ n.levelConstraints =
-            redMSubConstraints.levelConstraints \cup
-              UNION {redMexp[i].levelConstraints : i \in 1..r}
-       /\ n.argLevelConstraints =
-            redMSubConstraints.argLevelConstraints \cup
-              UNION {redMexp[i].argLevelConstraints : i \in 1..r}
-       /\ n.argLevelParams =
-            redMSubConstraints.argLevelParams \cup
-              UNION {redMexp[i].argLevelParams : i \in 1..r}
+       ∧ n.levelConstraints =
+            redMSubConstraints.levelConstraints ∪
+              UNION {redMexp[i].levelConstraints : i ∈ 1‥r}
+       ∧ n.argLevelConstraints =
+            redMSubConstraints.argLevelConstraints ∪
+              UNION {redMexp[i].argLevelConstraints : i ∈ 1‥r}
+       ∧ n.argLevelParams =
+            redMSubConstraints.argLevelParams ∪
+              UNION {redMexp[i].argLevelParams : i ∈ 1‥r}
 
- OpDefNodeLevelCorrect(n) ==
+ OpDefNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* We assume that n is an OpDefNode that is represents the definition of *)
    (*   Op(param[1], ... , param[p]) == exp                                 *)
@@ -1309,31 +1309,31 @@
    (*                                                                       *)
    (* The definition is level-correct iff expression exp is.                *)
    (*************************************************************************)
-   LET p == n.numberOfArgs
-       param == n.params
-       paramIds == {param[i] : i \in 1..p}
+   LET p ≜ n.numberOfArgs
+       param ≜ n.params
+       paramIds ≜ {param[i] : i ∈ 1‥p}
          (*******************************************************************)
          (* The set of ids of the formal parameters param[i].               *)
          (*******************************************************************)
-       exp == Node[n.body]
+       exp ≜ Node[n.body]
          (*******************************************************************)
          (* The ExprNode representing the body of the definition.           *)
          (*******************************************************************)
-       subst == Node[n.substitution]
-       r == Len(Node[n.substitution].subWith)
-       iParamIds == {param[i] : i \in 1..r}
+       subst ≜ Node[n.substitution]
+       r ≜ Len(Node[n.substitution].subWith)
+       iParamIds ≜ {param[i] : i ∈ 1‥r}
          (*******************************************************************)
          (* The set of param[i] that come from the INSTANCE.                *)
          (*******************************************************************)
-       mparamId == Node[n.substitution].subFor
+       mparamId ≜ Node[n.substitution].subFor
          (*******************************************************************)
          (* mparamId[i] is the NodeId of mparam[i].                         *)
          (*******************************************************************)
-       mexp == [i \in 1..r |-> Node[Node[n.substitution].subWith[i]]]
+       mexp ≜ [i ∈ 1‥r ↦ Node[Node[n.substitution].subWith[i]]]
          (*******************************************************************)
          (* mexp[i] is the ExprNode of the i-th WITH expression.            *)
          (*******************************************************************)
-       subExp == SubstituteInLevelConstraint(exp, subst)
+       subExp ≜ SubstituteInLevelConstraint(exp, subst)
          (*******************************************************************)
          (* This is a record containing the level-constraint fields for the *)
          (* expression subExp, obtained by performing the substitution      *)
@@ -1344,19 +1344,19 @@
          (* the same as the corresponding fields of exp.)                   *)
          (*******************************************************************)
 
-   IN  /\ n.level =
+   IN  ∧ n.level =
             (****************************************************************)
             (* The level of Op is the maximum of                            *)
             (*   - The level of exp, and                                    *)
             (*   - The levels of all mexp[i] such that mparam[i]            *)
             (*     contributes  to the level of exp.                        *)
             (****************************************************************)
-            LET pLevel(i) == IF mparamId[i] \in subExp.levelParams
+            LET pLevel(i) ≜ IF mparamId[i] ∈ subExp.levelParams
                                THEN mexp[i].level
                                ELSE 0
-            IN  NumMax(exp.level, SetMax({pLevel(i) : i \in 1..r}))
+            IN  NumMax(exp.level, SetMax({pLevel(i) : i ∈ 1‥r}))
 
-       /\ n.maxLevels =
+       ∧ n.maxLevels =
             (****************************************************************)
             (* n.maxLevels[i] is determined by the level constraints on     *)
             (* param[i] that come from subExp and from the mexp[j].  (The   *)
@@ -1370,20 +1370,20 @@
             (* the level of subExp (and hence the parameter doesn't occur   *)
             (* in subExp.levelParams).                                      *)
             (****************************************************************)
-            [i \in 1..p |->
+            [i ∈ 1‥p ↦
               MinLevelConstraint(
                 param[i],
-                subExp.levelConstraints \cup
-                   UNION {mexp[j].levelConstraints : j \in 1..r})]
+                subExp.levelConstraints ∪
+                   UNION {mexp[j].levelConstraints : j ∈ 1‥r})]
 
-       /\ n.weights =
+       ∧ n.weights =
             (****************************************************************)
             (* n.weights[i] is 1 iff param[i] is a level parameter of       *)
             (* subExp.                                                      *)
             (****************************************************************)
-            [i \in 1..p |-> IF param[i] \in subExp.levelParams THEN 1 ELSE 0]
+            [i ∈ 1‥p ↦ IF param[i] ∈ subExp.levelParams THEN 1 ELSE 0]
 
-       /\ n.minMaxLevel =
+       ∧ n.minMaxLevel =
             (****************************************************************)
             (* n.minMaxLevel[i] is deduced from the arg-level constraints   *)
             (* on param[i] obtained from subExp and (for i \leq r) from the *)
@@ -1391,13 +1391,13 @@
             (* essentially assuming that any INSTANCE parameter could       *)
             (* appear in subExp.                                            *)
             (****************************************************************)
-            [i \in 1..p |->
+            [i ∈ 1‥p ↦
               MaxArgLevelConstraints(
                   param[i],
-                  subExp.argLevelConstraints \cup
-                    UNION {mexp[j].argLevelConstraints : j \in 1..r})]
+                  subExp.argLevelConstraints ∪
+                    UNION {mexp[j].argLevelConstraints : j ∈ 1‥r})]
 
-       /\ n.opLevelCond =
+       ∧ n.opLevelCond =
             (****************************************************************)
             (* n.opLevelCond[i][j][k] is true iff there is an element of    *)
             (* subExp.argLevelParams indicating that param[j] occurs inside *)
@@ -1407,38 +1407,38 @@
             (* that come from mexp[h] involve only the first r formal       *)
             (* parameters.                                                  *)
             (****************************************************************)
-            [i \in 1..p |->
-              [j \in 1..p |->
-                [k \in 1..Node[param[i]].numberOfArgs |->
-                  [op |-> param[i], idx |-> k, param |-> param[j]]
-                   \in subExp.argLevelParams \cup
-                        UNION {mexp[h].argLevelParams : h \in 1..r}]]]
+            [i ∈ 1‥p ↦
+              [j ∈ 1‥p ↦
+                [k ∈ 1‥Node[param[i]].numberOfArgs ↦
+                  [op ↦ param[i], idx ↦ k, param ↦ param[j]]
+                   ∈ subExp.argLevelParams ∪
+                        UNION {mexp[h].argLevelParams : h ∈ 1‥r}]]]
 
-       /\ n.levelParams = subExp.levelParams \ paramIds
+       ∧ n.levelParams = subExp.levelParams \ paramIds
             (****************************************************************)
             (* The level parameters of Op are the ones that come from       *)
             (* subExp that are not formal parameters.                       *)
             (****************************************************************)
 
-       /\ n.levelConstraints =
+       ∧ n.levelConstraints =
             (****************************************************************)
             (* The level constraints of Op are the ones from subExp that    *)
             (* don't constrain its formal parameters.  The level            *)
             (* constraints that come from the mexp[j] belong to the         *)
             (* INSTANCE node.                                               *)
             (****************************************************************)
-            {lc \in subExp.levelConstraints : lc.param \notin paramIds}
+            {lc ∈ subExp.levelConstraints : lc.param ∉ paramIds}
 
-       /\ n.argLevelConstraints =
+       ∧ n.argLevelConstraints =
             (****************************************************************)
             (* The arg-level constraints of Op are the ones from subExp     *)
             (* that don't constraint its formal parameters.  Again, the     *)
             (* arg-level constraints that come from the mexp[j] belong to   *)
             (* the INSTANCE node.                                           *)
             (****************************************************************)
-            {alc \in subExp.argLevelConstraints : alc.param \notin paramIds }
+            {alc ∈ subExp.argLevelConstraints : alc.param ∉ paramIds }
 
-       /\ n.argLevelParams =
+       ∧ n.argLevelParams =
             (****************************************************************)
             (* The arg-level parameters of Op are the ones from subExp such *)
             (* that the op and params fields are not both formal parameters *)
@@ -1451,14 +1451,14 @@
             (* parameters.  Such conservatism seems necessary--for example, *)
             (* in case the INSTANCE occurs within a LET.                    *)
             (****************************************************************)
-            {alp \in subExp.argLevelParams : \/ alp.op    \notin paramIds
-                                             \/ alp.param \notin paramIds }
-              \cup
-            {alp \in UNION {mexp[j].argLevelParams : j \in 1..r}:
-               \/ /\ alp.op    \in    paramIds
-                  /\ alp.param \notin paramIds
-               \/ /\ alp.op    \notin paramIds
-                  /\ alp.param \in    paramIds }
+            {alp ∈ subExp.argLevelParams : ∨ alp.op    ∉ paramIds
+                                           ∨ alp.param ∉ paramIds }
+              ∪
+            {alp ∈ UNION {mexp[j].argLevelParams : j ∈ 1‥r}:
+               ∨ ∧ alp.op    ∈    paramIds
+                 ∧ alp.param ∉ paramIds
+               ∨ ∧ alp.op    ∉ paramIds
+                 ∧ alp.param ∈    paramIds }
 
 
  (***************************************************************************)
@@ -1467,7 +1467,7 @@
  (* operator.  These two cases are defined separately as                    *)
  (* DeclaredOpApplNodeLevelCorrect and DefinedOpApplNodeLevelCorrect.       *)
  (***************************************************************************)
- DeclaredOpApplNodeLevelCorrect(n) ==
+ DeclaredOpApplNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* This definition assumes that n is an OpApplNode representing the      *)
    (* expression Op(arg[1], ...  , arg[p]), where Op is a declared          *)
@@ -1481,22 +1481,22 @@
        (* We first define arg, p, op, and param to have the meanings        *)
        (* described informally above.                                       *)
        (*********************************************************************)
-       p     == Len(n.args)
-       arg   == [i \in 1..p |-> Node[n.args[i]]]
+       p     ≜ Len(n.args)
+       arg   ≜ [i ∈ 1‥p ↦ Node[n.args[i]]]
          (*******************************************************************)
          (* arg[i] is the ExprNode representing the i-th argument of the    *)
          (* expression represented by n.                                    *)
          (*******************************************************************)
-       opid == n.operator
-       op   == Node[opid]
+       opid ≜ n.operator
+       op   ≜ Node[opid]
          (*******************************************************************)
          (* The OpDefNode of the operator Op.)                              *)
          (*     ^^^^^^^^^                                                   *)
          (* I believe this shold be OpDeclNode. (LL, Mar 2007)              *)
          (*******************************************************************)
-       param == op.params
-   IN  /\ n.level = NumMax(op.level,
-                        SetMax({arg[i].level : i \in 1..p}))
+       param ≜ op.params
+   IN  ∧ n.level = NumMax(op.level,
+                        SetMax({arg[i].level : i ∈ 1‥p}))
             (****************************************************************)
             (* For an operator parameter, we assume that the weights of     *)
             (* each argument are 1, so the level is the maximum of the      *)
@@ -1504,48 +1504,48 @@
             (*                                                              *)
             (* Corrected (I hope) on 24 Mar 2007 by LL to include op.level. *)
             (****************************************************************)
-       /\ n.levelParams =
+       ∧ n.levelParams =
             (****************************************************************)
             (* The level parameters of n are the Op itself and the          *)
             (* LevelParams of all the arguments.                            *)
             (****************************************************************)
-            {opid} \cup UNION {arg[i].levelParams : i \in 1..p}
+            {opid} ∪ UNION {arg[i].levelParams : i ∈ 1‥p}
 
-       /\ n.levelConstraints =
+       ∧ n.levelConstraints =
             (****************************************************************)
             (* The LevelConstraints of n are all obtained from its          *)
             (* arguments.                                                   *)
             (****************************************************************)
-            UNION {arg[i].levelConstraints : i \in 1..p}
+            UNION {arg[i].levelConstraints : i ∈ 1‥p}
 
-       /\ n.argLevelConstraints =
+       ∧ n.argLevelConstraints =
             (****************************************************************)
             (* There are two source of arg-level constraints for n: the     *)
             (* ones it implies about Op, and the ones it inherits from its  *)
             (* arguments.                                                   *)
             (****************************************************************)
-            {[op |-> opid, idx |-> i, level |-> arg[i].level] : i \in 1..p}
-             \cup
-            UNION {arg[i].argLevelConstraints : i \in 1..p}
+            {[op ↦ opid, idx ↦ i, level ↦ arg[i].level] : i ∈ 1‥p}
+             ∪
+            UNION {arg[i].argLevelConstraints : i ∈ 1‥p}
 
-       /\ n.argLevelParams =
+       ∧ n.argLevelParams =
             (****************************************************************)
             (* There are two source of arg-level parameters for n: the ones *)
             (* it implies about Op, and the ones it inherits from its       *)
             (* arguments.                                                   *)
             (****************************************************************)
-            (LET ALP(i) ==
+            (LET ALP(i) ≜
                    (*********************************************************)
                    (* The arg-level parameters implied about Op by the i-th *)
                    (* argument of n.                                        *)
                    (*********************************************************)
-                   {[op |-> opid, idx   |-> i, param |-> par] :
-                       par \in arg[i].levelParams}
-             IN  UNION {ALP(i) : i \in 1..p} )
-               \cup
-            UNION {arg[i].argLevelParams : i \in 1..p}
+                   {[op ↦ opid, idx   ↦ i, param ↦ par] :
+                       par ∈ arg[i].levelParams}
+             IN  UNION {ALP(i) : i ∈ 1‥p} )
+               ∪
+            UNION {arg[i].argLevelParams : i ∈ 1‥p}
 
- DefinedOpApplNodeLevelCorrect(n) ==
+ DefinedOpApplNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* This definition assumes that n is an OpApplNode representing the      *)
    (* expression Op(arg[1], ...  , arg[p]), where Op is a defined operator. *)
@@ -1556,41 +1556,41 @@
        (* We first define arg, p, op, and param to have the meanings        *)
        (* described informally above.                                       *)
        (*********************************************************************)
-       p     == Len(n.args)
-       arg   == [i \in 1..p |-> Node[n.args[i]]]
+       p     ≜ Len(n.args)
+       arg   ≜ [i ∈ 1‥p ↦ Node[n.args[i]]]
          (*******************************************************************)
          (* arg[i] is the ExprNode representing the i-th argument of the    *)
          (* expression represented by n.                                    *)
          (*******************************************************************)
-       op    == Node[n.operator]
+       op    ≜ Node[n.operator]
          (*******************************************************************)
          (* The OpDefNode of the operator Op.                               *)
          (*******************************************************************)
-       param == op.params
-       numOpArgs(i) == Node[param[i]].numberOfArgs
+       param ≜ op.params
+       numOpArgs(i) ≜ Node[param[i]].numberOfArgs
          (*******************************************************************)
          (* If the i-th argument of op is an operator argument, then this   *)
          (* is the number of arguments that that operator argument takes.   *)
          (*******************************************************************)
-       defOpArgs ==
+       defOpArgs ≜
          (*******************************************************************)
          (* The set of i such that param[i] is an operator argument and     *)
          (* arg[i] is a defined operator.                                   *)
          (*******************************************************************)
-         {i \in 1..p : IsOpArg(op, i) /\ (arg[i].ref \in OpDefNodeId)}
-       declOpArgs ==
+         {i ∈ 1‥p : IsOpArg(op, i) ∧ (arg[i].ref ∈ OpDefNodeId)}
+       declOpArgs ≜
          (*******************************************************************)
          (* The set of i such that param[i] is an operator argument and     *)
          (* arg[i] is an operator parameter.                                *)
          (*******************************************************************)
-         {i \in 1..p : IsOpArg(op, i) /\ (arg[i].ref \in OpDeclNodeId)}
-       OpLevelCondIdx(i,j) ==
+         {i ∈ 1‥p : IsOpArg(op, i) ∧ (arg[i].ref ∈ OpDeclNodeId)}
+       OpLevelCondIdx(i,j) ≜
          (*******************************************************************)
          (* The set of k such that op.opLevelCond[i][j][k] is defined and   *)
          (* equals TRUE.                                                    *)
          (*******************************************************************)
-         {k \in 1..Node[param[i]].numberOfArgs : op.opLevelCond[i][j][k]}
-   IN  /\ (******************************************************************)
+         {k ∈ 1‥Node[param[i]].numberOfArgs : op.opLevelCond[i][j][k]}
+   IN  ∧ (******************************************************************)
           (* This conjunct expresses level-correctness.  For the i-th       *)
           (* argument, there is one condition derived from n.maxLevels[i]   *)
           (* and, if it is an operator argument and arg[i] is a defined     *)
@@ -1598,29 +1598,29 @@
           (* n.minMaxLevel[i] and a condition derived from                  *)
           (* n.opLevelCond[i].                                              *)
           (******************************************************************)
-          \A i \in 1..p :
-            /\ arg[i].level \leq op.maxLevels[i]
+          ∀ i ∈ 1‥p :
+            ∧ arg[i].level ≤ op.maxLevels[i]
                  (***********************************************************)
                  (* The level of arg[i] must be \leq op.maxLevels[i].       *)
                  (***********************************************************)
 
-            /\ /\ IsOpArg(op, i)
+            ∧ ∧ IsOpArg(op, i)
                     (********************************************************)
                     (* IF arg[i] is an operator argument oparg ...          *)
                     (********************************************************)
-               /\ arg[i].ref \in OpDefNodeId
+              ∧ arg[i].ref ∈ OpDefNodeId
                     (********************************************************)
                     (* ...  that is defined (rather than declared) [and     *)
                     (* hence is an IdentifierNode whose ref field is an     *)
                     (* OpDefOrDeclNodeId].)  THEN                           *)
                     (********************************************************)
-               => /\ (*******************************************************)
+              ⇒ ∧ (*******************************************************)
                      (* oparg must be able to take a k-th argument of level *)
                      (* at least op.minMaxLevel[k].                         *)
                      (*******************************************************)
-                     \A k \in 1.. numOpArgs(i) :
-                       Node[arg[i].ref].maxLevels[k] \geq op.minMaxLevel[i][k]
-                  /\ (*******************************************************)
+                     ∀ k ∈ 1‥ numOpArgs(i) :
+                       Node[arg[i].ref].maxLevels[k] ≥ op.minMaxLevel[i][k]
+                ∧ (*******************************************************)
                      (* If, in the definition of op, param[j] appears       *)
                      (* inside an expression in the k-th argument of        *)
                      (* param[i], then this means that, if we expand the    *)
@@ -1630,32 +1630,32 @@
                      (* able to take a k-th argument of level at least      *)
                      (* equal to the level of arg[j].                       *)
                      (*******************************************************)
-                     \A j \in 1..p :
-                       \A k \in 1..numOpArgs(i) :
-                         op.opLevelCond[i][j][k] =>
-                           arg[j].level \leq arg[i].maxLevels[k]
+                     ∀ j ∈ 1‥p :
+                       ∀ k ∈ 1‥numOpArgs(i) :
+                         op.opLevelCond[i][j][k] ⇒
+                           arg[j].level ≤ arg[i].maxLevels[k]
 
-       /\ n.level =
+       ∧ n.level =
             (****************************************************************)
             (* The maximum of op.level and the levels of all the arguments  *)
             (* whose corresponding weights are 1.                           *)
             (****************************************************************)
             NumMax(op.level,
-                   SetMax({arg[i].level * op.weights[i] : i \in 1..p}))
+                   SetMax({arg[i].level * op.weights[i] : i ∈ 1‥p}))
 
-       /\ n.levelParams =
+       ∧ n.levelParams =
             (****************************************************************)
             (* The parameters that contribute to the level of expression n  *)
             (* are the ones contributing to the level of op, together with  *)
             (* the ones contributing to the level of each argument that has *)
             (* weight 1.                                                    *)
             (****************************************************************)
-            op.levelParams \cup
-              LET LP(i) == IF op.weights[i] = 1 THEN arg[i].levelParams
+            op.levelParams ∪
+              LET LP(i) ≜ IF op.weights[i] = 1 THEN arg[i].levelParams
                                                 ELSE { }
-              IN  UNION {LP(i) : i \in 1..p}
+              IN  UNION {LP(i) : i ∈ 1‥p}
 
-       /\ n.levelConstraints =
+       ∧ n.levelConstraints =
             (****************************************************************)
             (* Level constraints obtained from the expression arise from    *)
             (* the following sources:                                       *)
@@ -1665,22 +1665,22 @@
             (*      Constraints inherited from the definition of op.        *)
             (****************************************************************)
             op.levelConstraints
-               \cup
+               ∪
             (****************************************************************)
             (* 2. arg[i].levelConstraints :                                 *)
             (*      Constraints inherited from each argument arg[i].        *)
             (****************************************************************)
-            (UNION {arg[i].levelConstraints : i \in 1..p})
-               \cup
+            (UNION {arg[i].levelConstraints : i ∈ 1‥p})
+               ∪
             (****************************************************************)
             (* 3. op.maxLevels[i] :                                         *)
             (*      If a parameter par contributes to the level of arg[i],  *)
             (*      then the level of par must be \leq op.maxLevels[i].     *)
             (****************************************************************)
-            (LET LC(i) == {[param |-> par, level |-> op.maxLevels[i]] :
-                              par \in arg[i].levelParams}
-             IN  UNION {LC(i) : i \in 1..p})
-              \cup
+            (LET LC(i) ≜ {[param ↦ par, level ↦ op.maxLevels[i]] :
+                              par ∈ arg[i].levelParams}
+             IN  UNION {LC(i) : i ∈ 1‥p})
+              ∪
             (****************************************************************)
             (* 4. op.opLevelCond :                                          *)
             (*      If param[i] is an operator parameter, arg[i] is         *)
@@ -1690,16 +1690,16 @@
             (*      contributing to the level of arg[j] must have level at  *)
             (*      most opArg.maxlevels[k].                                *)
             (****************************************************************)
-            (LET LC(i,j,k) ==
+            (LET LC(i,j,k) ≜
                (*************************************************************)
                (* The set of level constraints that would be implied if a   *)
                (* parameter contributes to the level of arg[j], and         *)
                (* param[j] appears as the k-th argument of some instance of *)
                (* param[i] in the definition of the operator arg[i].        *)
                (*************************************************************)
-                   {[param |-> par, level |-> Node[arg[i].ref].maxLevels[k]] :
-                       par \in arg[j].levelParams}
-                 LCE(i,j) ==
+                   {[param ↦ par, level ↦ Node[arg[i].ref].maxLevels[k]] :
+                       par ∈ arg[j].levelParams}
+                 LCE(i,j) ≜
                    (*********************************************************)
                    (* The set of level constraints in all LC(i,j,k) such    *)
                    (* that param[i] is an operator parameter that takes at  *)
@@ -1707,9 +1707,9 @@
                    (* implies that param[j] appears as in k-th argument of  *)
                    (* some instance of param[i] in the definition of Op.    *)
                    (*********************************************************)
-                   UNION {LC(i,j,k) : k \in OpLevelCondIdx(i,j)}
-             IN  UNION {LCE(i,j) : i \in defOpArgs, j \in 1..p} )
-              \cup
+                   UNION {LC(i,j,k) : k ∈ OpLevelCondIdx(i,j)}
+             IN  UNION {LCE(i,j) : i ∈ defOpArgs, j ∈ 1‥p} )
+              ∪
             (****************************************************************)
             (* 5. op.argLevelParams :                                       *)
             (*      For any arg-level parameter alp in op.argLevelParams,   *)
@@ -1718,23 +1718,23 @@
             (*      opArg.maxLevels[alp.idx].                               *)
             (****************************************************************)
             (LET
-                 ALP(i) ==
+                 ALP(i) ≜
                    (*********************************************************)
                    (* The set of arg-level parameters in op.argLevelParams  *)
                    (* whose op field is param[i].                           *)
                    (*********************************************************)
-                   {alp \in op.argLevelParams : alp.op = param[i]}
-                 LC(i) ==
+                   {alp ∈ op.argLevelParams : alp.op = param[i]}
+                 LC(i) ≜
                    (*********************************************************)
                    (* The level constraints implied by the elements in      *)
                    (* ALP(i).                                               *)
                    (*********************************************************)
-                   {[param |-> alp.param,
-                     level |-> Node[arg[i].ref].maxLevels[alp.idx]] :
-                       alp \in ALP(i)}
-             IN  UNION {LC(i) : i \in defOpArgs} )
+                   {[param ↦ alp.param,
+                     level ↦ Node[arg[i].ref].maxLevels[alp.idx]] :
+                       alp ∈ ALP(i)}
+             IN  UNION {LC(i) : i ∈ defOpArgs} )
 
-        /\ n.argLevelConstraints =
+        ∧ n.argLevelConstraints =
             (****************************************************************)
             (* Arg-level constraints implied by the expression arise from   *)
             (* the following sources:                                       *)
@@ -1745,33 +1745,33 @@
             (*      definition of op.                                       *)
             (****************************************************************)
              op.argLevelConstraints
-               \cup
+               ∪
 
             (****************************************************************)
             (* 2. arg[i].argLevelConstraints                                *)
             (*      Expression n inherits arg-level constraints from its    *)
             (*      arguments.                                              *)
             (****************************************************************)
-             (UNION {arg[i].argLevelConstraints : i \in 1..p})
-              \cup
+             (UNION {arg[i].argLevelConstraints : i ∈ 1‥p})
+              ∪
             (****************************************************************)
             (* 3. op.minMaxLevel                                            *)
             (*     If arg[i] is a declared operator, then it must be able   *)
             (*     to take a k-th argument of level op.minMaxLevel[i][k].   *)
             (****************************************************************)
             (LET
-                 ALC(i) ==
+                 ALC(i) ≜
                    (*********************************************************)
                    (* If arg[i] is the IdentifierNode of a declared         *)
                    (* operator opArg, then these are the arg-level          *)
                    (* constraints implied by op.minMaxLevel for opArg.      *)
                    (*********************************************************)
-                  {[param |-> arg[i].ref,
-                    idx   |-> k,
-                    level |-> op.minMaxLevel[i][k]] :
-                      k \in 1..numOpArgs(i)}
-             IN  UNION {ALC(i) : i \in declOpArgs})
-               \cup
+                  {[param ↦ arg[i].ref,
+                    idx   ↦ k,
+                    level ↦ op.minMaxLevel[i][k]] :
+                      k ∈ 1‥numOpArgs(i)}
+             IN  UNION {ALC(i) : i ∈ declOpArgs})
+               ∪
             (****************************************************************)
             (* 4. op.opLevelCond                                            *)
             (*      If op.opLevelCond[i][j][k] is true and arg[i] is an     *)
@@ -1779,18 +1779,18 @@
             (*      opArg, then opArg must be able to take a k-th argument  *)
             (*      of level arg[j].level.                                  *)
             (****************************************************************)
-            (LET ALC(i, j) ==
+            (LET ALC(i, j) ≜
                    (*********************************************************)
                    (* If arg[i] is a declared operator, then this is the    *)
                    (* set of arg-level constraints implied for that         *)
                    (* operator by arg[j].level.                             *)
                    (*********************************************************)
-                   {[param |-> arg[i].ref,
-                     idx |-> k,
-                     level |-> arg[j].level] : k \in OpLevelCondIdx(i,j)}
+                   {[param ↦ arg[i].ref,
+                     idx ↦ k,
+                     level ↦ arg[j].level] : k ∈ OpLevelCondIdx(i,j)}
 
-             IN  UNION {ALC(i,j) : i \in declOpArgs, j \in 1..p} )
-               \cup
+             IN  UNION {ALC(i,j) : i ∈ declOpArgs, j ∈ 1‥p} )
+               ∪
             (****************************************************************)
             (* 5. op.argLevelParams                                         *)
             (*      If an arg-level parameter alp indicates that param[i]   *)
@@ -1799,22 +1799,22 @@
             (*      that opArg must be able to take a k-th argument of      *)
             (*      level arg[i].level.                                     *)
             (****************************************************************)
-            (LET ALP(i) == {alp \in op.argLevelParams : alp.param = param[i]}
+            (LET ALP(i) ≜ {alp ∈ op.argLevelParams : alp.param = param[i]}
                    (*********************************************************)
                    (* The subset of op.argLevelParams whose param field is  *)
                    (* the i-th formal parameter of op.                      *)
                    (*********************************************************)
-                 ALC(i) ==
+                 ALC(i) ≜
                    (*********************************************************)
                    (* The set of arg-level constraints implied by the       *)
                    (* elements of ALP(i).                                   *)
                    (*********************************************************)
-                   {[param |-> alp.param,
-                     idx   |-> alp.idx,
-                     level |-> arg[i].level] : alp \in ALP(i)}
-              IN  UNION {ALC(i) : i \in 1..p})
+                   {[param ↦ alp.param,
+                     idx   ↦ alp.idx,
+                     level ↦ arg[i].level] : alp ∈ ALP(i)}
+              IN  UNION {ALC(i) : i ∈ 1‥p})
 
-       /\ n.argLevelParams =
+       ∧ n.argLevelParams =
             (****************************************************************)
             (* Arg-level parameters implied by the expression arise from    *)
             (* the following sources:                                       *)
@@ -1824,15 +1824,15 @@
             (*      The expression inherits all arg-level parameters from   *)
             (*      its arguments.                                          *)
             (****************************************************************)
-            (UNION {arg[i].argLevelParams : i \in 1..p})
-             \cup
+            (UNION {arg[i].argLevelParams : i ∈ 1‥p})
+             ∪
             (****************************************************************)
             (* 2. Elements alp of op.argLevelParams with neither alp.op or  *)
             (*    alp.param a formal parameter of the definition of op.     *)
             (****************************************************************)
-            {alp \in op.argLevelParams :
-              \A i \in 1..p : (alp.op # param[i]) /\ (alp.param # param[i])}
-             \cup
+            {alp ∈ op.argLevelParams :
+              ∀ i ∈ 1‥p : (alp.op ≠ param[i]) ∧ (alp.param ≠ param[i])}
+             ∪
 
             (****************************************************************)
             (* 3. Elements alp of op.argLevelParams with alp.op = param[i]. *)
@@ -1840,7 +1840,7 @@
             (*      implies an arg-level parameter asserting that alp.param *)
             (*      appears in argument alp.idx of opArg.                   *)
             (****************************************************************)
-            (LET ALP(i) == {alp \in op.argLevelParams : alp.op = param[i]}
+            (LET ALP(i) ≜ {alp ∈ op.argLevelParams : alp.op = param[i]}
                    (*********************************************************)
                    (* The set of arg-level parameters alp of op with alp.op *)
                    (* = param[i].  (Note: we know that alp.param is not a   *)
@@ -1849,14 +1849,14 @@
                    (* the op and param fields are formal parameters of the  *)
                    (* definition of op.)                                    *)
                    (*********************************************************)
-                 NLP(i) ==
+                 NLP(i) ≜
                    (*********************************************************)
                    (* The arg-level parameters of the expression implied by *)
                    (* the elements of ALP(i).                               *)
                    (*********************************************************)
-                   {[alp EXCEPT !.op = arg[i].ref] : alp \in ALP(i)}
-             IN  UNION {NLP(i) : i \in declOpArgs})
-               \cup
+                   {[alp EXCEPT !.op = arg[i].ref] : alp ∈ ALP(i)}
+             IN  UNION {NLP(i) : i ∈ declOpArgs})
+               ∪
             (****************************************************************)
             (* 4. Elements alp of op.argLevelParams with alp.param =        *)
             (*    param[i].                                                 *)
@@ -1865,13 +1865,13 @@
             (*      appears in argument alp.idx of an occurrence of         *)
             (*      alp.op.                                                 *)
             (****************************************************************)
-            (LET OLP(i) ==
+            (LET OLP(i) ≜
                    (*********************************************************)
                    (* The set of all arg-level parameters whose param field *)
                    (* is param[i].                                          *)
                    (*********************************************************)
-                   {alp \in op.argLevelParams : alp.param = param[i]}
-                 ALP(i) ==
+                   {alp ∈ op.argLevelParams : alp.param = param[i]}
+                 ALP(i) ≜
                    (*********************************************************)
                    (* The set of arg-level parameters obtained from an      *)
                    (* arg-level parameter alp in op.argLevelParams by       *)
@@ -1879,9 +1879,9 @@
                    (* arg[i].levelParams.                                   *)
                    (*********************************************************)
                    {[alp EXCEPT !.param = par] :
-                      alp \in OLP(i), par \in arg[i].levelParams}
-             IN  UNION {ALP(i) : i \in declOpArgs} )
-              \cup
+                      alp ∈ OLP(i), par ∈ arg[i].levelParams}
+             IN  UNION {ALP(i) : i ∈ declOpArgs} )
+              ∪
             (****************************************************************)
             (* 5. op.opLevelCond                                            *)
             (*      If op.opLevelCond[i][j][k] = TRUE and arg[i] is a       *)
@@ -1890,22 +1890,22 @@
             (*      to the level of arg[j] appears in argument k of an      *)
             (*      occurrence of opArg.                                    *)
             (****************************************************************)
-            (LET ALP(i,j) ==
+            (LET ALP(i,j) ≜
                    (*********************************************************)
                    (* If arg[i] is a declared operator, then this is the    *)
                    (* set of all all arg-level parameters implied by        *)
                    (* op.opLevelCond[i][j] and arg[j].levelParams.          *)
                    (*********************************************************)
-                   {[op |-> arg[i].ref, idx |-> k, param |-> par] :
-                       k \in OpLevelCondIdx(i,j), par \in arg[j].levelParams}
-              IN  UNION {ALP(i,j) : i \in declOpArgs, j \in 1..p})
+                   {[op ↦ arg[i].ref, idx ↦ k, param ↦ par] :
+                       k ∈ OpLevelCondIdx(i,j), par ∈ arg[j].levelParams}
+              IN  UNION {ALP(i,j) : i ∈ declOpArgs, j ∈ 1‥p})
 
 
- OpApplNodeLevelCorrect(n) ==
-   IF n.operator \in OpDeclNodeId THEN DeclaredOpApplNodeLevelCorrect(n)
+ OpApplNodeLevelCorrect(n) ≜
+   IF n.operator ∈ OpDeclNodeId THEN DeclaredOpApplNodeLevelCorrect(n)
                                   ELSE DefinedOpApplNodeLevelCorrect(n)
 
- LetInNodeLevelCorrect(n) ==
+ LetInNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* We assume n is a LetInNode.                                           *)
    (*                                                                       *)
@@ -1916,34 +1916,34 @@
    (* formal parameters must be removed from the argLevelParams field of a  *)
    (* LET definition.                                                       *)
    (*************************************************************************)
-   LET exp    == Node[n.body]
-       letIds == n.opDefs \cup n.instances
-       opParams(opid) ==
+   LET exp    ≜ Node[n.body]
+       letIds ≜ n.opDefs ∪ n.instances
+       opParams(opid) ≜
          (*******************************************************************)
          (* If opid is an OpDefNodeId, then this is the set of formal       *)
          (* parameters of the definition represented by Node[opid].         *)
          (*******************************************************************)
-         {Node[opid].params[i] : i \in 1..Node[opid].numberOfArgs}
-   IN  /\ n.level = exp.level
-       /\ n.levelParams =
+         {Node[opid].params[i] : i ∈ 1‥Node[opid].numberOfArgs}
+   IN  ∧ n.level = exp.level
+       ∧ n.levelParams =
             exp.levelParams
-       /\ n.levelConstraints =
-            exp.levelConstraints \cup
-               UNION {Node[opid].levelConstraints : opid \in letIds}
-       /\ n.argLevelConstraints =
-            exp.argLevelConstraints \cup
-               UNION {Node[opid].argLevelConstraints : opid \in letIds}
-       /\ n.argLevelParams =
+       ∧ n.levelConstraints =
+            exp.levelConstraints ∪
+               UNION {Node[opid].levelConstraints : opid ∈ letIds}
+       ∧ n.argLevelConstraints =
+            exp.argLevelConstraints ∪
+               UNION {Node[opid].argLevelConstraints : opid ∈ letIds}
+       ∧ n.argLevelParams =
             exp.argLevelParams
-              \cup
+              ∪
             (UNION {ReducedLevelConstraint(Node[opid],
                                           opParams(opid)).argLevelParams :
-                     opid \in n.opDefs})
-              \cup
-            UNION {Node[opid].argLevelParams : opid \in n.instances}
+                     opid ∈ n.opDefs})
+              ∪
+            UNION {Node[opid].argLevelParams : opid ∈ n.instances}
 
 
- IdentifierNodeLevelCorrect(n) ==
+ IdentifierNodeLevelCorrect(n) ≜
    (*************************************************************************)
    (* An IdentifierNode represents an expression that consists of a single  *)
    (* symbol, or else an operator argument appearing as the argument in the *)
@@ -1952,35 +1952,35 @@
    (* It is always level-correct if its ref field is, which will be the     *)
    (* case except possibly for a defined operator argument                  *)
    (*************************************************************************)
-   /\ n.level = Node[n.ref].level
+   ∧ n.level = Node[n.ref].level
         (********************************************************************)
         (* The level is the level of the symbol's node.                     *)
         (********************************************************************)
-   /\ IF n.ref \in OpDeclNodeId \cup BoundSymbolNodeId
+   ∧ IF n.ref ∈ OpDeclNodeId ∪ BoundSymbolNodeId
         THEN (***************************************************************)
              (* The symbol is a declared operator or a bound symbol.  In    *)
              (* this case, all the constraints are empty except for a       *)
              (* ConstantDeclNode, in which case the set of level parameters *)
              (* consists of the symbol itself.                              *)
              (***************************************************************)
-             /\ n.levelParams         = IF n.ref \in ConstantDeclNodeId
+             ∧ n.levelParams         = IF n.ref ∈ ConstantDeclNodeId
                                           THEN {n.ref}
                                           ELSE { }
-             /\ n.levelConstraints    = { }
-             /\ n.argLevelConstraints = { }
-             /\ n.argLevelParams      = { }
+             ∧ n.levelConstraints    = { }
+             ∧ n.argLevelConstraints = { }
+             ∧ n.argLevelParams      = { }
 
         ELSE (***************************************************************)
              (* The symbol is a defined operator (appearing as an argument  *)
              (* to a higher-order operator).  Its constraints are the       *)
              (* constraints of the symbol's OpDefNode.                      *)
              (***************************************************************)
-             /\ n.levelParams         = Node[n.ref].levelParams
-             /\ n.levelConstraints    = Node[n.ref].levelConstraints
-             /\ n.argLevelConstraints = Node[n.ref].argLevelConstraints
-             /\ n.argLevelParams      = Node[n.ref].argLevelParams
+             ∧ n.levelParams         = Node[n.ref].levelParams
+             ∧ n.levelConstraints    = Node[n.ref].levelConstraints
+             ∧ n.argLevelConstraints = Node[n.ref].argLevelConstraints
+             ∧ n.argLevelParams      = Node[n.ref].argLevelParams
 
- LevelCorrect ==
+ LevelCorrect ≜
    (*************************************************************************)
    (* The following kinds of nodes are always level-correct, and any level  *)
    (* information they contain is specified by their types.                 *)
@@ -1995,14 +1995,14 @@
    (*                                                                       *)
    (*   SubstitutionNode                                                    *)
    (*************************************************************************)
-   \A id \in NodeId :
-     LET n == Node[id]
-     IN  /\ (n \in IdentifierNode) => IdentifierNodeLevelCorrect(n)
-         /\ (n \in OpApplNode)     => OpApplNodeLevelCorrect(n)
-         /\ n \in LetInNode        => LetInNodeLevelCorrect(n)
-         /\ n \in InstanceNode     => InstanceNodeLevelCorrect(n)
-         /\ n \in ModuleNode       => ModuleNodeLevelCorrect(n)
-         /\ (n \in OpDefNode) /\ (n.body # Null) => OpDefNodeLevelCorrect(n)
+   ∀ id ∈ NodeId :
+     LET n ≜ Node[id]
+     IN  ∧ (n ∈ IdentifierNode) ⇒ IdentifierNodeLevelCorrect(n)
+         ∧ (n ∈ OpApplNode)     ⇒ OpApplNodeLevelCorrect(n)
+         ∧ n ∈ LetInNode        ⇒ LetInNodeLevelCorrect(n)
+         ∧ n ∈ InstanceNode     ⇒ InstanceNodeLevelCorrect(n)
+         ∧ n ∈ ModuleNode       ⇒ ModuleNodeLevelCorrect(n)
+         ∧ (n ∈ OpDefNode) ∧ (n.body ≠ Null) ⇒ OpDefNodeLevelCorrect(n)
 
 
 

@@ -42,8 +42,8 @@ CONSTANTS N, P
 (* such that P(v) is true, if such a value exists.                         *)
 (***************************************************************************)
 RECURSIVE Sum(_,_)
-Sum(f,S) == IF S = {} THEN 0
-                      ELSE LET x == CHOOSE x \in S : TRUE
+Sum(f,S) ≜ IF S = {} THEN 0
+                      ELSE LET x ≜ CHOOSE x ∈ S : TRUE
                            IN  f[x] + Sum(f, S \ {x})
 
 (***************************************************************************)
@@ -62,8 +62,8 @@ Sum(f,S) == IF S = {} THEN 0
 (* In TLA+, [S -> T] is the set of all functions with domain S and range a *)
 (* subset of T.  \A and \E are the universal and existential quantifiers.  *)
 (***************************************************************************)
-Break == {B \in [1..P -> 1..N] :    Sum(B, 1..P) = N
-                                 /\ \A i \in 1..P : \A j \in (i+1)..P : B[i] =< B[j]}
+Break ≜ {B ∈ [1‥P → 1‥N] :    Sum(B, 1‥P) = N
+                                 ∧ ∀ i ∈ 1‥P : ∀ j ∈ (i+1)‥P : B[i] ≤ B[j]}
 
 (***************************************************************************)
 (* To weigh a quantity of corn, we can put some of the weights on the same *)
@@ -74,22 +74,22 @@ Break == {B \in [1..P -> 1..N] :    Sum(B, 1..P) = N
 (* piece numbers (numbers in 1..P), so Sum(B, S) is the weight of the      *)
 (* pieces in S.                                                            *)
 (***************************************************************************)
-IsRepresentation(w, B, S, T) ==    S \cap T = {}
-                                 /\ w + Sum(B,S) = Sum(B,T)
+IsRepresentation(w, B, S, T) ≜    S ∩ T = {}
+                                 ∧ w + Sum(B,S) = Sum(B,T)
 (***************************************************************************)
 (* I now define IsSolution(B) to be true iff break B solves the problem,   *)
 (* meaning that it can be used to balance any weight in 1..N.              *)
 (*                                                                         *)
 (* SUBSET S is the set of all subsets of S (the power set of S).           *)
 (***************************************************************************)
-IsSolution(B) ==  \A w \in 1..N : 
-                     \E S, T \in SUBSET (1..P) : IsRepresentation(w, B, S, T) 
+IsSolution(B) ≜  ∀ w ∈ 1‥N : 
+                     ∃ S, T ∈ SUBSET (1‥P) : IsRepresentation(w, B, S, T) 
 
 (***************************************************************************)
 (* I define AllSolutions to be the set of all breaks B that solve the      *)
 (* problem.                                                                *)
 (***************************************************************************)
-AllSolutions == { B \in Break : IsSolution(B) }
+AllSolutions ≜ { B ∈ Break : IsSolution(B) }
 
 (***************************************************************************)
 (* We can now have TLC compute the solution to the problem as follows.  We *)
@@ -148,13 +148,13 @@ AllSolutions == { B \in Break : IsSolution(B) }
 (*   [w \in 1..N |-> F(w)]  is the N tuple with F(i) as element i.         *)
 (*                                                                         *)
 (***************************************************************************)
-ExpandSolutions ==
-  LET PiecesFor(w, B) == CHOOSE ST \in (SUBSET (1..P)) \X (SUBSET (1..P)) :
+ExpandSolutions ≜
+  LET PiecesFor(w, B) ≜ CHOOSE ST ∈ (SUBSET (1‥P)) × (SUBSET (1‥P)) :
                            IsRepresentation(w, B, ST[1], ST[2])
-      Image(S, B) == {B[x] : x \in S}
-      SolutionFor(w, B) == << w, 
+      Image(S, B) ≜ {B[x] : x ∈ S}
+      SolutionFor(w, B) ≜ ⟨ w, 
                               Image(PiecesFor(w, B)[1], B), 
-                              Image(PiecesFor(w, B)[2], B) >>
-  IN  { [w \in 1..N |-> SolutionFor(w, B)] : B \in AllSolutions }
+                              Image(PiecesFor(w, B)[2], B) ⟩
+  IN  { [w ∈ 1‥N ↦ SolutionFor(w, B)] : B ∈ AllSolutions }
 ===============================================================================
 Created by Leslie Lamport on 26 October 2011

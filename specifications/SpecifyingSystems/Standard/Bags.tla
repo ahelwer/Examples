@@ -1,46 +1,46 @@
 ------------------------------- MODULE Bags ---------------------------------
 LOCAL INSTANCE Naturals
 
-IsABag(B) ==  B \in [DOMAIN B -> {n \in Nat : n > 0}]
+IsABag(B) ≜  B ∈ [DOMAIN B → {n ∈ ℕ : n > 0}]
 
-BagToSet(B) == DOMAIN B
+BagToSet(B) ≜ DOMAIN B
 
-SetToBag(S) == [e \in S |-> 1]  
+SetToBag(S) ≜ [e ∈ S ↦ 1]  
   
-BagIn(e,B) == e \in BagToSet(B)
+BagIn(e,B) ≜ e ∈ BagToSet(B)
 
-EmptyBag == SetToBag({})
+EmptyBag ≜ SetToBag({})
 
-CopiesIn(e, B) ==  IF BagIn(e, B) THEN B[e] ELSE 0
+CopiesIn(e, B) ≜  IF BagIn(e, B) THEN B[e] ELSE 0
 
-B1 (+) B2  ==  
-  [e \in (DOMAIN B1) \cup (DOMAIN B2) |-> CopiesIn(e, B1) + CopiesIn(e, B2)]
+B1 ⊕ B2  ≜  
+  [e ∈ (DOMAIN B1) ∪ (DOMAIN B2) ↦ CopiesIn(e, B1) + CopiesIn(e, B2)]
   
-B1 (-) B2  == 
-  LET B == [e \in DOMAIN B1 |-> CopiesIn(e, B1) - CopiesIn(e, B2)]
-  IN  [e \in {d \in DOMAIN B : B[d] > 0} |-> B[e]]
+B1 ⊖ B2  ≜ 
+  LET B ≜ [e ∈ DOMAIN B1 ↦ CopiesIn(e, B1) - CopiesIn(e, B2)]
+  IN  [e ∈ {d ∈ DOMAIN B : B[d] > 0} ↦ B[e]]
 
-LOCAL Sum(f) ==
-  LET DSum[S \in SUBSET DOMAIN f] == LET elt == CHOOSE e \in S : TRUE
+LOCAL Sum(f) ≜
+  LET DSum[S ∈ SUBSET DOMAIN f] ≜ LET elt ≜ CHOOSE e ∈ S : TRUE
                                      IN  IF S = {} 
                                            THEN 0
                                            ELSE f[elt] + DSum[S \ {elt}]
   IN  DSum[DOMAIN f]
 
-BagUnion(S) ==
-  [e \in UNION {BagToSet(B) : B \in S} |-> Sum([B \in S |-> CopiesIn(e,B)])]
+BagUnion(S) ≜
+  [e ∈ UNION {BagToSet(B) : B ∈ S} ↦ Sum([B ∈ S ↦ CopiesIn(e,B)])]
 
-B1 \sqsubseteq B2  ==  /\ (DOMAIN B1) \subseteq (DOMAIN B2)
-                       /\ \A e \in DOMAIN B1 : B1[e] \leq B2[e]
+B1 ⊑ B2  ≜  ∧ (DOMAIN B1) ⊆ (DOMAIN B2)
+            ∧ ∀ e ∈ DOMAIN B1 : B1[e] ≤ B2[e]
 
-SubBag(B) ==
-  LET AllBagsOfSubset == 
-        UNION {[SB -> {n \in Nat : n > 0}] : SB \in SUBSET BagToSet(B)}  
-  IN  {SB \in AllBagsOfSubset : \A e \in DOMAIN SB : SB[e] \leq B[e]}
+SubBag(B) ≜
+  LET AllBagsOfSubset ≜ 
+        UNION {[SB → {n ∈ ℕ : n > 0}] : SB ∈ SUBSET BagToSet(B)}  
+  IN  {SB ∈ AllBagsOfSubset : ∀ e ∈ DOMAIN SB : SB[e] ≤ B[e]}
 
-BagOfAll(F(_), B) ==
-  [e \in {F(d) : d \in BagToSet(B)} |-> 
-     Sum( [d \in BagToSet(B) |-> IF F(d) = e THEN B[d] ELSE 0] ) ]
+BagOfAll(F(_), B) ≜
+  [e ∈ {F(d) : d ∈ BagToSet(B)} ↦ 
+     Sum( [d ∈ BagToSet(B) ↦ IF F(d) = e THEN B[d] ELSE 0] ) ]
 
-BagCardinality(B) == Sum(B)
+BagCardinality(B) ≜ Sum(B)
 =============================================================================

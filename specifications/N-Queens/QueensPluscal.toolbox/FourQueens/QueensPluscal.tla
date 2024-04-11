@@ -12,23 +12,23 @@ EXTENDS Naturals, Sequences
 (***************************************************************************)
 
 CONSTANT N              \** number of queens and size of the board
-ASSUME N \in Nat \ {0}
+ASSUME N ∈ ℕ \ {0}
 
 (* The following predicate determines if queens i and j attack each other
    in a placement of queens (represented by a sequence as above). *)
-Attacks(queens,i,j) ==
-  \/ queens[i] = queens[j]                 \** same column
-  \/ queens[i] - queens[j] = i - j         \** first diagonal
-  \/ queens[j] - queens[i] = i - j         \** second diagonal
+Attacks(queens,i,j) ≜
+  ∨ queens[i] = queens[j]                 \** same column
+  ∨ queens[i] - queens[j] = i - j         \** first diagonal
+  ∨ queens[j] - queens[i] = i - j         \** second diagonal
 
 (* A placement represents a (partial) solution if no two different queens
    attack each other in it. *)
-IsSolution(queens) ==
-  \A i \in 1 .. Len(queens)-1 : \A j \in i+1 .. Len(queens) : 
-       ~ Attacks(queens,i,j) 
+IsSolution(queens) ≜
+  ∀ i ∈ 1 ‥ Len(queens)-1 : ∀ j ∈ i+1 ‥ Len(queens) : 
+       ¬ Attacks(queens,i,j) 
 
 (* Compute the set of solutions of the N-queens problem. *)
-Solutions == { queens \in [1..N -> 1..N] : IsSolution(queens) }
+Solutions ≜ { queens ∈ [1‥N → 1‥N] : IsSolution(queens) }
 
 (***************************************************************************)
 (* We now describe an algorithm that iteratively computes the set of       *)
@@ -44,21 +44,21 @@ Solutions == { queens \in [1..N -> 1..N] : IsSolution(queens) }
 
 (* --algorithm Queens
      variables
-       todo = { << >> };
+       todo = { ⟨ ⟩ };
        sols = {};
 
      begin
-nxtQ:  while todo # {}
+nxtQ:  while todo ≠ {}
        do
-         with queens \in todo,
+         with queens ∈ todo,
               nxtQ = Len(queens) + 1,
-              cols = { c \in 1..N : ~ \E i \in 1 .. Len(queens) :
+              cols = { c ∈ 1‥N : ¬ ∃ i ∈ 1 ‥ Len(queens) :
                                       Attacks( Append(queens, c), i, nxtQ ) },
-              exts = { Append(queens,c) : c \in cols }
+              exts = { Append(queens,c) : c ∈ cols }
          do
            if (nxtQ = N)
-           then todo := todo \ {queens}; sols := sols \union exts;
-           else todo := (todo \ {queens}) \union exts;
+           then todo ≔ todo \ {queens}; sols ≔ sols ∪ exts;
+           else todo ≔ (todo \ {queens}) ∪ exts;
            end if;
          end with;
        end while;
@@ -68,57 +68,57 @@ nxtQ:  while todo # {}
 \** BEGIN TRANSLATION
 VARIABLES todo, sols, pc
 
-vars == << todo, sols, pc >>
+vars ≜ ⟨ todo, sols, pc ⟩
 
-Init == (* Global variables *)
-        /\ todo = { << >> }
-        /\ sols = {}
-        /\ pc = "nxtQ"
+Init ≜ (* Global variables *)
+        ∧ todo = { ⟨ ⟩ }
+        ∧ sols = {}
+        ∧ pc = "nxtQ"
 
-nxtQ == /\ pc = "nxtQ"
-        /\ IF todo # {}
-              THEN /\ \E queens \in todo:
-                        LET nxtQ == Len(queens) + 1 IN
-                          LET cols == { c \in 1..N : ~ \E i \in 1 .. Len(queens) :
+nxtQ ≜ ∧ pc = "nxtQ"
+       ∧ IF todo ≠ {}
+              THEN ∧ ∃ queens ∈ todo:
+                        LET nxtQ ≜ Len(queens) + 1 IN
+                          LET cols ≜ { c ∈ 1‥N : ¬ ∃ i ∈ 1 ‥ Len(queens) :
                                                        Attacks( Append(queens, c), i, nxtQ ) } IN
-                            LET exts == { Append(queens,c) : c \in cols } IN
+                            LET exts ≜ { Append(queens,c) : c ∈ cols } IN
                               IF (nxtQ = N)
-                                 THEN /\ todo' = todo \ {queens}
-                                      /\ sols' = (sols \union exts)
-                                 ELSE /\ todo' = ((todo \ {queens}) \union exts)
-                                      /\ sols' = sols
-                   /\ pc' = "nxtQ"
-              ELSE /\ pc' = "Done"
-                   /\ UNCHANGED << todo, sols >>
+                                 THEN ∧ todo' = todo \ {queens}
+                                      ∧ sols' = (sols ∪ exts)
+                                 ELSE ∧ todo' = ((todo \ {queens}) ∪ exts)
+                                      ∧ sols' = sols
+                   ∧ pc' = "nxtQ"
+              ELSE ∧ pc' = "Done"
+                   ∧ UNCHANGED ⟨ todo, sols ⟩
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
-Terminating == pc = "Done" /\ UNCHANGED vars
+Terminating ≜ pc = "Done" ∧ UNCHANGED vars
 
-Next == nxtQ
-           \/ Terminating
+Next ≜ nxtQ
+           ∨ Terminating
 
-Spec == Init /\ [][Next]_vars
+Spec ≜ Init ∧ □[Next]_vars
 
-Termination == <>(pc = "Done")
+Termination ≜ ◇(pc = "Done")
 
 \** END TRANSLATION
 
-TypeInvariant ==
-  /\ todo \in SUBSET Seq(1 .. N) /\ \A s \in todo : Len(s) < N
-  /\ sols \in SUBSET Seq(1 .. N) /\ \A s \in sols : Len(s) = N
+TypeInvariant ≜
+  ∧ todo ∈ SUBSET Seq(1 ‥ N) ∧ ∀ s ∈ todo : Len(s) < N
+  ∧ sols ∈ SUBSET Seq(1 ‥ N) ∧ ∀ s ∈ sols : Len(s) = N
 
 (* The set of sols contains only solutions, and contains all solutions
    when todo is empty. *)
-Invariant ==
-  /\ sols \subseteq Solutions
-  /\ todo = {} => Solutions \subseteq sols
+Invariant ≜
+  ∧ sols ⊆ Solutions
+  ∧ todo = {} ⇒ Solutions ⊆ sols
 
 (* Assert that no solutions are ever computed so that TLC displays one *)
-NoSolutions == sols = {}
+NoSolutions ≜ sols = {}
 
 (* Add a fairness condition to ensure progress as long as todo is nonempty *)
-Liveness == WF_vars(nxtQ)
-LiveSpec == Spec /\ Liveness
+Liveness ≜ WF_vars(nxtQ)
+LiveSpec ≜ Spec ∧ Liveness
 
 =============================================================================
 \* Modification History

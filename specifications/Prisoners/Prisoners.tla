@@ -45,10 +45,10 @@ ASSUME
   (* is more than one prisoner.  (The problem is trivial if there is a     *)
   (* single prisoner.)                                                     *)
   (*************************************************************************)
-  /\ Counter \in Prisoner
-  /\ Cardinality(Prisoner) > 1
+  ∧ Counter ∈ Prisoner
+  ∧ Cardinality(Prisoner) > 1
 
-OtherPrisoner == Prisoner \ {Counter}
+OtherPrisoner ≜ Prisoner \ {Counter}
   (*************************************************************************)
   (* The set of all prisoners other than the counter.                      *)
   (*************************************************************************)
@@ -72,7 +72,7 @@ VARIABLES
     (* The number of times the Counter has switched switch A down.         *)
     (***********************************************************************)
 
-vars == <<switchAUp, switchBUp, timesSwitched, count>>    
+vars ≜ ⟨switchAUp, switchBUp, timesSwitched, count⟩    
   (*************************************************************************)
   (* The tuple of all variables.                                           *)
   (*************************************************************************)
@@ -80,7 +80,7 @@ vars == <<switchAUp, switchBUp, timesSwitched, count>>
 (***************************************************************************)
 (* We first define three state predicates.                                 *)
 (***************************************************************************)
-TypeOK == 
+TypeOK ≜ 
   (*************************************************************************)
   (* The type-correctness invariant.  This is not actually part of the     *)
   (* specification.  It is added to help the reader understand the         *)
@@ -89,21 +89,21 @@ TypeOK ==
   (*                                                                       *)
   (* Note the bound on the value of count.                                 *)
   (*************************************************************************)
-  /\ switchAUp     \in BOOLEAN
-  /\ switchBUp     \in BOOLEAN
-  /\ timesSwitched \in [OtherPrisoner -> 0..2]
-  /\ count         \in 0 .. (2 * Cardinality(Prisoner) - 1)
+  ∧ switchAUp     ∈ BOOLEAN
+  ∧ switchBUp     ∈ BOOLEAN
+  ∧ timesSwitched ∈ [OtherPrisoner → 0‥2]
+  ∧ count         ∈ 0 ‥ (2 * Cardinality(Prisoner) - 1)
 
-Init ==
+Init ≜
   (*************************************************************************)
   (* The initial predicate.                                                *)
   (*************************************************************************)
-  /\ switchAUp \in BOOLEAN
-  /\ switchBUp \in BOOLEAN
-  /\ timesSwitched = [i \in OtherPrisoner |-> 0]
-  /\ count     = 0
+  ∧ switchAUp ∈ BOOLEAN
+  ∧ switchBUp ∈ BOOLEAN
+  ∧ timesSwitched = [i ∈ OtherPrisoner ↦ 0]
+  ∧ count     = 0
 
-Done == 
+Done ≜ 
   (*************************************************************************)
   (* This is the condition that tells the counter that every other         *)
   (* prisoner has been in the room at least once.  (He will trivially know *)
@@ -115,51 +115,51 @@ Done ==
 (* Next come the actions performed by each prisoner when he (or she) is    *)
 (* brought into the room with the switches.                                *)
 (***************************************************************************)
-NonCounterStep(i) ==
+NonCounterStep(i) ≜
   (*************************************************************************)
   (* A prisoner other than the counter moves switch A up if it is down and *)
   (* if (s)he has not already moved it up two times.  Otherwise, (s)he     *)
   (* flips switch B.                                                       *)
   (*************************************************************************)
-  /\ IF (~switchAUp) /\ (timesSwitched[i] < 2)
-       THEN /\ switchAUp' = TRUE
-            /\ timesSwitched' = [timesSwitched EXCEPT ![i] = @+1]
-            /\ UNCHANGED switchBUp
-       ELSE /\ switchBUp' = ~switchBUp
-            /\ UNCHANGED <<switchAUp, timesSwitched>>
-  /\ UNCHANGED count
+  ∧ IF (¬switchAUp) ∧ (timesSwitched[i] < 2)
+       THEN ∧ switchAUp' = TRUE
+            ∧ timesSwitched' = [timesSwitched EXCEPT ![i] = @+1]
+            ∧ UNCHANGED switchBUp
+       ELSE ∧ switchBUp' = ¬switchBUp
+            ∧ UNCHANGED ⟨switchAUp, timesSwitched⟩
+  ∧ UNCHANGED count
        
-CounterStep ==
+CounterStep ≜
   (*************************************************************************)
   (* If switch A is up, the counter moves it down and increments his (or   *)
   (* her) count.  Otherwise, (s)he flips switch B.                         *)
   (*************************************************************************)
-  /\ IF switchAUp
-       THEN /\ switchAUp' = FALSE
-            /\ UNCHANGED switchBUp
-            /\ count' =  count + 1
-       ELSE /\ switchBUp' = ~switchBUp
-            /\ UNCHANGED <<switchAUp, count>>
-  /\ UNCHANGED timesSwitched
+  ∧ IF switchAUp
+       THEN ∧ switchAUp' = FALSE
+            ∧ UNCHANGED switchBUp
+            ∧ count' =  count + 1
+       ELSE ∧ switchBUp' = ¬switchBUp
+            ∧ UNCHANGED ⟨switchAUp, count⟩
+  ∧ UNCHANGED timesSwitched
 
-Next == 
+Next ≜ 
   (*************************************************************************)
   (* The next-state relation                                               *)
   (*************************************************************************)
-  \/ CounterStep 
-  \/ \E i \in OtherPrisoner : NonCounterStep(i)
+  ∨ CounterStep 
+  ∨ ∃ i ∈ OtherPrisoner : NonCounterStep(i)
 
-Fairness == 
+Fairness ≜ 
   (*************************************************************************)
   (* This asserts that every prisoner is brought into the room infinitely  *)
   (* often.                                                                *)
   (*************************************************************************)
-  /\ WF_vars(CounterStep)
-  /\ \A i \in OtherPrisoner : WF_vars(NonCounterStep(i))
+  ∧ WF_vars(CounterStep)
+  ∧ ∀ i ∈ OtherPrisoner : WF_vars(NonCounterStep(i))
 
-Spec == Init /\ [][Next]_vars /\ Fairness
+Spec ≜ Init ∧ □[Next]_vars ∧ Fairness
 -----------------------------------------------------------------------------
-Safety == 
+Safety ≜ 
   (*************************************************************************)
   (* This formula asserts that safety condition: that Done true implies    *)
   (* that every prisoner other than the counter has flipped switch A at    *)
@@ -167,15 +167,15 @@ Safety ==
   (* counter increments the count only when in the room, and Done implies  *)
   (* count > 0, it also implies that the counter has been in the room.     *)
   (*************************************************************************)
-  [](Done => (\A i \in Prisoner \ {Counter} : timesSwitched[i] > 0))
+  □(Done ⇒ (∀ i ∈ Prisoner \ {Counter} : timesSwitched[i] > 0))
 
-Liveness == <>Done
+Liveness ≜ ◇Done
   (*************************************************************************)
   (* This asserts that Done is eventually true, so the prisoners are       *)
   (* eventually released.                                                  *)
   (*************************************************************************)
   
-THEOREM Spec => Safety /\ Liveness
+THEOREM Spec ⇒ Safety ∧ Liveness
   (*************************************************************************)
   (* This theorem asserts that the specification satisfies properties      *)
   (* Safety and Liveness.  TLC verifies this in a few seconds for the case *)
@@ -183,24 +183,24 @@ THEOREM Spec => Safety /\ Liveness
   (* if Done is changed to assert a smaller value of count.                *)
   (*************************************************************************)
 
-CountInvariant ==
+CountInvariant ≜
   (*************************************************************************)
   (* This is an invariant of Spec.  From its invariance, one can easily    *)
   (* prove that Spec satisfies its safety property.                        *)
   (*************************************************************************)
-  LET totalSwitched ==
+  LET totalSwitched ≜
         (*******************************************************************)
         (* A recursive definition of the sum, over all p in OtherPrisoner, *)
         (* of timesSwitched[p].                                            *)
         (*******************************************************************)
-        LET sum[S \in SUBSET OtherPrisoner] ==
+        LET sum[S ∈ SUBSET OtherPrisoner] ≜
               IF S = {} THEN 0
-                        ELSE LET p == CHOOSE pr \in S : TRUE
+                        ELSE LET p ≜ CHOOSE pr ∈ S : TRUE
                              IN  timesSwitched[p] + sum[S \ {p}]
         IN  sum[OtherPrisoner]
-      oneIfUp == IF switchAUp THEN 1 ELSE 0
+      oneIfUp ≜ IF switchAUp THEN 1 ELSE 0
         (*******************************************************************)
         (* Equals 1 if switch A is up, 0 otherwise.                        *)
         (*******************************************************************)
-  IN  count \in {totalSwitched - oneIfUp, totalSwitched - oneIfUp + 1}
+  IN  count ∈ {totalSwitched - oneIfUp, totalSwitched - oneIfUp + 1}
 =============================================================================

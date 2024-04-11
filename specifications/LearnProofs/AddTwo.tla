@@ -12,7 +12,7 @@ EXTENDS Naturals, TLAPS
 --algorithm Increase {
   variable x = 0; {
     while (TRUE) {
-      x := x + 2
+      x ≔ x + 2
     }
   }
 }
@@ -20,41 +20,40 @@ EXTENDS Naturals, TLAPS
 \* BEGIN TRANSLATION (chksum(pcal) = "b4b07666" /\ chksum(tla) = "8adfa002")
 VARIABLE x
 
-vars == << x >>
+vars ≜ ⟨ x ⟩
 
-Init == (* Global variables *)
-        /\ x = 0
+Init ≜ (* Global variables *)
+        ∧ x = 0
 
-Next == x' = x + 2
+Next ≜ x' = x + 2
 
-Spec == Init /\ [][Next]_vars
+Spec ≜ Init ∧ □[Next]_vars
 
 \* END TRANSLATION 
 
-TypeOK == x \in Nat
+TypeOK ≜ x ∈ ℕ
 
-THEOREM TypeInvariant == Spec => []TypeOK
-  <1>a. Init => TypeOK
+THEOREM TypeInvariant ≜ Spec ⇒ □TypeOK
+  <1>a. Init ⇒ TypeOK
     BY DEF Init, TypeOK
-  <1>b. TypeOK /\ UNCHANGED vars => TypeOK'
+  <1>b. TypeOK ∧ UNCHANGED vars ⇒ TypeOK'
     BY DEF TypeOK, vars
-  <1>c. TypeOK /\ Next => TypeOK'
+  <1>c. TypeOK ∧ Next ⇒ TypeOK'
     BY DEF TypeOK, Next
   <1> QED BY PTL, <1>a, <1>b, <1>c DEF Spec
 
-a|b == \E c \in Nat : a*c = b
+a|b ≜ ∃ c ∈ ℕ : a*c = b
 
-AlwaysEven == 2|x
+AlwaysEven ≜ 2|x
 
-THEOREM Spec => []AlwaysEven
-  <1>a. Init => AlwaysEven
+THEOREM Spec ⇒ □AlwaysEven
+  <1>a. Init ⇒ AlwaysEven
     BY DEF Init, AlwaysEven, |
-  <1>b. AlwaysEven /\ UNCHANGED vars => AlwaysEven'
+  <1>b. AlwaysEven ∧ UNCHANGED vars ⇒ AlwaysEven'
     BY DEF AlwaysEven, vars
-  <1>c. AlwaysEven /\ Next => AlwaysEven'
-    BY \A c \in Nat : c+1 \in Nat /\ 2*(c+1) = 2*c + 2, Zenon
+  <1>c. AlwaysEven ∧ Next ⇒ AlwaysEven'
+    BY ∀ c ∈ ℕ : c+1 ∈ ℕ ∧ 2*(c+1) = 2*c + 2, Zenon
     DEF TypeOK, AlwaysEven, Next, |
   <1> QED BY PTL, <1>a, <1>b, <1>c DEF Spec
 
 =============================================================================
-

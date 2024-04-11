@@ -13,8 +13,8 @@ EXTENDS DieHarder
 (***************************************************************************)
 
 \* The following definitions duplicate the original Die Hard problem.
-MCJug == {"j1", "j2"}
-MCCapacity ==
-  [j \in MCJug |-> CASE j = "j1" -> 3
-                     [] j = "j2" -> 5 ]
+MCJug ≜ {"j1", "j2"}
+MCCapacity ≜
+  [j ∈ MCJug ↦ CASE j = "j1" → 3
+                     □ j = "j2" → 5 ]
 =============================================================================

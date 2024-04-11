@@ -49,13 +49,13 @@ CONSTANT NAT_FLAG(*@type: BOOL;*)
 CONSTANT UNKNOWN_AUTH_ID(*@type: Integer;*)
 
 \*If the legistimate user and attacker are in the same LAN with shared public IP, then the local port range after SNAT must not conflict with each other.
-ASSUME  (NAT_FLAG = TRUE => AttackerCfg.SrcIp = ClientCfg.SrcIp /\ USER_BASEPORT # ATTACKER_BASEPORT) 
+ASSUME  (NAT_FLAG = TRUE ⇒ AttackerCfg.SrcIp = ClientCfg.SrcIp ∧ USER_BASEPORT ≠ ATTACKER_BASEPORT) 
 
-ASSUME (SDPSvrCfg.IP # ClientCfg.SrcIp /\ SDPSvrCfg.IP # AttackerCfg.SrcIp)
+ASSUME (SDPSvrCfg.IP ≠ ClientCfg.SrcIp ∧ SDPSvrCfg.IP ≠ AttackerCfg.SrcIp)
 
-ASSUME (SvrCfg.IP # ClientCfg.SrcIp /\ SvrCfg.IP # AttackerCfg.SrcIp) 
+ASSUME (SvrCfg.IP ≠ ClientCfg.SrcIp ∧ SvrCfg.IP ≠ AttackerCfg.SrcIp) 
 
-ASSUME (SvrCfg.IP # SDPSvrCfg.IP) 
+ASSUME (SvrCfg.IP ≠ SDPSvrCfg.IP) 
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
@@ -119,7 +119,7 @@ VARIABLE uChannel (*@type: Sequence of TCP Packets Seq([sIP      |-> p.dIP,   \*
                                                                        \* this flag not involved in inter-operation between SDP protocol entities,only for statistic
                    *) 
 \* The legistimate User's private variables ( uChannel is public variable of user, for other entity can operate and modify uChannel variable directly ) 
-user_vars == <<uState, uIP, uID, Key, uTstamp, uSDPSvrInfo, uSvrInfo, uTCPLinkSet, uAuthSession>>
+user_vars ≜ ⟨uState, uIP, uID, Key, uTstamp, uSDPSvrInfo, uSvrInfo, uTCPLinkSet, uAuthSession⟩
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
@@ -168,7 +168,7 @@ VARIABLE AuthChannel (*@type: Sequence of SPA Auth Packets Seq( [MsgID   |-> "SP
                                                       \* this flag not involved in inter-operation between SDP protocol entities,only for statistic;
                      *) 
 \* The SDP controller's private variables ( AuthChannel is public variable of SDP controller, for other entity can operate and modify AuthChannel variable directly ) 
-sdpsvr_vars == <<SDPSvrState, SDPSucSession, Account, SDPSvrInfo ,ReplayCount, SpoofCount, ReplaySession, SpoofSession>>
+sdpsvr_vars ≜ ⟨SDPSvrState, SDPSucSession, Account, SDPSvrInfo ,ReplayCount, SpoofCount, ReplaySession, SpoofSession⟩
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
@@ -216,7 +216,7 @@ VARIABLE FwDataChannel (*@type: Sequence of Data Packets Seq([sIP      |-> p.dIP
                                      Type     |-> Set("User","Attacker")];)*)
  
 \* The FireWall's private variables ( FwDataChannel and FwCtlChannel are public variable of FW, for other entity can operate and modify them directly ) 
-fw_vars == <<FwState, AclRuleSet, AgedRuleSet ,DropPackets>>
+fw_vars ≜ ⟨FwState, AclRuleSet, AgedRuleSet ,DropPackets⟩
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
@@ -270,7 +270,7 @@ VARIABLE CapDataMsg(*@type: DataKnowledge*)
 VARIABLE aChannel(*@type: uChannel*)  
 
 \* The attacker's private variables ( aChannel is public variable of attacker, for other entity can operate and modify aChannel variable directly ) 
-attacker_vars == <<aState, AuthKnowledge,  aSession, aTCPLinkSet, sniffCount, CapAuthMsg, aCounter, aIP, DataKnowledge, CapDataMsg>>
+attacker_vars ≜ ⟨aState, AuthKnowledge,  aSession, aTCPLinkSet, sniffCount, CapAuthMsg, aCounter, aIP, DataKnowledge, CapDataMsg⟩
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
@@ -296,7 +296,7 @@ VARIABLE sSvrInfo(*@type: [IP |-> SvrCfg.IP, Port |-> SvrCfg.Port]*)
 VARIABLE sChannel(*@type: uChannel*)  
 
 \* The target server's private variables ( sChannel is public variable of server, for other entity can operate and modify sChannel variable directly ) 
-server_vars == <<sState, sTCPLinkSet, sSvrInfo>>
+server_vars ≜ ⟨sState, sTCPLinkSet, sSvrInfo⟩
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
@@ -304,14 +304,14 @@ server_vars == <<sState, sTCPLinkSet, sSvrInfo>>
 (* ^'                                                                      *)
 (***************************************************************************)
 
-Public_vars == <<uChannel,AuthChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel>>
+Public_vars ≜ ⟨uChannel,AuthChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel⟩
 
 (***************************************************************************)
 (* `^ \centering                                                           *)
 (* All the variables that consititute the global state machine             *)
 (* ^'                                                                      *)
 (***************************************************************************)
-vars == <<user_vars,sdpsvr_vars,fw_vars,attacker_vars,server_vars,Public_vars>> 
+vars ≜ ⟨user_vars,sdpsvr_vars,fw_vars,attacker_vars,server_vars,Public_vars⟩ 
 
 
 (***************************************************************************)
@@ -320,23 +320,23 @@ vars == <<user_vars,sdpsvr_vars,fw_vars,attacker_vars,server_vars,Public_vars>>
 (* ^'                                                                      *)
 (***************************************************************************)
 \* Sequence S to Set
-Seq2Set(S) == Range(S) 
+Seq2Set(S) ≜ Range(S) 
 
 \*Select local port when client create socket connection, 
 \*the parameter count is related to  new session's timestamp, and will increase for each new link session.
-SelLocalPort(count,base) == (CHOOSE x \in (count + base)..(100 + base) :TRUE) 
+SelLocalPort(count,base) ≜ (CHOOSE x ∈ (count + base)‥(100 + base) :TRUE) 
 
 \*Simulate Symmetric-key based cryptographic algorithm AES-256: 
 \*For encrypt function, the operator is simplified by a single XOR operation,
 \*only to ensure that Decrypt(Encrypt(d,k), k) = d while Decrypt(Encrypt(d,k), k') gives a meaningless result when k' # k.
 \*For the attack mode in this Spec is based on Delov-Yao Intruder Model, so we just focus on the vulnerabilities of
 \*SDP framework design and never challenge the cryptographic algorithm like AES and HMAC that it relies on. 
-Encrypt(d, k) == d ^^ k
+Encrypt(d, k) ≜ d ^^ k
 \*simulate Symmetric-key algorithm AES-256: Decrypt function     
-DeCrypt(d,k) == Encrypt(d, k) 
+DeCrypt(d,k) ≜ Encrypt(d, k) 
     
 \*simulate Hash-based message authentication code (HMAC) algorithm used for SPA message authorization. 
-CalcHMAC(n1,n2,n3,n4,n5,n6,n7,key) == Encrypt(n1+n2+n3+n4+n5+n6+n7, key)
+CalcHMAC(n1,n2,n3,n4,n5,n6,n7,key) ≜ Encrypt(n1+n2+n3+n4+n5+n6+n7, key)
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -345,16 +345,16 @@ CalcHMAC(n1,n2,n3,n4,n5,n6,n7,key) == Encrypt(n1+n2+n3+n4+n5+n6+n7, key)
 (***************************************************************************)
 \* User Init: Load input configuration data and ready to launch an access to target server
 \* the init state is ready to start a auth session. 
-UsrInit == /\ uState = "Start_Auth"
-           /\ uID =  ClientCfg.LoginID
-           /\ Key = ClientCfg.Key
-           /\ uIP = ClientCfg.SrcIp  
-           /\ uTstamp = 0
-           /\ uSDPSvrInfo = [IP |-> SDPSvrCfg.IP, Port |-> SDPSvrCfg.Port]
-           /\ uSvrInfo = [IP |-> SvrCfg.IP, Port |-> SvrCfg.Port]
-           /\ uTCPLinkSet = {} 
-           /\ uChannel = <<>>
-           /\ uAuthSession = {}
+UsrInit ≜ ∧ uState = "Start_Auth"
+          ∧ uID =  ClientCfg.LoginID
+          ∧ Key = ClientCfg.Key
+          ∧ uIP = ClientCfg.SrcIp  
+          ∧ uTstamp = 0
+          ∧ uSDPSvrInfo = [IP ↦ SDPSvrCfg.IP, Port ↦ SDPSvrCfg.Port]
+          ∧ uSvrInfo = [IP ↦ SvrCfg.IP, Port ↦ SvrCfg.Port]
+          ∧ uTCPLinkSet = {} 
+          ∧ uChannel = ⟨⟩
+          ∧ uAuthSession = {}
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -362,54 +362,54 @@ UsrInit == /\ uState = "Start_Auth"
 (* ^'                                                                      *)
 (***************************************************************************)
 
-UsrBuildTcpSynPkt ==
-    [sIP      |-> uIP,
-     sPort    |-> SelLocalPort(uTstamp,USER_BASEPORT)+1, \* the new data access corresponds to the latest auth session by local port field.
-     dIP      |-> uSvrInfo.IP,
-     dPort    |-> uSvrInfo.Port, 
-     Flg      |-> "TCP_SYN", 
-     Type     |-> "User"]  
+UsrBuildTcpSynPkt ≜
+    [sIP      ↦ uIP,
+     sPort    ↦ SelLocalPort(uTstamp,USER_BASEPORT)+1, \* the new data access corresponds to the latest auth session by local port field.
+     dIP      ↦ uSvrInfo.IP,
+     dPort    ↦ uSvrInfo.Port, 
+     Flg      ↦ "TCP_SYN", 
+     Type     ↦ "User"]  
      
 \* Action 1: UsrConnectServerEnhance
 \* legistimate user perform enhanced SPA auth which is triggered by and synchronized with the data plane TCP connecting event to target server.
 \* Variables changed: <uState,uAuthSession,uTstamp,AuthChannel,uTCPLinkSet,FwDataChannel>
-UsrConnectServerEnhance ==
-    /\ uState = "Start_Auth"
-    /\ uState' = "Auth_End_Connecting"      
-    /\ uTstamp' = uTstamp+1  \* uTstamp increases each session for anti-replay.
-    /\ AuthChannel' = Append(AuthChannel,  
-                             [MsgID   |-> "SPA_AUTH", 
-                              sIP     |-> uIP, 
-                              sPort   |-> SelLocalPort(uTstamp,USER_BASEPORT), \* the random port of SPA message 
-                              dIP     |-> uSDPSvrInfo.IP, 
-                              dPort   |-> uSDPSvrInfo.Port, 
-                              ClientID|-> uID, 
-                              Tstamp |-> uTstamp,
-                              CliIP   |-> Encrypt(uIP,Key), \* <CliIP,CliPort,SvrIP,SvrPort> is the connecting TCP link info to the target server 
-                              CliPort |-> Encrypt(SelLocalPort(uTstamp,USER_BASEPORT)+1,Key),  \*the random local port of TCP connection for data access    
-                              SvrIP   |-> Encrypt(uSvrInfo.IP,Key), 
-                              SvrPort |-> Encrypt(uSvrInfo.Port,Key),  
-                              HMAC    |-> CalcHMAC(uIP,uID,uTstamp,Encrypt(uIP,Key),Encrypt(SelLocalPort(uTstamp+1,USER_BASEPORT),Key),
+UsrConnectServerEnhance ≜
+    ∧ uState = "Start_Auth"
+    ∧ uState' = "Auth_End_Connecting"      
+    ∧ uTstamp' = uTstamp+1  \* uTstamp increases each session for anti-replay.
+    ∧ AuthChannel' = Append(AuthChannel,  
+                             [MsgID   ↦ "SPA_AUTH", 
+                              sIP     ↦ uIP, 
+                              sPort   ↦ SelLocalPort(uTstamp,USER_BASEPORT), \* the random port of SPA message 
+                              dIP     ↦ uSDPSvrInfo.IP, 
+                              dPort   ↦ uSDPSvrInfo.Port, 
+                              ClientID↦ uID, 
+                              Tstamp ↦ uTstamp,
+                              CliIP   ↦ Encrypt(uIP,Key), \* <CliIP,CliPort,SvrIP,SvrPort> is the connecting TCP link info to the target server 
+                              CliPort ↦ Encrypt(SelLocalPort(uTstamp,USER_BASEPORT)+1,Key),  \*the random local port of TCP connection for data access    
+                              SvrIP   ↦ Encrypt(uSvrInfo.IP,Key), 
+                              SvrPort ↦ Encrypt(uSvrInfo.Port,Key),  
+                              HMAC    ↦ CalcHMAC(uIP,uID,uTstamp,Encrypt(uIP,Key),Encrypt(SelLocalPort(uTstamp+1,USER_BASEPORT),Key),
                                                    Encrypt(uSvrInfo.IP,Key),Encrypt(uSvrInfo.Port,Key),Key) ,
-                              Type    |->"User"]
+                              Type    ↦"User"]
                             )
-    /\ uAuthSession' = uAuthSession \cup {Head(AuthChannel')} \* Auth session is recorded in Log
-    /\ uTCPLinkSet = {}
-    /\ uTCPLinkSet' = {   \*We assume the user only launch one data access session. 
-        [sIP      |-> UsrBuildTcpSynPkt.sIP,
-         sPort    |-> UsrBuildTcpSynPkt.sPort,
-         dIP      |-> UsrBuildTcpSynPkt.dIP,
-         dPort    |-> UsrBuildTcpSynPkt.dPort,
-         State    |-> "SYN_SENT",    \* Create new TCP socket corresponds to the latest Auth session, TCP link state is "SYN_SENT" 
-         Retrans  |-> FALSE
+    ∧ uAuthSession' = uAuthSession ∪ {Head(AuthChannel')} \* Auth session is recorded in Log
+    ∧ uTCPLinkSet = {}
+    ∧ uTCPLinkSet' = {   \*We assume the user only launch one data access session. 
+        [sIP      ↦ UsrBuildTcpSynPkt.sIP,
+         sPort    ↦ UsrBuildTcpSynPkt.sPort,
+         dIP      ↦ UsrBuildTcpSynPkt.dIP,
+         dPort    ↦ UsrBuildTcpSynPkt.dPort,
+         State    ↦ "SYN_SENT",    \* Create new TCP socket corresponds to the latest Auth session, TCP link state is "SYN_SENT" 
+         Retrans  ↦ FALSE
         ]             } 
-    /\ FwDataChannel' = Append(FwDataChannel, UsrBuildTcpSynPkt) \* Send TCP SYN packet to FireWall. 
-    /\ UNCHANGED <<uIP, uID, Key,uSDPSvrInfo, uSvrInfo>>
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED server_vars 
-    /\ UNCHANGED <<uChannel,FwCtlChannel,aChannel,sChannel>>   
+    ∧ FwDataChannel' = Append(FwDataChannel, UsrBuildTcpSynPkt) \* Send TCP SYN packet to FireWall. 
+    ∧ UNCHANGED ⟨uIP, uID, Key,uSDPSvrInfo, uSvrInfo⟩
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED server_vars 
+    ∧ UNCHANGED ⟨uChannel,FwCtlChannel,aChannel,sChannel⟩   
 
 \* Action 2: UsrRcvSynAck
 \* legistimate user receive TCP SYN Ack packet from target server which 
@@ -417,55 +417,55 @@ UsrConnectServerEnhance ==
 \* successfully fulfilled a data access.
 \* Variables changed: <uState, uTCPLinkSet, uChannel,FwDataChannel>
 
-HasMatchLink(p,LinkSet) ==
-  \E x \in LinkSet:  /\ p.sIP = x.dIP         
-                     /\ p.sPort = x.dPort
-                     /\ p.dIP = x.sIP
-                     /\ p.dPort = x.sPort
+HasMatchLink(p,LinkSet) ≜
+  ∃ x ∈ LinkSet:  ∧ p.sIP = x.dIP         
+                  ∧ p.sPort = x.dPort
+                  ∧ p.dIP = x.sIP
+                  ∧ p.dPort = x.sPort
                      
-GetMatchLink(p,LinkSet) ==  \*get match TCB (TCP control Block) for a received TCP packet
-    CHOOSE x \in LinkSet: /\ p.sIP = x.dIP         
-                          /\ p.sPort = x.dPort
-                          /\ p.dIP = x.sIP
-                          /\ p.dPort = x.sPort  
+GetMatchLink(p,LinkSet) ≜  \*get match TCB (TCP control Block) for a received TCP packet
+    CHOOSE x ∈ LinkSet: ∧ p.sIP = x.dIP         
+                        ∧ p.sPort = x.dPort
+                        ∧ p.dIP = x.sIP
+                        ∧ p.dPort = x.sPort  
 
 
-EndPointBuildTcpAckPkt(p,t) == \* End point equipment might be a legistimate user or attacker
-    [sIP      |-> p.dIP,
-     sPort    |-> p.dPort,
-     dIP      |-> p.sIP,
-     dPort    |-> p.sPort, 
-     Flg      |-> "TCP_ACK", 
-     Type     |-> t] 
+EndPointBuildTcpAckPkt(p,t) ≜ \* End point equipment might be a legistimate user or attacker
+    [sIP      ↦ p.dIP,
+     sPort    ↦ p.dPort,
+     dIP      ↦ p.sIP,
+     dPort    ↦ p.sPort, 
+     Flg      ↦ "TCP_ACK", 
+     Type     ↦ t] 
 
-UsrRcvSynAck ==
-    /\ ( \/ uState = "Auth_End_Connecting"
-         \/ uState = "Auth_End_Reconnecting"
+UsrRcvSynAck ≜
+    ∧ ( ∨ uState = "Auth_End_Connecting"
+        ∨ uState = "Auth_End_Reconnecting"
        )
-    /\ uTCPLinkSet # {}
-    /\ uChannel # <<>>
-    /\ Head(uChannel).Flg  = "TCP_SYN_ACK"
-    /\ Head(uChannel).Type = "User"
-    /\ HasMatchLink(Head(uChannel),uTCPLinkSet) \* Receive TCP_SYN_ACK from target server and match the connecting TCP socket 
-    /\ LET l == GetMatchLink(Head(uChannel),uTCPLinkSet)
+    ∧ uTCPLinkSet ≠ {}
+    ∧ uChannel ≠ ⟨⟩
+    ∧ Head(uChannel).Flg  = "TCP_SYN_ACK"
+    ∧ Head(uChannel).Type = "User"
+    ∧ HasMatchLink(Head(uChannel),uTCPLinkSet) \* Receive TCP_SYN_ACK from target server and match the connecting TCP socket 
+    ∧ LET l ≜ GetMatchLink(Head(uChannel),uTCPLinkSet)
        IN  uTCPLinkSet' = (uTCPLinkSet \ {l}) 
-                      \cup { [sIP      |-> l.sIP,
-                              sPort    |-> l.sPort,
-                              dIP      |-> l.dIP,
-                              dPort    |-> l.dPort,
-                              State    |-> "ESTABLISHED", \* Updata TCP link status to established
-                              Retrans  |-> l.Retrans 
+                      ∪ { [sIP      ↦ l.sIP,
+                              sPort    ↦ l.sPort,
+                              dIP      ↦ l.dIP,
+                              dPort    ↦ l.dPort,
+                              State    ↦ "ESTABLISHED", \* Updata TCP link status to established
+                              Retrans  ↦ l.Retrans 
                              ]   
                             }
-    /\ uState' = "Connected" \* The user successfully access the target server
-    /\ uChannel' = Tail(uChannel) \*Send TCP ACK packet (the last step of hand shake)  to target server
-    /\ FwDataChannel' = Append(FwDataChannel, EndPointBuildTcpAckPkt(Head(uChannel),"User"))
-    /\ UNCHANGED <<uIP, uID, Key, uTstamp, uSDPSvrInfo, uSvrInfo, uAuthSession>>
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED server_vars 
-    /\ UNCHANGED <<AuthChannel,FwCtlChannel,aChannel,sChannel>> 
+    ∧ uState' = "Connected" \* The user successfully access the target server
+    ∧ uChannel' = Tail(uChannel) \*Send TCP ACK packet (the last step of hand shake)  to target server
+    ∧ FwDataChannel' = Append(FwDataChannel, EndPointBuildTcpAckPkt(Head(uChannel),"User"))
+    ∧ UNCHANGED ⟨uIP, uID, Key, uTstamp, uSDPSvrInfo, uSvrInfo, uAuthSession⟩
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED server_vars 
+    ∧ UNCHANGED ⟨AuthChannel,FwCtlChannel,aChannel,sChannel⟩ 
  
 
 \* Action 3: UsrReConnectServer
@@ -476,50 +476,50 @@ UsrRcvSynAck ==
 \* Variables changed: <FwDataChannel,uState,uTCPLinkSet> 
 
  \*Whether there exists 4 Tuple ACL Rule in AclSet that exactly match the given TCP link l 
-TcpLnkHasMatchAcl(l,AclSet) == \E r \in AclSet: 
-        /\ r.sIP  = l.sIP 
-        /\ r.sPort = l.sPort
-        /\ r.dIP  = l.dIP
-        /\ r.dPort  = l.dPort
-        /\ r.action = "Accept"                  
+TcpLnkHasMatchAcl(l,AclSet) ≜ ∃ r ∈ AclSet: 
+        ∧ r.sIP  = l.sIP 
+        ∧ r.sPort = l.sPort
+        ∧ r.dIP  = l.dIP
+        ∧ r.dPort  = l.dPort
+        ∧ r.action = "Accept"                  
 
 \* Whether the fire wall has packets dropping record for the given TCP link x.
-WithDropPkts(x) == \E p \in DropPackets: 
-        /\ p.sIP = x.sIP 
-        /\ p.sPort = x.sPort
-        /\ p.dIP = x.dIP
-        /\ p.dPort = x.dPort   
+WithDropPkts(x) ≜ ∃ p ∈ DropPackets: 
+        ∧ p.sIP = x.sIP 
+        ∧ p.sPort = x.sPort
+        ∧ p.dIP = x.dIP
+        ∧ p.dPort = x.dPort   
 
-SYN_Timeout_Lnk == CHOOSE x \in uTCPLinkSet:(x.State = "SYN_SENT" /\ WithDropPkts(x)) 
+SYN_Timeout_Lnk ≜ CHOOSE x ∈ uTCPLinkSet:(x.State = "SYN_SENT" ∧ WithDropPkts(x)) 
 
-UsrReConnectServer ==
-    /\ uState = "Auth_End_Connecting"
-    /\ uState' = "Auth_End_Reconnecting"  
-    /\ uTCPLinkSet # {}
-    /\ \E x \in uTCPLinkSet:( x.State = "SYN_SENT" /\ WithDropPkts(x))
-    /\ TcpLnkHasMatchAcl(SYN_Timeout_Lnk,AclRuleSet) 
-    /\ FwDataChannel' = Append(FwDataChannel, 
-         [sIP      |-> SYN_Timeout_Lnk.sIP,
-          sPort    |-> SYN_Timeout_Lnk.sPort, 
-          dIP      |-> SYN_Timeout_Lnk.dIP,
-          dPort    |-> SYN_Timeout_Lnk.dPort, 
-          Flg      |-> "TCP_SYN", 
-          Type     |-> "User"]  ) \* Resend TCP SYN packet to FireWall. 
-    /\ uTCPLinkSet' = (uTCPLinkSet \ {SYN_Timeout_Lnk}) 
-                      \cup { [sIP      |-> SYN_Timeout_Lnk.sIP,
-                              sPort    |-> SYN_Timeout_Lnk.sPort,
-                              dIP      |-> SYN_Timeout_Lnk.dIP,
-                              dPort    |-> SYN_Timeout_Lnk.dPort,
-                              State    |-> SYN_Timeout_Lnk.State, 
-                              Retrans  |-> TRUE  \*to record the retansmission event ever happened in link setup process
+UsrReConnectServer ≜
+    ∧ uState = "Auth_End_Connecting"
+    ∧ uState' = "Auth_End_Reconnecting"  
+    ∧ uTCPLinkSet ≠ {}
+    ∧ ∃ x ∈ uTCPLinkSet:( x.State = "SYN_SENT" ∧ WithDropPkts(x))
+    ∧ TcpLnkHasMatchAcl(SYN_Timeout_Lnk,AclRuleSet) 
+    ∧ FwDataChannel' = Append(FwDataChannel, 
+         [sIP      ↦ SYN_Timeout_Lnk.sIP,
+          sPort    ↦ SYN_Timeout_Lnk.sPort, 
+          dIP      ↦ SYN_Timeout_Lnk.dIP,
+          dPort    ↦ SYN_Timeout_Lnk.dPort, 
+          Flg      ↦ "TCP_SYN", 
+          Type     ↦ "User"]  ) \* Resend TCP SYN packet to FireWall. 
+    ∧ uTCPLinkSet' = (uTCPLinkSet \ {SYN_Timeout_Lnk}) 
+                      ∪ { [sIP      ↦ SYN_Timeout_Lnk.sIP,
+                              sPort    ↦ SYN_Timeout_Lnk.sPort,
+                              dIP      ↦ SYN_Timeout_Lnk.dIP,
+                              dPort    ↦ SYN_Timeout_Lnk.dPort,
+                              State    ↦ SYN_Timeout_Lnk.State, 
+                              Retrans  ↦ TRUE  \*to record the retansmission event ever happened in link setup process
                              ]   
                             }
-    /\ UNCHANGED <<uIP, uID, Key, uTstamp, uSDPSvrInfo, uSvrInfo, uAuthSession>>
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED server_vars 
-    /\ UNCHANGED <<uChannel,AuthChannel,FwCtlChannel,aChannel,sChannel>>      
+    ∧ UNCHANGED ⟨uIP, uID, Key, uTstamp, uSDPSvrInfo, uSvrInfo, uAuthSession⟩
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED server_vars 
+    ∧ UNCHANGED ⟨uChannel,AuthChannel,FwCtlChannel,aChannel,sChannel⟩      
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -527,15 +527,15 @@ UsrReConnectServer ==
 (* ^'                                                                      *)
 (***************************************************************************)           
 \* SDP Controller Init: Load configuration and ready to provide SPA auth service.           
-SDPSvrInit == /\ SDPSvrState = "Work"
-              /\ SDPSucSession = {}  
-              /\ Account = {[ClientID |->ClientCfg.LoginID, Key  |->ClientCfg.Key]} \*Load user account config into IAM
-              /\ SDPSvrInfo =  [IP |-> SDPSvrCfg.IP, Port |-> SDPSvrCfg.Port] \* Service IP and port for SPA protocol   
-              /\ AuthChannel = <<>>  
-              /\ ReplayCount = 0
-              /\ SpoofCount = 0 
-              /\ ReplaySession = {}
-              /\ SpoofSession = {} 
+SDPSvrInit ≜ ∧ SDPSvrState = "Work"
+             ∧ SDPSucSession = {}  
+             ∧ Account = {[ClientID ↦ClientCfg.LoginID, Key  ↦ClientCfg.Key]} \*Load user account config into IAM
+             ∧ SDPSvrInfo =  [IP ↦ SDPSvrCfg.IP, Port ↦ SDPSvrCfg.Port] \* Service IP and port for SPA protocol   
+             ∧ AuthChannel = ⟨⟩  
+             ∧ ReplayCount = 0
+             ∧ SpoofCount = 0 
+             ∧ ReplaySession = {}
+             ∧ SpoofSession = {} 
               
 (***************************************************************************)
 (* `^                                                                      *)
@@ -551,78 +551,78 @@ SDPSvrInit == /\ SDPSvrState = "Work"
 
 \* if a coming SPA message SN match the history message recorded in anti-replay window
 \* then it must be recognized as a replay attack packet.  
-FindAntiReplay(msg,wnd) == \E r \in wnd : (msg.ClientID = r.ClientID /\ msg.Tstamp = r.Tstamp)
+FindAntiReplay(msg,wnd) ≜ ∃ r ∈ wnd : (msg.ClientID = r.ClientID ∧ msg.Tstamp = r.Tstamp)
                                                                  
 \*For a recognized replay attack message, SDP controller drop it and recorded in the log. 
-SDPSvrAntiReplayAtk == 
-    /\ AuthChannel' = Tail(AuthChannel) \*Drop packet
-    /\ ReplayCount' = ReplayCount+ 1  \* Increase statistics
-    /\ ReplaySession' = ReplaySession \cup {Head(AuthChannel)} \*Update log 
+SDPSvrAntiReplayAtk ≜ 
+    ∧ AuthChannel' = Tail(AuthChannel) \*Drop packet
+    ∧ ReplayCount' = ReplayCount+ 1  \* Increase statistics
+    ∧ ReplaySession' = ReplaySession ∪ {Head(AuthChannel)} \*Update log 
 
 \*For a recognized spoof attack message, SDP controller drop it and recorded in the log.                     
-SDPSvrAntiSpoof == 
-    /\ AuthChannel' = Tail(AuthChannel) \*Drop packet
-    /\ SpoofCount' = SpoofCount + 1 \* Increase statistics
-    /\ SpoofSession' = SpoofSession \cup {Head(AuthChannel)} \*Update log  
+SDPSvrAntiSpoof ≜ 
+    ∧ AuthChannel' = Tail(AuthChannel) \*Drop packet
+    ∧ SpoofCount' = SpoofCount + 1 \* Increase statistics
+    ∧ SpoofSession' = SpoofSession ∪ {Head(AuthChannel)} \*Update log  
                    
 
 \* SDP controller implement authenticaiton triggered by a received SPA message
 \* The authentication is implemented by recaculate the HMAC according the user account Info
-SpaProcAuth(msg,accounts) == 
-    \E a \in accounts : ( /\ a.ClientID = msg.ClientID  \* user ID must match
+SpaProcAuth(msg,accounts) ≜ 
+    ∃ a ∈ accounts : ( ∧ a.ClientID = msg.ClientID  \* user ID must match
        \*Recaclulate the HMAC value by using local stored user Key and then compare the value of corresponding field in SPA packet.
-                          /\ CalcHMAC(msg.sIP,msg.ClientID,msg.Tstamp,msg.CliIP,msg.CliPort,msg.SvrIP,msg.SvrPort,a.Key) = msg.HMAC 
+                       ∧ CalcHMAC(msg.sIP,msg.ClientID,msg.Tstamp,msg.CliIP,msg.CliPort,msg.SvrIP,msg.SvrPort,a.Key) = msg.HMAC 
                         )    
 \* Get the correspond key by user ID from IAM stored accounts                      
-GetKey(id,accounts) == (CHOOSE a \in accounts : a.ClientID = id).Key   
+GetKey(id,accounts) ≜ (CHOOSE a ∈ accounts : a.ClientID = id).Key   
 
 \* SDP controller instruct FireWall to config Acl Rule by sending instruction message to FireWall's control plane channel 
-SDPSvrCfgFw(Acl,op) == 
-    /\ FwCtlChannel' = Append(FwCtlChannel,[Rule |-> Acl, op |-> op])
+SDPSvrCfgFw(Acl,op) ≜ 
+    ∧ FwCtlChannel' = Append(FwCtlChannel,[Rule ↦ Acl, op ↦ op])
 
 
-SDPSvrProcSpaAuthEx == 
-    /\ SDPSvrState = "Work"
-    /\ AuthChannel # <<>>
-    /\ Head(AuthChannel).MsgID = "SPA_AUTH" \*check the packet is SPA message
-    /\ Head(AuthChannel).dIP = SDPSvrInfo.IP
-    /\ Head(AuthChannel).dPort = SDPSvrInfo.Port
-    /\ IF FindAntiReplay(Head(AuthChannel),SDPSucSession) = TRUE \* case 1: the packet is a replay message 
+SDPSvrProcSpaAuthEx ≜ 
+    ∧ SDPSvrState = "Work"
+    ∧ AuthChannel ≠ ⟨⟩
+    ∧ Head(AuthChannel).MsgID = "SPA_AUTH" \*check the packet is SPA message
+    ∧ Head(AuthChannel).dIP = SDPSvrInfo.IP
+    ∧ Head(AuthChannel).dPort = SDPSvrInfo.Port
+    ∧ IF FindAntiReplay(Head(AuthChannel),SDPSucSession) = TRUE \* case 1: the packet is a replay message 
        THEN 
-         /\ SDPSvrAntiReplayAtk \*drop packets and record exception into log
-         /\ UNCHANGED user_vars
-         /\ UNCHANGED <<SDPSvrState, SDPSucSession, Account, SDPSvrInfo, SpoofCount, SpoofSession>>
-         /\ UNCHANGED fw_vars 
-         /\ UNCHANGED attacker_vars
-         /\ UNCHANGED server_vars
-         /\ UNCHANGED <<uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel>>
+         ∧ SDPSvrAntiReplayAtk \*drop packets and record exception into log
+         ∧ UNCHANGED user_vars
+         ∧ UNCHANGED ⟨SDPSvrState, SDPSucSession, Account, SDPSvrInfo, SpoofCount, SpoofSession⟩
+         ∧ UNCHANGED fw_vars 
+         ∧ UNCHANGED attacker_vars
+         ∧ UNCHANGED server_vars
+         ∧ UNCHANGED ⟨uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel⟩
        ELSE
-         /\ IF SpaProcAuth(Head(AuthChannel),Account) = FALSE  \* case 2: it is a spoof message or from unknown user
+         ∧ IF SpaProcAuth(Head(AuthChannel),Account) = FALSE  \* case 2: it is a spoof message or from unknown user
             THEN 
-              /\ SDPSvrAntiSpoof \*drop packets and record exception into log
-              /\ UNCHANGED user_vars
-              /\ UNCHANGED <<SDPSvrState, SDPSucSession, Account, SDPSvrInfo, ReplayCount, ReplaySession>>
-              /\ UNCHANGED fw_vars
-              /\ UNCHANGED attacker_vars
-              /\ UNCHANGED server_vars
-              /\ UNCHANGED <<uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel>>                             
+              ∧ SDPSvrAntiSpoof \*drop packets and record exception into log
+              ∧ UNCHANGED user_vars
+              ∧ UNCHANGED ⟨SDPSvrState, SDPSucSession, Account, SDPSvrInfo, ReplayCount, ReplaySession⟩
+              ∧ UNCHANGED fw_vars
+              ∧ UNCHANGED attacker_vars
+              ∧ UNCHANGED server_vars
+              ∧ UNCHANGED ⟨uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel⟩                             
             ELSE  \*case 3: Authenticated successfully, then send instruction to FW to allow data access towards target server.
-              /\ SDPSvrCfgFw([sIP      |-> DeCrypt(Head(AuthChannel).CliIP,GetKey(Head(AuthChannel).ClientID,Account)), 
-                              sPort    |-> DeCrypt(Head(AuthChannel).CliPort,GetKey(Head(AuthChannel).ClientID,Account)),  \*For the improved version this Acl Rule is 4 tuple, for data access source port is determined now.
-                              dIP      |-> DeCrypt(Head(AuthChannel).SvrIP,GetKey(Head(AuthChannel).ClientID,Account)),
-                              dPort    |-> DeCrypt(Head(AuthChannel).SvrPort,GetKey(Head(AuthChannel).ClientID,Account)), 
-                              protocol |-> "TCP", 
-                              action   |-> "Accept"],
+              ∧ SDPSvrCfgFw([sIP      ↦ DeCrypt(Head(AuthChannel).CliIP,GetKey(Head(AuthChannel).ClientID,Account)), 
+                              sPort    ↦ DeCrypt(Head(AuthChannel).CliPort,GetKey(Head(AuthChannel).ClientID,Account)),  \*For the improved version this Acl Rule is 4 tuple, for data access source port is determined now.
+                              dIP      ↦ DeCrypt(Head(AuthChannel).SvrIP,GetKey(Head(AuthChannel).ClientID,Account)),
+                              dPort    ↦ DeCrypt(Head(AuthChannel).SvrPort,GetKey(Head(AuthChannel).ClientID,Account)), 
+                              protocol ↦ "TCP", 
+                              action   ↦ "Accept"],
                               "Add"  \* The instruction code is to Add a new rule.
                              )
-              /\ SDPSucSession' = SDPSucSession \cup {Head(AuthChannel)} \*record in log
-              /\ AuthChannel' = Tail(AuthChannel)
-              /\ UNCHANGED user_vars
-              /\ UNCHANGED <<SDPSvrState, Account, SDPSvrInfo ,ReplayCount, SpoofCount, ReplaySession, SpoofSession>> 
-              /\ UNCHANGED fw_vars
-              /\ UNCHANGED attacker_vars
-              /\ UNCHANGED server_vars
-              /\ UNCHANGED <<uChannel,FwDataChannel,aChannel,sChannel>>            
+              ∧ SDPSucSession' = SDPSucSession ∪ {Head(AuthChannel)} \*record in log
+              ∧ AuthChannel' = Tail(AuthChannel)
+              ∧ UNCHANGED user_vars
+              ∧ UNCHANGED ⟨SDPSvrState, Account, SDPSvrInfo ,ReplayCount, SpoofCount, ReplaySession, SpoofSession⟩ 
+              ∧ UNCHANGED fw_vars
+              ∧ UNCHANGED attacker_vars
+              ∧ UNCHANGED server_vars
+              ∧ UNCHANGED ⟨uChannel,FwDataChannel,aChannel,sChannel⟩            
               
 
 (***************************************************************************)
@@ -632,12 +632,12 @@ SDPSvrProcSpaAuthEx ==
 (***************************************************************************)               
 \* Fire wall init: power on and enter work state, by default, it works in deny mode and will drop
 \* any ingress data packets.          
-FwInit ==  /\ FwCtlChannel = <<>>
-           /\ FwDataChannel = <<>>
-           /\ FwState = "Work"
-           /\ AclRuleSet = {}
-           /\ AgedRuleSet = {} 
-           /\ DropPackets = {} 
+FwInit ≜  ∧ FwCtlChannel = ⟨⟩
+          ∧ FwDataChannel = ⟨⟩
+          ∧ FwState = "Work"
+          ∧ AclRuleSet = {}
+          ∧ AgedRuleSet = {} 
+          ∧ DropPackets = {} 
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -647,18 +647,18 @@ FwInit ==  /\ FwCtlChannel = <<>>
 \* Action 4: FwProcAclCfg
 \* FireWall receive Acl Rule config instruction from control plane channel, and hence create a 3 Tuple rule for data access 
 \* Variables changed: <FwCtlChannel, AclRuleSet>
-FwProcAclCfg ==
-    /\ FwState = "Work"
-    /\ FwCtlChannel # <<>>
-    /\ Head(FwCtlChannel).op = "Add" \*Check instruction message format
-    /\ AclRuleSet' = AclRuleSet \cup {Head(FwCtlChannel).Rule} \* Update local maintained rule table   
-    /\ FwCtlChannel' = Tail(FwCtlChannel)
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED server_vars
-    /\ UNCHANGED <<FwState,AgedRuleSet, DropPackets>>
-    /\ UNCHANGED <<uChannel,AuthChannel,FwDataChannel,aChannel,sChannel>>
+FwProcAclCfg ≜
+    ∧ FwState = "Work"
+    ∧ FwCtlChannel ≠ ⟨⟩
+    ∧ Head(FwCtlChannel).op = "Add" \*Check instruction message format
+    ∧ AclRuleSet' = AclRuleSet ∪ {Head(FwCtlChannel).Rule} \* Update local maintained rule table   
+    ∧ FwCtlChannel' = Tail(FwCtlChannel)
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED server_vars
+    ∧ UNCHANGED ⟨FwState,AgedRuleSet, DropPackets⟩
+    ∧ UNCHANGED ⟨uChannel,AuthChannel,FwDataChannel,aChannel,sChannel⟩
 
     
 \* Action 5: FwProcEndPointAccessEx
@@ -667,38 +667,38 @@ FwProcAclCfg ==
 \* Variables changed: <sChannel, AclRuleSet,FwDataChannel,DropPackets >
                         
 \*Whether the TCP packet match a given 4 tuple rule.
-AclMatch4Tuple(p,Acl) == \E r \in Acl: 
-              /\ p.sIP = r.sIP  \* (sIP,sPort,dIP,dPort) must match exactly
-              /\ p.dIP = r.dIP 
-              /\ r.sPort # MATCH_ANY 
-              /\ r.sPort = p.sPort 
-              /\ p.dPort = r.dPort
-              /\ r.action = "Accept"
+AclMatch4Tuple(p,Acl) ≜ ∃ r ∈ Acl: 
+              ∧ p.sIP = r.sIP  \* (sIP,sPort,dIP,dPort) must match exactly
+              ∧ p.dIP = r.dIP 
+              ∧ r.sPort ≠ MATCH_ANY 
+              ∧ r.sPort = p.sPort 
+              ∧ p.dPort = r.dPort
+              ∧ r.action = "Accept"
     
-FwProcEndPointAccessEx  ==
-   /\ FwState = "Work"
-   /\ FwDataChannel # <<>>
-   /\ ( \/ Head(FwDataChannel).Flg  = "TCP_SYN"  \* to simplify the model, we only consider TCP connection proceudre for data access
-        \/ Head(FwDataChannel).Flg  = "TCP_ACK" \* the end point euipments as TCP client, only send TCP_SYN and TCP_ACK packet to target server.
+FwProcEndPointAccessEx  ≜
+   ∧ FwState = "Work"
+   ∧ FwDataChannel ≠ ⟨⟩
+   ∧ ( ∨ Head(FwDataChannel).Flg  = "TCP_SYN"  \* to simplify the model, we only consider TCP connection proceudre for data access
+       ∨ Head(FwDataChannel).Flg  = "TCP_ACK" \* the end point euipments as TCP client, only send TCP_SYN and TCP_ACK packet to target server.
       )
-   /\ (IF AclMatch4Tuple(Head(FwDataChannel),AclRuleSet) 
+   ∧ (IF AclMatch4Tuple(Head(FwDataChannel),AclRuleSet) 
        THEN   \*CASE1 : the incoming packets exactly match a 4 tuple rule
-         /\ sChannel' = Append(sChannel, Head(FwDataChannel)) \* route the packets to target server
-         /\ FwDataChannel' = Tail(FwDataChannel)
-         /\ AclRuleSet' = AclRuleSet     
-         /\ DropPackets' = DropPackets 
+         ∧ sChannel' = Append(sChannel, Head(FwDataChannel)) \* route the packets to target server
+         ∧ FwDataChannel' = Tail(FwDataChannel)
+         ∧ AclRuleSet' = AclRuleSet     
+         ∧ DropPackets' = DropPackets 
        ELSE   \*CASE2 : the incoming packetsnot match any 4 tuple rule
-         /\ FwDataChannel' = Tail(FwDataChannel) 
-         /\ AclRuleSet' = AclRuleSet
-         /\ sChannel' = sChannel   \*just drop the packets
-         /\ DropPackets' = DropPackets \cup {Head(FwDataChannel)} \* record it into exception log 
+         ∧ FwDataChannel' = Tail(FwDataChannel) 
+         ∧ AclRuleSet' = AclRuleSet
+         ∧ sChannel' = sChannel   \*just drop the packets
+         ∧ DropPackets' = DropPackets ∪ {Head(FwDataChannel)} \* record it into exception log 
       ) 
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED <<FwState,AgedRuleSet>>
-    /\ UNCHANGED server_vars    
-    /\ UNCHANGED <<uChannel,AuthChannel,FwCtlChannel,aChannel>>               
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED ⟨FwState,AgedRuleSet⟩
+    ∧ UNCHANGED server_vars    
+    ∧ UNCHANGED ⟨uChannel,AuthChannel,FwCtlChannel,aChannel⟩               
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -706,10 +706,10 @@ FwProcEndPointAccessEx  ==
 (* ^'                                                                      *)
 (***************************************************************************) 
 \* Target TCP server init and begin listening on its service IP and Port.                
-ServerInit == /\ sState = "Listen"
-              /\ sSvrInfo = [IP |-> SvrCfg.IP, Port |-> SvrCfg.Port] \*Load configuration
-              /\ sTCPLinkSet = {}
-              /\ sChannel = <<>>
+ServerInit ≜ ∧ sState = "Listen"
+             ∧ sSvrInfo = [IP ↦ SvrCfg.IP, Port ↦ SvrCfg.Port] \*Load configuration
+             ∧ sTCPLinkSet = {}
+             ∧ sChannel = ⟨⟩
           
 (***************************************************************************)
 (* `^                                                                      *)
@@ -723,92 +723,92 @@ ServerInit == /\ sState = "Listen"
 \* Variables changed: <sTCPLinkSet,sChannel,uChannel,aChannel >
 
 \*Whether the coming packet indicates a new connection
-NewLink(p,LinkSet) ==
-     \A x \in LinkSet: \*without matching TCB (TCP Control Block)
-       \/ x.sIP # p.sIP
-       \/ x.dIP # p.dIP
-       \/ x.sPort # p.sPort
-       \/ x.dPort # p.dPort       
+NewLink(p,LinkSet) ≜
+     ∀ x ∈ LinkSet: \*without matching TCB (TCP Control Block)
+       ∨ x.sIP ≠ p.sIP
+       ∨ x.dIP ≠ p.dIP
+       ∨ x.sPort ≠ p.sPort
+       ∨ x.dPort ≠ p.dPort       
        
-ServerRcvTCPSyn ==
-    /\ sState = "Listen"
-    /\ sChannel # <<>>
-    /\ Head(sChannel).Flg  = "TCP_SYN"
-    /\ Head(sChannel).dIP = sSvrInfo.IP \* check incoming packets format
-    /\ Head(sChannel).dPort = sSvrInfo.Port
-    /\ sChannel' = Tail(sChannel)
-    /\( IF NewLink(Head(sChannel),sTCPLinkSet) 
+ServerRcvTCPSyn ≜
+    ∧ sState = "Listen"
+    ∧ sChannel ≠ ⟨⟩
+    ∧ Head(sChannel).Flg  = "TCP_SYN"
+    ∧ Head(sChannel).dIP = sSvrInfo.IP \* check incoming packets format
+    ∧ Head(sChannel).dPort = sSvrInfo.Port
+    ∧ sChannel' = Tail(sChannel)
+    ∧( IF NewLink(Head(sChannel),sTCPLinkSet) 
         THEN \*CASE1 : New TCP SYN packets
-         /\ sTCPLinkSet' = sTCPLinkSet \cup { \*create a TCB and update local link set.
-             [dIP      |-> Head(sChannel).sIP,
-              dPort    |-> Head(sChannel).sPort,
-              sIP      |-> Head(sChannel).dIP,
-              sPort    |-> Head(sChannel).dPort,
-              Type     |-> Head(sChannel).Type,
-              State    |-> "SYN_RCVD"   \* the TCB 's state is SYN_RCVD
+         ∧ sTCPLinkSet' = sTCPLinkSet ∪ { \*create a TCB and update local link set.
+             [dIP      ↦ Head(sChannel).sIP,
+              dPort    ↦ Head(sChannel).sPort,
+              sIP      ↦ Head(sChannel).dIP,
+              sPort    ↦ Head(sChannel).dPort,
+              Type     ↦ Head(sChannel).Type,
+              State    ↦ "SYN_RCVD"   \* the TCB 's state is SYN_RCVD
              ] }
-         /\ ( IF Head(sChannel).Type = "User" 
+         ∧ ( IF Head(sChannel).Type = "User" 
                THEN \*If the client is legistimate user, then send TCP_SYN_ACK packet to legistimate user.
-                ( /\ uChannel' = Append(uChannel, [
-                                   sIP      |-> Head(sChannel).dIP,
-                                   sPort    |-> Head(sChannel).dPort,
-                                   dIP      |-> Head(sChannel).sIP,
-                                   dPort    |-> Head(sChannel).sPort, 
-                                   Flg      |-> "TCP_SYN_ACK", 
-                                   Type     |-> Head(sChannel).Type]                                    
+                ( ∧ uChannel' = Append(uChannel, [
+                                   sIP      ↦ Head(sChannel).dIP,
+                                   sPort    ↦ Head(sChannel).dPort,
+                                   dIP      ↦ Head(sChannel).sIP,
+                                   dPort    ↦ Head(sChannel).sPort, 
+                                   Flg      ↦ "TCP_SYN_ACK", 
+                                   Type     ↦ Head(sChannel).Type]                                    
                                   )
-                  /\ aChannel' = aChannel
+                  ∧ aChannel' = aChannel
                 )  
                ELSE  \*If the client is attacker, then send TCP_SYN_ACK packet to attacker.
-                ( /\ aChannel' = Append(aChannel, [
-                                   sIP      |-> Head(sChannel).dIP,
-                                   sPort    |-> Head(sChannel).dPort,
-                                   dIP      |-> Head(sChannel).sIP,
-                                   dPort    |-> Head(sChannel).sPort, 
-                                   Flg      |-> "TCP_SYN_ACK", 
-                                   Type     |-> Head(sChannel).Type]                                    
+                ( ∧ aChannel' = Append(aChannel, [
+                                   sIP      ↦ Head(sChannel).dIP,
+                                   sPort    ↦ Head(sChannel).dPort,
+                                   dIP      ↦ Head(sChannel).sIP,
+                                   dPort    ↦ Head(sChannel).sPort, 
+                                   Flg      ↦ "TCP_SYN_ACK", 
+                                   Type     ↦ Head(sChannel).Type]                                    
                                   )
-                  /\ uChannel' = uChannel
+                  ∧ uChannel' = uChannel
                 )                    
              ) 
        ELSE \*CASE2 : duplicated TCP SYN packet,just neglect it for we don't focus on TCP SYN Flood attack.
-         /\ sTCPLinkSet' = sTCPLinkSet
-         /\ aChannel' = aChannel
-         /\ uChannel' = uChannel
+         ∧ sTCPLinkSet' = sTCPLinkSet
+         ∧ aChannel' = aChannel
+         ∧ uChannel' = uChannel
       )     
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars 
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED <<sState,sSvrInfo>>
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED <<AuthChannel,FwCtlChannel,FwDataChannel>> 
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars 
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED ⟨sState,sSvrInfo⟩
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED ⟨AuthChannel,FwCtlChannel,FwDataChannel⟩ 
 
 \* Action 7: ServerRcvTcpAck
 \* Target server recieve a TCP ACK packet that acknowledge the last SYN_ACK, then establish the TCP link with the client.
 \* Variables changed: <sTCPLinkSet,sChannel>
-ServerRcvTcpAck ==
-    /\ sState = "Listen"
-    /\ sChannel # <<>>
-    /\ Head(sChannel).Flg  = "TCP_ACK" \* check incoming packets format
-    /\ HasMatchLink(Head(sChannel),sTCPLinkSet)
-    /\ GetMatchLink(Head(sChannel),sTCPLinkSet).State = "SYN_RCVD"  \* the matched TCB state must be SYN_RCVD 
-    /\ sChannel' = Tail(sChannel)
-    /\ LET l == GetMatchLink(Head(sChannel),sTCPLinkSet)
+ServerRcvTcpAck ≜
+    ∧ sState = "Listen"
+    ∧ sChannel ≠ ⟨⟩
+    ∧ Head(sChannel).Flg  = "TCP_ACK" \* check incoming packets format
+    ∧ HasMatchLink(Head(sChannel),sTCPLinkSet)
+    ∧ GetMatchLink(Head(sChannel),sTCPLinkSet).State = "SYN_RCVD"  \* the matched TCB state must be SYN_RCVD 
+    ∧ sChannel' = Tail(sChannel)
+    ∧ LET l ≜ GetMatchLink(Head(sChannel),sTCPLinkSet)
        IN  sTCPLinkSet' = (sTCPLinkSet \ {l}) 
-                      \cup { [sIP      |-> l.sIP,
-                              sPort    |-> l.sPort,
-                              dIP      |-> l.dIP,
-                              dPort    |-> l.dPort,
-                              Type     |-> l.Type,
-                              State    |-> "ESTABLISHED"  \*Update TCP link state to ESTABLISHED. 
+                      ∪ { [sIP      ↦ l.sIP,
+                              sPort    ↦ l.sPort,
+                              dIP      ↦ l.dIP,
+                              dPort    ↦ l.dPort,
+                              Type     ↦ l.Type,
+                              State    ↦ "ESTABLISHED"  \*Update TCP link state to ESTABLISHED. 
                              ]                            \*This indicates the client has successfully accessed target server.
                             }
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars 
-    /\ UNCHANGED attacker_vars
-    /\ UNCHANGED <<sState,sSvrInfo>>
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED <<uChannel,AuthChannel,FwCtlChannel,FwDataChannel,aChannel>> 
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars 
+    ∧ UNCHANGED attacker_vars
+    ∧ UNCHANGED ⟨sState,sSvrInfo⟩
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED ⟨uChannel,AuthChannel,FwCtlChannel,FwDataChannel,aChannel⟩ 
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -816,17 +816,17 @@ ServerRcvTcpAck ==
 (* ^'                                                                      *)
 (***************************************************************************) 
 \* Attacker init and capable of sniffing the packets on the local network.
-AttackerInit == /\ aState = "Listen"
-                /\ AuthKnowledge = {}
-                /\ aSession = {}
-                /\ aTCPLinkSet = {}
-                /\ aChannel = <<>> 
-                /\ sniffCount = 0
-                /\ CapAuthMsg = {}
-                /\ aCounter = 0
-                /\ aIP = AttackerCfg.SrcIp
-                /\ DataKnowledge = {}
-                /\ CapDataMsg = {}
+AttackerInit ≜ ∧ aState = "Listen"
+               ∧ AuthKnowledge = {}
+               ∧ aSession = {}
+               ∧ aTCPLinkSet = {}
+               ∧ aChannel = ⟨⟩ 
+               ∧ sniffCount = 0
+               ∧ CapAuthMsg = {}
+               ∧ aCounter = 0
+               ∧ aIP = AttackerCfg.SrcIp
+               ∧ DataKnowledge = {}
+               ∧ CapDataMsg = {}
           
 (***************************************************************************)
 (* `^                                                                      *)
@@ -842,34 +842,34 @@ AttackerInit == /\ aState = "Listen"
 
 \*Select a new (which means unknown to attacker till now) SPA message from the Auth channel
 \* to simulate a successful sniff. 
-SelectNewAuthMsg(MsgQ,known) ==
-    IF known # {}
+SelectNewAuthMsg(MsgQ,known) ≜
+    IF known ≠ {}
     THEN  \*for a dedicate user, the difference among SPA messages is the value of SN (counter) field.
-    CHOOSE S \in SUBSET Seq2Set(MsgQ) : (\A x \in S: (\A y \in known: x.Tstamp # y.Tstamp ))
+    CHOOSE S ∈ SUBSET Seq2Set(MsgQ) : (∀ x ∈ S: (∀ y ∈ known: x.Tstamp ≠ y.Tstamp ))
     ELSE
     Seq2Set(MsgQ)  
 
 \*For the attacker can also insert fake  messages into channel, but
 \*for both data and auth channel, attacker only wants to capture messages from legistimate user.
 \*so the PureChannel() function is to select the set of user's messages.     
-PureChannel(S) == SelectSeq(S, LAMBDA x : x.Type = "User")  
+PureChannel(S) ≜ SelectSeq(S, LAMBDA x : x.Type = "User")  
 
-AttackerSniffAuthChannel ==
-    /\ aState = "Listen"
-    /\ PureChannel(AuthChannel) # <<>> \*pre-condition: there exists attacker unknown legistimate user originated SPA messages on the wire.
-    /\ LET l == PureChannel(AuthChannel)
-       IN  /\ \E i \in 1..Len(l) : (\A x \in CapAuthMsg : l[i].Tstamp # x.Tstamp )
-           /\ AuthKnowledge' = AuthKnowledge \cup  \*post-condition: attacker learned new intelligence by a successful sniffing.
+AttackerSniffAuthChannel ≜
+    ∧ aState = "Listen"
+    ∧ PureChannel(AuthChannel) ≠ ⟨⟩ \*pre-condition: there exists attacker unknown legistimate user originated SPA messages on the wire.
+    ∧ LET l ≜ PureChannel(AuthChannel)
+       IN  ∧ ∃ i ∈ 1‥Len(l) : (∀ x ∈ CapAuthMsg : l[i].Tstamp ≠ x.Tstamp )
+           ∧ AuthKnowledge' = AuthKnowledge ∪  \*post-condition: attacker learned new intelligence by a successful sniffing.
                                SelectNewAuthMsg(l,CapAuthMsg)
-           /\ CapAuthMsg' = CapAuthMsg \cup   \* All the captured message in history recorded in Log.
+           ∧ CapAuthMsg' = CapAuthMsg ∪   \* All the captured message in history recorded in Log.
                                SelectNewAuthMsg(l,CapAuthMsg) 
-    /\ sniffCount' = sniffCount + 1 \* increase statistics
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED server_vars
-    /\ UNCHANGED <<aState, aSession, aTCPLinkSet, aCounter, aIP,DataKnowledge, CapDataMsg>>   
-    /\ UNCHANGED Public_vars
+    ∧ sniffCount' = sniffCount + 1 \* increase statistics
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED server_vars
+    ∧ UNCHANGED ⟨aState, aSession, aTCPLinkSet, aCounter, aIP,DataKnowledge, CapDataMsg⟩   
+    ∧ UNCHANGED Public_vars
 
 \* Action 9: AttackerSniffDataChannel
 \* Attacker eavesdropping data access from legistimate user to target server by sniffing the data channel.
@@ -879,35 +879,35 @@ AttackerSniffAuthChannel ==
 
 \*Select a new (which means unknown to attacker till now) data packets being sent from user to FireWall
 \* to simulate a successful sniff. 
-SelectNewDataMsg(MsgQ,known) ==
-    IF known # {}
+SelectNewDataMsg(MsgQ,known) ≜
+    IF known ≠ {}
     THEN   \* The aim of capturing  user data access packets is to get the exposure service info about the target server
            \* so (dIP,dPort) is the key knowledge.
-    CHOOSE S \in SUBSET Seq2Set(MsgQ) : (\A x \in S: (\A y \in known: (x.dIP # y.dIP /\ x.dPort # y.dPort)))
+    CHOOSE S ∈ SUBSET Seq2Set(MsgQ) : (∀ x ∈ S: (∀ y ∈ known: (x.dIP ≠ y.dIP ∧ x.dPort ≠ y.dPort)))
     ELSE             
     Seq2Set(MsgQ)  
 
 
-AttackerSniffDataChannel ==
-    /\ aState = "Listen"
-    /\ PureChannel(FwDataChannel) # <<>> \*pre-condition: there exists attacker unknown target server service info.
-    /\ LET l == PureChannel(FwDataChannel)
-       IN  /\ \E i \in 1..Len(l) :
-             ( \A x \in CapDataMsg : /\ l[i].dIP # x.dIP   
-                                     /\ l[i].dPort # x.dPort
-                                     /\ l[i].Flg = "TCP_SYN" \* A new TCP SYN packets represents a new starting data access session. 
+AttackerSniffDataChannel ≜
+    ∧ aState = "Listen"
+    ∧ PureChannel(FwDataChannel) ≠ ⟨⟩ \*pre-condition: there exists attacker unknown target server service info.
+    ∧ LET l ≜ PureChannel(FwDataChannel)
+       IN  ∧ ∃ i ∈ 1‥Len(l) :
+             ( ∀ x ∈ CapDataMsg : ∧ l[i].dIP ≠ x.dIP   
+                                  ∧ l[i].dPort ≠ x.dPort
+                                  ∧ l[i].Flg = "TCP_SYN" \* A new TCP SYN packets represents a new starting data access session. 
              )
-           /\ DataKnowledge' = DataKnowledge \cup  \*post-condition: attacker learned new intelligence by a successful sniffing.
+           ∧ DataKnowledge' = DataKnowledge ∪  \*post-condition: attacker learned new intelligence by a successful sniffing.
                                SelectNewDataMsg(l,CapDataMsg)
-           /\ CapDataMsg' = CapDataMsg \cup   \* All the captured packets in history recorded in Log.
+           ∧ CapDataMsg' = CapDataMsg ∪   \* All the captured packets in history recorded in Log.
                                SelectNewDataMsg(l,CapDataMsg)
-    /\ sniffCount' = sniffCount + 1 \* increase statistics 
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars           
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED server_vars
-    /\ UNCHANGED <<aState, AuthKnowledge,  aSession, aTCPLinkSet, CapAuthMsg, aCounter, aIP>>
-    /\ UNCHANGED Public_vars
+    ∧ sniffCount' = sniffCount + 1 \* increase statistics 
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars           
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED server_vars
+    ∧ UNCHANGED ⟨aState, AuthKnowledge,  aSession, aTCPLinkSet, CapAuthMsg, aCounter, aIP⟩
+    ∧ UNCHANGED Public_vars
     
 
 \* Action 10: AttackerSpoofAuth
@@ -918,33 +918,33 @@ AttackerSniffDataChannel ==
 \* Variables changed: <aSession,AuthChannel,AuthKnowledge>
 
 \*make a spoof message according a captured auth knowledge
-SpoofAuthMsg(m) ==
-    [MsgID   |-> "SPA_AUTH", 
-     sIP     |-> m.sIP, 
-     sPort   |-> m.sPort, 
-     dIP     |-> m.dIP, 
-     dPort   |-> m.dPort, 
-     ClientID|-> m.ClientID, 
-     Tstamp |-> m.Tstamp + 1, \*SN number increase
-     CliIP   |-> m.CliIP,
-     CliPort |-> m.CliPort,
-     SvrIP   |-> m.SvrIP,
-     SvrPort |-> m.SvrPort,   
-     HMAC    |-> m.HMAC,
-     Type    |->"Attacker"]
+SpoofAuthMsg(m) ≜
+    [MsgID   ↦ "SPA_AUTH", 
+     sIP     ↦ m.sIP, 
+     sPort   ↦ m.sPort, 
+     dIP     ↦ m.dIP, 
+     dPort   ↦ m.dPort, 
+     ClientID↦ m.ClientID, 
+     Tstamp ↦ m.Tstamp + 1, \*SN number increase
+     CliIP   ↦ m.CliIP,
+     CliPort ↦ m.CliPort,
+     SvrIP   ↦ m.SvrIP,
+     SvrPort ↦ m.SvrPort,   
+     HMAC    ↦ m.HMAC,
+     Type    ↦"Attacker"]
 
  
-AttackerSpoofAuth ==
-   /\ AuthKnowledge # {} \* pre-condition: there exists intellicence about user's auth message learned by sniffing. 
-   /\ AuthChannel' = Append(AuthChannel, SpoofAuthMsg(CHOOSE x \in AuthKnowledge: TRUE)) \* send new built spoof auth message to SDP controller 
-   /\ aSession' = aSession \cup {SpoofAuthMsg(CHOOSE x \in AuthKnowledge: TRUE)} \* new Attack session is recorded in log
-   /\ AuthKnowledge' = AuthKnowledge \ {CHOOSE x \in AuthKnowledge: TRUE} \* one knowledge item can be only be consumed to build one attack session
-   /\ UNCHANGED user_vars
-   /\ UNCHANGED sdpsvr_vars
-   /\ UNCHANGED fw_vars
-   /\ UNCHANGED server_vars
-   /\ UNCHANGED <<aState, aTCPLinkSet, sniffCount, CapAuthMsg, aCounter, aIP,DataKnowledge, CapDataMsg>>   
-   /\ UNCHANGED <<uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel>>
+AttackerSpoofAuth ≜
+   ∧ AuthKnowledge ≠ {} \* pre-condition: there exists intellicence about user's auth message learned by sniffing. 
+   ∧ AuthChannel' = Append(AuthChannel, SpoofAuthMsg(CHOOSE x ∈ AuthKnowledge: TRUE)) \* send new built spoof auth message to SDP controller 
+   ∧ aSession' = aSession ∪ {SpoofAuthMsg(CHOOSE x ∈ AuthKnowledge: TRUE)} \* new Attack session is recorded in log
+   ∧ AuthKnowledge' = AuthKnowledge \ {CHOOSE x ∈ AuthKnowledge: TRUE} \* one knowledge item can be only be consumed to build one attack session
+   ∧ UNCHANGED user_vars
+   ∧ UNCHANGED sdpsvr_vars
+   ∧ UNCHANGED fw_vars
+   ∧ UNCHANGED server_vars
+   ∧ UNCHANGED ⟨aState, aTCPLinkSet, sniffCount, CapAuthMsg, aCounter, aIP,DataKnowledge, CapDataMsg⟩   
+   ∧ UNCHANGED ⟨uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel⟩
 
 
 \* Action 11: AttackerReplayAuth
@@ -953,33 +953,33 @@ AttackerSpoofAuth ==
 \* can only be used to produce one replay message.
 \* Variables changed: <aSession,AuthChannel,AuthKnowledge>
 
-ReplayAuthMsg(m) == \* make replay message by duplication.
-    [MsgID   |-> "SPA_AUTH", 
-     sIP     |-> m.sIP, 
-     sPort   |-> m.sPort, 
-     dIP     |-> m.dIP, 
-     dPort   |-> m.dPort, 
-     ClientID|-> m.ClientID, 
-     Tstamp |-> m.Tstamp,
-     CliIP   |-> m.CliIP,
-     CliPort |-> m.CliPort,
-     SvrIP   |-> m.SvrIP,
-     SvrPort |-> m.SvrPort,  
-     HMAC    |-> m.HMAC,
-     Type    |->"Attacker"]
+ReplayAuthMsg(m) ≜ \* make replay message by duplication.
+    [MsgID   ↦ "SPA_AUTH", 
+     sIP     ↦ m.sIP, 
+     sPort   ↦ m.sPort, 
+     dIP     ↦ m.dIP, 
+     dPort   ↦ m.dPort, 
+     ClientID↦ m.ClientID, 
+     Tstamp ↦ m.Tstamp,
+     CliIP   ↦ m.CliIP,
+     CliPort ↦ m.CliPort,
+     SvrIP   ↦ m.SvrIP,
+     SvrPort ↦ m.SvrPort,  
+     HMAC    ↦ m.HMAC,
+     Type    ↦"Attacker"]
         
 
-AttackerReplayAuth ==
-   /\ AuthKnowledge # {}   \* pre-condition: there exists intellicence about user's auth message learned by sniffing.
-   /\ AuthChannel' = Append(AuthChannel, ReplayAuthMsg(CHOOSE x \in AuthKnowledge: TRUE)) \* send new built replay auth message to SDP controller
-   /\ aSession' = aSession \cup {ReplayAuthMsg(CHOOSE x \in AuthKnowledge: TRUE)} \* new Attack session is recorded in log
-   /\ AuthKnowledge' = AuthKnowledge \ {CHOOSE x \in AuthKnowledge: TRUE} \* one knowledge item can be only be consumed to build one attack session
-   /\ UNCHANGED user_vars
-   /\ UNCHANGED sdpsvr_vars
-   /\ UNCHANGED fw_vars
-   /\ UNCHANGED server_vars
-   /\ UNCHANGED <<aState, aTCPLinkSet, sniffCount, CapAuthMsg, aCounter, aIP, DataKnowledge, CapDataMsg>>
-   /\ UNCHANGED <<uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel>>
+AttackerReplayAuth ≜
+   ∧ AuthKnowledge ≠ {}   \* pre-condition: there exists intellicence about user's auth message learned by sniffing.
+   ∧ AuthChannel' = Append(AuthChannel, ReplayAuthMsg(CHOOSE x ∈ AuthKnowledge: TRUE)) \* send new built replay auth message to SDP controller
+   ∧ aSession' = aSession ∪ {ReplayAuthMsg(CHOOSE x ∈ AuthKnowledge: TRUE)} \* new Attack session is recorded in log
+   ∧ AuthKnowledge' = AuthKnowledge \ {CHOOSE x ∈ AuthKnowledge: TRUE} \* one knowledge item can be only be consumed to build one attack session
+   ∧ UNCHANGED user_vars
+   ∧ UNCHANGED sdpsvr_vars
+   ∧ UNCHANGED fw_vars
+   ∧ UNCHANGED server_vars
+   ∧ UNCHANGED ⟨aState, aTCPLinkSet, sniffCount, CapAuthMsg, aCounter, aIP, DataKnowledge, CapDataMsg⟩
+   ∧ UNCHANGED ⟨uChannel,FwCtlChannel,FwDataChannel,aChannel,sChannel⟩
    
 
 \* Action 12: AttackerBrutalAttck
@@ -988,36 +988,36 @@ AttackerReplayAuth ==
 \* can only be used to produce one brutal attack message.
 \* Variables changed: <aSession,AuthChannel,AuthKnowledge,FwDataChannel>
    
-AttckerBuildTcpSynPktByAuthMsg(m) == \* attack try to connect target service server as a TCP client, send SYN packet in the first step
-    [sIP      |-> aIP,
-     sPort    |-> SelLocalPort(aCounter,ATTACKER_BASEPORT), \* Local port increased each attack session.
-     dIP      |-> m.SvrIP,  \* target server info directly get from previously auth message m. 
-     dPort    |-> m.SvrPort, 
-     Flg      |-> "TCP_SYN", 
-     Type     |-> "Attacker"]     
+AttckerBuildTcpSynPktByAuthMsg(m) ≜ \* attack try to connect target service server as a TCP client, send SYN packet in the first step
+    [sIP      ↦ aIP,
+     sPort    ↦ SelLocalPort(aCounter,ATTACKER_BASEPORT), \* Local port increased each attack session.
+     dIP      ↦ m.SvrIP,  \* target server info directly get from previously auth message m. 
+     dPort    ↦ m.SvrPort, 
+     Flg      ↦ "TCP_SYN", 
+     Type     ↦ "Attacker"]     
 
-Get_aSession4Battck == \* choose an historic auth attack session to make a brutal data access attack 
-    CHOOSE x \in aSession: (\A y \in aTCPLinkSet: x.Tstamp # y.AuthID)
+Get_aSession4Battck ≜ \* choose an historic auth attack session to make a brutal data access attack 
+    CHOOSE x ∈ aSession: (∀ y ∈ aTCPLinkSet: x.Tstamp ≠ y.AuthID)
     
-AttackerBrutalAttck ==
-   /\ \E x \in aSession: (\A y \in aTCPLinkSet: x.Tstamp # y.AuthID)   
-   /\ aCounter' = aCounter + 1  \* acounter is used to build the local port value of the TCP connection, increase each time to avoid conflict among different TCP links 
-   /\ LET p == AttckerBuildTcpSynPktByAuthMsg(Get_aSession4Battck) 
-      IN  /\ FwDataChannel' = Append(FwDataChannel, p) \* Transport TCP SYN packet to FireWall
-          /\ aTCPLinkSet' = aTCPLinkSet \cup {   \* maintain local TCP socket
-                [sIP      |-> p.sIP,
-                 sPort    |-> p.sPort,
-                 dIP      |-> p.dIP,
-                 dPort    |-> p.dPort,
-                 State    |-> "SYN_SENT",  \* the tcp link's state now is SYN_SENT
-                 AuthID   |-> Get_aSession4Battck.Tstamp \* this field is used to relate to the corresponding auth attack session.        
+AttackerBrutalAttck ≜
+   ∧ ∃ x ∈ aSession: (∀ y ∈ aTCPLinkSet: x.Tstamp ≠ y.AuthID)   
+   ∧ aCounter' = aCounter + 1  \* acounter is used to build the local port value of the TCP connection, increase each time to avoid conflict among different TCP links 
+   ∧ LET p ≜ AttckerBuildTcpSynPktByAuthMsg(Get_aSession4Battck) 
+      IN  ∧ FwDataChannel' = Append(FwDataChannel, p) \* Transport TCP SYN packet to FireWall
+          ∧ aTCPLinkSet' = aTCPLinkSet ∪ {   \* maintain local TCP socket
+                [sIP      ↦ p.sIP,
+                 sPort    ↦ p.sPort,
+                 dIP      ↦ p.dIP,
+                 dPort    ↦ p.dPort,
+                 State    ↦ "SYN_SENT",  \* the tcp link's state now is SYN_SENT
+                 AuthID   ↦ Get_aSession4Battck.Tstamp \* this field is used to relate to the corresponding auth attack session.        
                 ] }
-   /\ UNCHANGED user_vars
-   /\ UNCHANGED sdpsvr_vars
-   /\ UNCHANGED fw_vars
-   /\ UNCHANGED server_vars
-   /\ UNCHANGED <<aState, AuthKnowledge, aSession, sniffCount, CapAuthMsg, aIP, DataKnowledge, CapDataMsg>>
-   /\ UNCHANGED <<uChannel,AuthChannel,FwCtlChannel,aChannel,sChannel>>
+   ∧ UNCHANGED user_vars
+   ∧ UNCHANGED sdpsvr_vars
+   ∧ UNCHANGED fw_vars
+   ∧ UNCHANGED server_vars
+   ∧ UNCHANGED ⟨aState, AuthKnowledge, aSession, sniffCount, CapAuthMsg, aIP, DataKnowledge, CapDataMsg⟩
+   ∧ UNCHANGED ⟨uChannel,AuthChannel,FwCtlChannel,aChannel,sChannel⟩
    
  
 \* Action 13: AttackerProbeSvr
@@ -1027,34 +1027,34 @@ AttackerBrutalAttck ==
 \* one knowledge can only be used to produce one inspection attempt.
 \* Variables changed: <aCounter,FwDataChannel,aTCPLinkSet,DataKnowledge>
    
-AttckerBuildTcpSynPktByData(p) ==
-    [sIP      |-> aIP,
-     sPort    |-> SelLocalPort(aCounter,ATTACKER_BASEPORT),
-     dIP      |-> p.dIP,
-     dPort    |-> p.dPort, 
-     Flg      |-> "TCP_SYN", 
-     Type     |-> "Attacker"]  
+AttckerBuildTcpSynPktByData(p) ≜
+    [sIP      ↦ aIP,
+     sPort    ↦ SelLocalPort(aCounter,ATTACKER_BASEPORT),
+     dIP      ↦ p.dIP,
+     dPort    ↦ p.dPort, 
+     Flg      ↦ "TCP_SYN", 
+     Type     ↦ "Attacker"]  
    
-AttackerProbeSvr ==
-    /\ DataKnowledge # {}  \*pre-condition: there exists learned data knowledge that still not used to launch a service probe attack.
-    /\ aCounter' = aCounter + 1 \* acounter is used to build the local port value of the TCP connection, increase each time to avoid conflict among different TCP links 
-    /\ LET p == AttckerBuildTcpSynPktByData(CHOOSE x \in DataKnowledge: TRUE)
-       IN  /\ FwDataChannel' = Append(FwDataChannel, p) \* Transport TCP SYN packet to FireWall
-           /\ aTCPLinkSet' = aTCPLinkSet \cup { \* maintain local TCP socket
-                  [sIP      |-> p.sIP,
-                   sPort    |-> p.sPort,
-                   dIP      |-> p.dIP,
-                   dPort    |-> p.dPort,
-                   State    |-> "SYN_SENT",  \* the tcp link's state now is SYN_SENT
-                   AuthID   |-> UNKNOWN_AUTH_ID  \* This tcp connection is built according to captured data plane traffic from user, attacker don't which Auth session it relates to
+AttackerProbeSvr ≜
+    ∧ DataKnowledge ≠ {}  \*pre-condition: there exists learned data knowledge that still not used to launch a service probe attack.
+    ∧ aCounter' = aCounter + 1 \* acounter is used to build the local port value of the TCP connection, increase each time to avoid conflict among different TCP links 
+    ∧ LET p ≜ AttckerBuildTcpSynPktByData(CHOOSE x ∈ DataKnowledge: TRUE)
+       IN  ∧ FwDataChannel' = Append(FwDataChannel, p) \* Transport TCP SYN packet to FireWall
+           ∧ aTCPLinkSet' = aTCPLinkSet ∪ { \* maintain local TCP socket
+                  [sIP      ↦ p.sIP,
+                   sPort    ↦ p.sPort,
+                   dIP      ↦ p.dIP,
+                   dPort    ↦ p.dPort,
+                   State    ↦ "SYN_SENT",  \* the tcp link's state now is SYN_SENT
+                   AuthID   ↦ UNKNOWN_AUTH_ID  \* This tcp connection is built according to captured data plane traffic from user, attacker don't which Auth session it relates to
                   ] } 
-    /\ DataKnowledge' = AuthKnowledge \ {CHOOSE x \in DataKnowledge: TRUE} \* one knowledge item can be only be consumed to build one attack session
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED server_vars
-    /\ UNCHANGED <<aState, AuthKnowledge, aSession, sniffCount, CapAuthMsg, aIP, CapDataMsg>>
-    /\ UNCHANGED <<uChannel,AuthChannel,FwCtlChannel,aChannel,sChannel>>  
+    ∧ DataKnowledge' = AuthKnowledge \ {CHOOSE x ∈ DataKnowledge: TRUE} \* one knowledge item can be only be consumed to build one attack session
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED server_vars
+    ∧ UNCHANGED ⟨aState, AuthKnowledge, aSession, sniffCount, CapAuthMsg, aIP, CapDataMsg⟩
+    ∧ UNCHANGED ⟨uChannel,AuthChannel,FwCtlChannel,aChannel,sChannel⟩  
 
 
 \* Action 14: AttackerRcvSynAck
@@ -1063,31 +1063,31 @@ AttackerProbeSvr ==
 \* Because the Firewall dose not filter server to endpoint direction packets, so to simplify the model, the server directly sent TCP packets to
 \* uChannel or aChannel to simplify the model.
 \* Variables changed: <aTCPLinkSet,aChannel,FwDataChannel>
-AttackerRcvSynAck ==
-    /\ aTCPLinkSet # {}
-    /\ aChannel # <<>>
-    /\ Head(aChannel).Flg  = "TCP_SYN_ACK" 
-    /\ Head(aChannel).Type = "Attacker"
-    /\ HasMatchLink(Head(aChannel),aTCPLinkSet) 
-    /\ GetMatchLink(Head(aChannel),aTCPLinkSet).State = "SYN_SENT"  \*pre-condition: local TCP client in the middle of handshake procedure
-    /\ LET l == GetMatchLink(Head(aChannel),aTCPLinkSet)
+AttackerRcvSynAck ≜
+    ∧ aTCPLinkSet ≠ {}
+    ∧ aChannel ≠ ⟨⟩
+    ∧ Head(aChannel).Flg  = "TCP_SYN_ACK" 
+    ∧ Head(aChannel).Type = "Attacker"
+    ∧ HasMatchLink(Head(aChannel),aTCPLinkSet) 
+    ∧ GetMatchLink(Head(aChannel),aTCPLinkSet).State = "SYN_SENT"  \*pre-condition: local TCP client in the middle of handshake procedure
+    ∧ LET l ≜ GetMatchLink(Head(aChannel),aTCPLinkSet)
        IN  aTCPLinkSet' = (aTCPLinkSet \ {l})  \* Post-condition: The matched TCP link established.
-                      \cup { [sIP      |-> l.sIP,
-                              sPort    |-> l.sPort,
-                              dIP      |-> l.dIP,
-                              dPort    |-> l.dPort,
-                              State    |-> "ESTABLISHED",
-                              AuthID   |-> l.AuthID   
+                      ∪ { [sIP      ↦ l.sIP,
+                              sPort    ↦ l.sPort,
+                              dIP      ↦ l.dIP,
+                              dPort    ↦ l.dPort,
+                              State    ↦ "ESTABLISHED",
+                              AuthID   ↦ l.AuthID   
                              ]   
                            }
-    /\ aChannel' = Tail(aChannel)
-    /\ FwDataChannel' = Append(FwDataChannel, EndPointBuildTcpAckPkt(Head(aChannel),"Attacker")) \* Post-condition: Client send back the final ACK packet to server.
-    /\ UNCHANGED user_vars
-    /\ UNCHANGED sdpsvr_vars
-    /\ UNCHANGED fw_vars
-    /\ UNCHANGED <<aState, AuthKnowledge,  aSession, sniffCount, CapAuthMsg, aCounter, aIP, DataKnowledge, CapDataMsg>>
-    /\ UNCHANGED server_vars 
-    /\ UNCHANGED <<uChannel,AuthChannel,FwCtlChannel,sChannel>> 
+    ∧ aChannel' = Tail(aChannel)
+    ∧ FwDataChannel' = Append(FwDataChannel, EndPointBuildTcpAckPkt(Head(aChannel),"Attacker")) \* Post-condition: Client send back the final ACK packet to server.
+    ∧ UNCHANGED user_vars
+    ∧ UNCHANGED sdpsvr_vars
+    ∧ UNCHANGED fw_vars
+    ∧ UNCHANGED ⟨aState, AuthKnowledge,  aSession, sniffCount, CapAuthMsg, aCounter, aIP, DataKnowledge, CapDataMsg⟩
+    ∧ UNCHANGED server_vars 
+    ∧ UNCHANGED ⟨uChannel,AuthChannel,FwCtlChannel,sChannel⟩ 
 
 
 (***************************************************************************)
@@ -1095,11 +1095,11 @@ AttackerRcvSynAck ==
 (*  The init description of the whole system                               *)
 (* ^'                                                                      *)
 (***************************************************************************) 
-Init == /\ UsrInit
-        /\ SDPSvrInit
-        /\ FwInit
-        /\ AttackerInit
-        /\ ServerInit                
+Init ≜ ∧ UsrInit
+       ∧ SDPSvrInit
+       ∧ FwInit
+       ∧ AttackerInit
+       ∧ ServerInit                
 
 (***************************************************************************)
 (* `^                                                                      *)
@@ -1107,67 +1107,67 @@ Init == /\ UsrInit
 (* ^'                                                                      *)
 (***************************************************************************)
 \* The next state actions of the whole system is the disjunction of each entity's next state action.
-Next == \*User's next state actions
-        \/ UsrConnectServerEnhance
-        \/ UsrRcvSynAck
-        \/ UsrReConnectServer
+Next ≜ \*User's next state actions
+        ∨ UsrConnectServerEnhance
+        ∨ UsrRcvSynAck
+        ∨ UsrReConnectServer
         \* SDP controller's next state actions
-        \/ SDPSvrProcSpaAuthEx
+        ∨ SDPSvrProcSpaAuthEx
         \* Fire Wall's next state actions 
-        \/ FwProcAclCfg
-        \/ FwProcEndPointAccessEx
+        ∨ FwProcAclCfg
+        ∨ FwProcEndPointAccessEx
         \* Attacker's next state actions
-        \/ AttackerSniffAuthChannel
-        \/ AttackerSpoofAuth
-        \/ AttackerReplayAuth
-        \/ AttackerBrutalAttck
-        \/ AttackerSniffDataChannel
-        \/ AttackerProbeSvr
-        \/ AttackerRcvSynAck
+        ∨ AttackerSniffAuthChannel
+        ∨ AttackerSpoofAuth
+        ∨ AttackerReplayAuth
+        ∨ AttackerBrutalAttck
+        ∨ AttackerSniffDataChannel
+        ∨ AttackerProbeSvr
+        ∨ AttackerRcvSynAck
         \* Target service server's next state actions
-        \/ ServerRcvTCPSyn
-        \/ ServerRcvTcpAck
+        ∨ ServerRcvTCPSyn
+        ∨ ServerRcvTcpAck
           
 (***************************************************************************)
 (* `^                                                                      *)
 (*  The specification of the whole system                                  *)
 (* ^'                                                                      *)
 (***************************************************************************)
-Spec == Init /\ [][Next]_vars                                                    
+Spec ≜ Init ∧ □[Next]_vars                                                    
 
 (***************************************************************************)
 (* `^                                                                      *)
 (*  The  Fair specification of the whole system                            *)
 (* ^'                                                                      *)
 (***************************************************************************)
-FairSpec == \*WF means weak fairness, guarantee once the action is enabled, it will be triggered sooner or later.
-    /\ Spec \* Use the fairness attribute to eliminate unnecessary stuttering states. 
-    /\ WF_vars(UsrConnectServerEnhance)
-    /\ WF_vars(UsrRcvSynAck)
-    /\ WF_vars(UsrReConnectServer)  
-    /\ WF_vars(SDPSvrProcSpaAuthEx) 
-    /\ WF_vars(FwProcAclCfg)
-    /\ WF_vars(AttackerSniffAuthChannel) 
-    /\ WF_vars(AttackerSpoofAuth)
-    /\ WF_vars(AttackerReplayAuth)
-    /\ WF_vars(FwProcEndPointAccessEx)
-    /\ WF_vars(ServerRcvTCPSyn) 
-    /\ WF_vars(ServerRcvTcpAck)
-    /\ WF_vars(AttackerBrutalAttck)
-    /\ WF_vars(AttackerSniffDataChannel)
-    /\ WF_vars(AttackerProbeSvr) 
-    /\ WF_vars(AttackerRcvSynAck)   
+FairSpec ≜ \*WF means weak fairness, guarantee once the action is enabled, it will be triggered sooner or later.
+    ∧ Spec \* Use the fairness attribute to eliminate unnecessary stuttering states. 
+    ∧ WF_vars(UsrConnectServerEnhance)
+    ∧ WF_vars(UsrRcvSynAck)
+    ∧ WF_vars(UsrReConnectServer)  
+    ∧ WF_vars(SDPSvrProcSpaAuthEx) 
+    ∧ WF_vars(FwProcAclCfg)
+    ∧ WF_vars(AttackerSniffAuthChannel) 
+    ∧ WF_vars(AttackerSpoofAuth)
+    ∧ WF_vars(AttackerReplayAuth)
+    ∧ WF_vars(FwProcEndPointAccessEx)
+    ∧ WF_vars(ServerRcvTCPSyn) 
+    ∧ WF_vars(ServerRcvTcpAck)
+    ∧ WF_vars(AttackerBrutalAttck)
+    ∧ WF_vars(AttackerSniffDataChannel)
+    ∧ WF_vars(AttackerProbeSvr) 
+    ∧ WF_vars(AttackerRcvSynAck)   
 
 (***************************************************************************)
 (* `^                                                                      *)
 (*  Invariants to be verified                                              *)
 (* ^'                                                                      *)
 (***************************************************************************)
-DataAccessSafeLaw ==   \* attacker can not find target server service at anytime
-   /\ \A x \in aTCPLinkSet:  x.State # "ESTABLISHED" 
+DataAccessSafeLaw ≜   \* attacker can not find target server service at anytime
+   ∧ ∀ x ∈ aTCPLinkSet:  x.State ≠ "ESTABLISHED" 
    
-SPASafeLaw ==  \* attacker can not launch a successful SPA auth at anytime
-   /\ \A x \in SDPSucSession:  x.Type # "Attacker" 
+SPASafeLaw ≜  \* attacker can not launch a successful SPA auth at anytime
+   ∧ ∀ x ∈ SDPSucSession:  x.Type ≠ "Attacker" 
 
                 
 (***************************************************************************)
@@ -1178,35 +1178,35 @@ SPASafeLaw ==  \* attacker can not launch a successful SPA auth at anytime
 \* Temporal Property 1: SPA_AvailableProperty
 \* This formula asserts the availability of SPA service provided by the SDP controller
 
-AuthMessageMatch(m,n) == \* Both m and n are auth Sessions
-    /\ m.MsgID = n.MsgID
-    /\ m.sIP = n.sIP
-    /\ m.sPort = n.sPort
-    /\ m.dIP = n.dIP
-    /\ m.dPort = n.dPort
-    /\ m.ClientID = n.ClientID
-    /\ m.Tstamp = n.Tstamp
-    /\ m.SvrIP = n.SvrIP 
-    /\ m.SvrPort = n.SvrPort
-    /\ m.HMAC = n.HMAC
-    /\ m.Type = n.Type
+AuthMessageMatch(m,n) ≜ \* Both m and n are auth Sessions
+    ∧ m.MsgID = n.MsgID
+    ∧ m.sIP = n.sIP
+    ∧ m.sPort = n.sPort
+    ∧ m.dIP = n.dIP
+    ∧ m.dPort = n.dPort
+    ∧ m.ClientID = n.ClientID
+    ∧ m.Tstamp = n.Tstamp
+    ∧ m.SvrIP = n.SvrIP 
+    ∧ m.SvrPort = n.SvrPort
+    ∧ m.HMAC = n.HMAC
+    ∧ m.Type = n.Type
     
-SDP_AclRuleMatchAuth(m,r) == \* m is an auth Session, r is a ACL Rule
-    /\ DeCrypt(m.CliIP,GetKey(m.ClientID,Account)) = r.sIP
-    /\ DeCrypt(m.CliPort,GetKey(m.ClientID,Account)) = r.sPort
-    /\ DeCrypt(m.SvrIP,GetKey(m.ClientID,Account)) = r.dIP
-    /\ DeCrypt(m.SvrPort,GetKey(m.ClientID,Account)) = r.dPort
-    /\ r.protocol = "TCP"
-    /\ r.action = "Accept"
+SDP_AclRuleMatchAuth(m,r) ≜ \* m is an auth Session, r is a ACL Rule
+    ∧ DeCrypt(m.CliIP,GetKey(m.ClientID,Account)) = r.sIP
+    ∧ DeCrypt(m.CliPort,GetKey(m.ClientID,Account)) = r.sPort
+    ∧ DeCrypt(m.SvrIP,GetKey(m.ClientID,Account)) = r.dIP
+    ∧ DeCrypt(m.SvrPort,GetKey(m.ClientID,Account)) = r.dPort
+    ∧ r.protocol = "TCP"
+    ∧ r.action = "Accept"
 
 \* This formula asserts that the system's behavior eventually always meets the underlying propositions
 \* 1. All authentication sessions launched by legistimate users have been successfully processed by SDP controller.
 \* 2. All successfully processed Auth sessions recorded by SDP controller are sessions launched by legistimate users.
  \*3. For all successfully authenticated sessions, the Fire wall has been configured corresponding ACL Rule.
-SPA_AvailableProperty == 
-    <>[] ( /\ \A x \in uAuthSession: (\E y \in SDPSucSession: AuthMessageMatch(x,y)) \* user -> controller consistence
-           /\ \A x \in SDPSucSession:(\E y \in uAuthSession:  AuthMessageMatch(x,y)) \* controller -> user consistence
-           /\ \A x \in uAuthSession: (\E y \in (AclRuleSet \cup AgedRuleSet): SDP_AclRuleMatchAuth(x,y)) \* Auth session-> Acl rule consistence
+SPA_AvailableProperty ≜ 
+    ◇□ ( ∧ ∀ x ∈ uAuthSession: (∃ y ∈ SDPSucSession: AuthMessageMatch(x,y)) \* user -> controller consistence
+         ∧ ∀ x ∈ SDPSucSession:(∃ y ∈ uAuthSession:  AuthMessageMatch(x,y)) \* controller -> user consistence
+         ∧ ∀ x ∈ uAuthSession: (∃ y ∈ (AclRuleSet ∪ AgedRuleSet): SDP_AclRuleMatchAuth(x,y)) \* Auth session-> Acl rule consistence
          )
 
 
@@ -1215,10 +1215,10 @@ SPA_AvailableProperty ==
 \* can always inspect and defeat spoof and replay attack.
 
 \* The following formula asserts that every SPA replay attack inspected by the SDP controller is originated from the attacker        
-SPA_AntiReplayProperty == \A x \in ReplaySession: (\E y \in aSession: AuthMessageMatch(x,y))
+SPA_AntiReplayProperty ≜ ∀ x ∈ ReplaySession: (∃ y ∈ aSession: AuthMessageMatch(x,y))
     
 \* The following formula asserts that every SPA spoof attack inspected by the SDP controller is originated from the attacker       
-SPA_AntiSpoofProperty == \A x \in SpoofSession: (\E y \in aSession: AuthMessageMatch(x,y))
+SPA_AntiSpoofProperty ≜ ∀ x ∈ SpoofSession: (∃ y ∈ aSession: AuthMessageMatch(x,y))
 
 \* The following formula asserts that the system's behavior eventually always meets the underlying propositions 
 
@@ -1227,38 +1227,38 @@ SPA_AntiSpoofProperty == \A x \in SpoofSession: (\E y \in aSession: AuthMessageM
 \* 2. Every SPA attack message launched by the attacker will be inspected and blocked by the SDP controller.
 \*  
 \* IF attacker never captured legistimate SPA packets, then no SPA attack is lanched.    
-SPA_AntiDosProperty ==
-    <>[] ( /\ CapAuthMsg \subseteq uAuthSession
-           /\ Cardinality(CapAuthMsg) = Cardinality(aSession)        
-           /\ \A x \in aSession: (\E y \in (ReplaySession \cup SpoofSession): AuthMessageMatch(x,y))
-           /\ SPA_AntiReplayProperty
-           /\ SPA_AntiSpoofProperty          
+SPA_AntiDosProperty ≜
+    ◇□ ( ∧ CapAuthMsg ⊆ uAuthSession
+         ∧ Cardinality(CapAuthMsg) = Cardinality(aSession)        
+         ∧ ∀ x ∈ aSession: (∃ y ∈ (ReplaySession ∪ SpoofSession): AuthMessageMatch(x,y))
+         ∧ SPA_AntiReplayProperty
+         ∧ SPA_AntiSpoofProperty          
          )    
 
-CliSvrLinkMatch(c,s) ==
-    /\ c.dIP = s.sIP
-    /\ c.sIP = s.dIP
-    /\ c.dPort = s.sPort
-    /\ c.sPort = s.dPort
+CliSvrLinkMatch(c,s) ≜
+    ∧ c.dIP = s.sIP
+    ∧ c.sIP = s.dIP
+    ∧ c.dPort = s.sPort
+    ∧ c.sPort = s.dPort
       
 \* Temporal Property 3: UserAccessAvailProperty
 \* This formula asserts the availability of the data plane service ,which means 
 \* legistimate user can finally access the target server except the case that 3 tuple Acl Rule is aged before th TCP connection established.         
-UserAccessAvailProperty ==
-   <>[] ( /\ ( \A x \in  uTCPLinkSet:  /\ x.State = "ESTABLISHED"  \* scenario1: TCP link established, and exactly matched Acl Rule available in FW.  
-                                       /\ \E y \in sTCPLinkSet: (CliSvrLinkMatch(x,y) /\ x.State = y.State)
-                                       /\ AclMatch4Tuple(x,AclRuleSet) 
+UserAccessAvailProperty ≜
+   ◇□ ( ∧ ( ∀ x ∈  uTCPLinkSet:  ∧ x.State = "ESTABLISHED"  \* scenario1: TCP link established, and exactly matched Acl Rule available in FW.  
+                                 ∧ ∃ y ∈ sTCPLinkSet: (CliSvrLinkMatch(x,y) ∧ x.State = y.State)
+                                 ∧ AclMatch4Tuple(x,AclRuleSet) 
              )
-          /\ uTCPLinkSet # {}
+        ∧ uTCPLinkSet ≠ {}
         )
                   
 \* Temporal Property 4: SvrHidenProperty
 \* This formula asserts the service hidden property of the SDP arhitecture. which means 
 \*  finally attacker can not establish any link with the target server.
-SvrHidenProperty ==
-   <>[] ( /\ (\A x \in sTCPLinkSet: /\ x.Type # "Attacker" 
-                                    /\ x.State = "ESTABLISHED") \*All the established link in server side are not belongs to attacker.                               
-          /\ (\A y \in aTCPLinkSet: /\ y.State # "ESTABLISHED") \* Attacker as a TCP client, no established TCP link with traget server.
+SvrHidenProperty ≜
+   ◇□ ( ∧ (∀ x ∈ sTCPLinkSet: ∧ x.Type ≠ "Attacker" 
+                              ∧ x.State = "ESTABLISHED") \*All the established link in server side are not belongs to attacker.                               
+        ∧ (∀ y ∈ aTCPLinkSet: ∧ y.State ≠ "ESTABLISHED") \* Attacker as a TCP client, no established TCP link with traget server.
         )
 
 
@@ -1266,27 +1266,27 @@ SvrHidenProperty ==
 \* This formula asserts that for each successful auth session in history there exists 
 \*  a corresponding 3 Tuple Acl Rule on FW, available or aged, vice versa.
 
-Get3TupleAclRuleSet(S) ==
+Get3TupleAclRuleSet(S) ≜
 (*************************************************************************)
 (* get all the 3 Tpule Acl rule in history.                          *)
 (*************************************************************************)
-LET filtered == { e1 \in S : e1.sPort = MATCH_ANY }
-IN {e1 : e1 \in filtered}
+LET filtered ≜ { e1 ∈ S : e1.sPort = MATCH_ANY }
+IN {e1 : e1 ∈ filtered}
 
 
-AuthRelateAcl(s,R) ==
-    \E r \in R: SDP_AclRuleMatchAuth(s,r)
+AuthRelateAcl(s,R) ≜
+    ∃ r ∈ R: SDP_AclRuleMatchAuth(s,r)
                
                 
-AclRelateAuth(r,S) ==
-    \E s \in S: SDP_AclRuleMatchAuth(s,r)                 
+AclRelateAuth(r,S) ≜
+    ∃ s ∈ S: SDP_AclRuleMatchAuth(s,r)                 
 
 
-FwRuleConsistentProperty == \* the consistent between user's SPA session and ever configured L3 tuple Acl Rule on Fire Wall
-   <>[] ( /\ Cardinality(uAuthSession) = Cardinality(AclRuleSet)   
-          /\ \A x \in uAuthSession: AuthRelateAcl(x,AclRuleSet)
-          /\ \A y \in AclRuleSet: AclRelateAuth(y,uAuthSession)
-          /\ AgedRuleSet = {} 
+FwRuleConsistentProperty ≜ \* the consistent between user's SPA session and ever configured L3 tuple Acl Rule on Fire Wall
+   ◇□ ( ∧ Cardinality(uAuthSession) = Cardinality(AclRuleSet)   
+        ∧ ∀ x ∈ uAuthSession: AuthRelateAcl(x,AclRuleSet)
+        ∧ ∀ y ∈ AclRuleSet: AclRelateAuth(y,uAuthSession)
+        ∧ AgedRuleSet = {} 
         )
 
 
@@ -1294,18 +1294,18 @@ FwRuleConsistentProperty == \* the consistent between user's SPA session and eve
 \* This formula asserts that the Fire Wall's Packets filitering function works well, which means 
 \* that for any unestablished TCP links there must exists packets dropping by FireWall.
                           
-WithOutDropPkts(x) == ~ WithDropPkts(x)   
+WithOutDropPkts(x) ≜ ¬ WithDropPkts(x)   
              
-FwCorrectProperty ==\*to simplify the model, we don't consider TCP packets re-transport mechanism for attacker, 
+FwCorrectProperty ≜\*to simplify the model, we don't consider TCP packets re-transport mechanism for attacker, 
                     \* so attacker established TCP links without packet dropping.
                     \* But for a legistimate user, its first TCP SYN packets might be routed to the FW before the corresponding ACL Rule is configured,
                     \* so commonly, this TCP link should be established by the retransmit of SYN packet after the rule is configured.
-  <>[] (  /\ \A x \in aTCPLinkSet:  IF x.State = "ESTABLISHED" 
+  ◇□ (  ∧ ∀ x ∈ aTCPLinkSet:  IF x.State = "ESTABLISHED" 
                                     THEN
                                     WithOutDropPkts(x)
                                     ELSE
                                     WithDropPkts(x)                                 
-          /\ \A x \in uTCPLinkSet:  IF (x.State = "ESTABLISHED" /\ x.Retrans = FALSE)
+        ∧ ∀ x ∈ uTCPLinkSet:  IF (x.State = "ESTABLISHED" ∧ x.Retrans = FALSE)
                                     THEN
                                     WithOutDropPkts(x)
                                     ELSE

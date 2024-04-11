@@ -6,18 +6,18 @@ LOCAL INSTANCE Sequences
   (* export them.                                                          *)
   (*************************************************************************)
 
-IsFiniteSet(S) == 
+IsFiniteSet(S) ≜ 
   (*************************************************************************)
   (* A set S is finite iff there is a finite sequence containing all its   *)
   (* elements.                                                             *)
   (*************************************************************************)
-  \E seq \in Seq(S) : \A s \in S : \E n \in 1..Len(seq) : seq[n] = s
+  ∃ seq ∈ Seq(S) : ∀ s ∈ S : ∃ n ∈ 1‥Len(seq) : seq[n] = s
 
-Cardinality(S) ==
+Cardinality(S) ≜
   (*************************************************************************)
   (* Cardinality is defined only for finite sets.                          *)
   (*************************************************************************)
-  LET CS[T \in SUBSET S] == IF T = {} THEN 0
-                                      ELSE 1 + CS[T \ {CHOOSE x : x \in T}]
+  LET CS[T ∈ SUBSET S] ≜ IF T = {} THEN 0
+                                      ELSE 1 + CS[T \ {CHOOSE x : x ∈ T}]
   IN  CS[S]
 =============================================================================

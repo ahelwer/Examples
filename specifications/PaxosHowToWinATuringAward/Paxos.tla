@@ -33,12 +33,12 @@ EXTENDS Integers
 (***************************************************************************)
 CONSTANTS Value, Acceptor, Quorum
 
-ASSUME  /\ \A Q \in Quorum : Q \subseteq Acceptor
-        /\ \A Q1, Q2 \in Quorum : Q1 \cap Q2 /= {}
+ASSUME  ∧ ∀ Q ∈ Quorum : Q ⊆ Acceptor
+        ∧ ∀ Q1, Q2 ∈ Quorum : Q1 ∩ Q2 ≠ {}
       
-Ballot ==  Nat
+Ballot ≜  ℕ
 
-None == CHOOSE v : v \notin Ballot
+None ≜ CHOOSE v : v ∉ Ballot
   (*************************************************************************)
   (* This defines None to be an unspecified value that is not a ballot     *)
   (* number.                                                               *)
@@ -64,12 +64,12 @@ None == CHOOSE v : v \notin Ballot
 (* The function of each type of message in the set Message is explained    *)
 (* below with the action that can send it.                                 *)
 (***************************************************************************)
-Message == 
+Message ≜ 
        [type : {"1a"}, bal : Ballot]
-  \cup [type : {"1b"}, acc : Acceptor, bal : Ballot, 
-        mbal : Ballot \cup {-1}, mval : Value \cup {None}]
-  \cup [type : {"2a"}, bal : Ballot, val : Value]
-  \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
+  ∪ [type : {"1b"}, acc : Acceptor, bal : Ballot, 
+        mbal : Ballot ∪ {-1}, mval : Value ∪ {None}]
+  ∪ [type : {"2a"}, bal : Ballot, val : Value]
+  ∪ [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now declare the following variables:                                 *)
@@ -103,7 +103,7 @@ Message ==
 (* one that is never received.                                             *)
 (***************************************************************************)
 VARIABLES maxBal, maxVBal, maxVal, msgs  
-vars == <<maxBal, maxVBal, maxVal, msgs>>
+vars ≜ ⟨maxBal, maxVBal, maxVal, msgs⟩
   (*************************************************************************)
   (* It's convenient to name the tuple of all variables in a spec.         *)
   (*************************************************************************)
@@ -111,26 +111,26 @@ vars == <<maxBal, maxVBal, maxVal, msgs>>
 (***************************************************************************)
 (* The invariant that describes the "types" of the variables.              *)
 (***************************************************************************)
-TypeOK == /\ maxBal  \in [Acceptor -> Ballot \cup {-1}]
-          /\ maxVBal \in [Acceptor -> Ballot \cup {-1}]
-          /\ maxVal  \in [Acceptor -> Value \cup {None}]
-          /\ msgs \subseteq Message
+TypeOK ≜ ∧ maxBal  ∈ [Acceptor → Ballot ∪ {-1}]
+         ∧ maxVBal ∈ [Acceptor → Ballot ∪ {-1}]
+         ∧ maxVal  ∈ [Acceptor → Value ∪ {None}]
+         ∧ msgs ⊆ Message
 
 (***************************************************************************)
 (* The initial predicate should be obvious from the descriptions of the    *)
 (* variables given above.                                                  *)
 (***************************************************************************)          
-Init == /\ maxBal  = [a \in Acceptor |-> -1]
-        /\ maxVBal = [a \in Acceptor |-> -1]
-        /\ maxVal  = [a \in Acceptor |-> None]
-        /\ msgs = {}
+Init ≜ ∧ maxBal  = [a ∈ Acceptor ↦ -1]
+       ∧ maxVBal = [a ∈ Acceptor ↦ -1]
+       ∧ maxVal  = [a ∈ Acceptor ↦ None]
+       ∧ msgs = {}
 ----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now define the subactions of the next-state actions.  We begin by    *)
 (* defining an action that will be used in those subactions.  The action   *)
 (* Send(m) asserts that message m is added to the set msgs.                *)
 (***************************************************************************)
-Send(m) == msgs' = msgs \cup {m}
+Send(m) ≜ msgs' = msgs ∪ {m}
 
 (***************************************************************************)
 (* The ballot b leader can perform actions Phase1a(b) and Phase2a(b).  In  *)
@@ -142,8 +142,8 @@ Send(m) == msgs' = msgs \cup {m}
 (* definition of [type |-> "1a", bal |-> b] from the comment preceding the *)
 (* definition of Message.)                                                 *)
 (***************************************************************************)
-Phase1a(b) == /\ Send([type |-> "1a", bal |-> b])
-              /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
+Phase1a(b) ≜ ∧ Send([type ↦ "1a", bal ↦ b])
+             ∧ UNCHANGED ⟨maxBal, maxVBal, maxVal⟩
    (************************************************************************)
    (* Note that there is no enabling condition to prevent sending the      *)
    (* phase 1a message a second time.  Since messages are never removed    *)
@@ -160,14 +160,14 @@ Phase1a(b) == /\ Send([type |-> "1a", bal |-> b])
 (* maxVBal[a] and maxVal[a].  This action implements the                   *)
 (* IncreaseMaxBal(a,b) action of the Voting algorithm for b = m.bal.       *)
 (***************************************************************************)                 
-Phase1b(a) == 
-  /\ \E m \in msgs : 
-        /\ m.type = "1a"
-        /\ m.bal > maxBal[a]
-        /\ maxBal' = [maxBal EXCEPT ![a] = m.bal]
-        /\ Send([type |-> "1b", acc |-> a, bal |-> m.bal, 
-                  mbal |-> maxVBal[a], mval |-> maxVal[a]])
-  /\ UNCHANGED <<maxVBal, maxVal>>
+Phase1b(a) ≜ 
+  ∧ ∃ m ∈ msgs : 
+        ∧ m.type = "1a"
+        ∧ m.bal > maxBal[a]
+        ∧ maxBal' = [maxBal EXCEPT ![a] = m.bal]
+        ∧ Send([type ↦ "1b", acc ↦ a, bal ↦ m.bal, 
+                  mbal ↦ maxVBal[a], mval ↦ maxVal[a]])
+  ∧ UNCHANGED ⟨maxVBal, maxVal⟩
 
 (***************************************************************************)
 (* In the Phase2a(b, v) action, the ballot b leader sends a type "2a"      *)
@@ -213,20 +213,20 @@ Phase1b(a) ==
 (* conditions of VoteFor(a, b, v) but the first, maxBal[a] =< b, are       *)
 (* satisfied.                                                              *)
 (***************************************************************************)
-Phase2a(b, v) ==
-  /\ ~ \E m \in msgs : m.type = "2a" /\ m.bal = b
-  /\ \E Q \in Quorum :
-        LET Q1b == {m \in msgs : /\ m.type = "1b"
-                                 /\ m.acc \in Q
-                                 /\ m.bal = b}
-            Q1bv == {m \in Q1b : m.mbal >= 0}
-        IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
-            /\ \/ Q1bv = {}
-               \/ \E m \in Q1bv : 
-                    /\ m.mval = v
-                    /\ \A mm \in Q1bv : m.mbal >= mm.mbal 
-  /\ Send([type |-> "2a", bal |-> b, val |-> v])
-  /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
+Phase2a(b, v) ≜
+  ∧ ¬ ∃ m ∈ msgs : m.type = "2a" ∧ m.bal = b
+  ∧ ∃ Q ∈ Quorum :
+        LET Q1b ≜ {m ∈ msgs : ∧ m.type = "1b"
+                              ∧ m.acc ∈ Q
+                              ∧ m.bal = b}
+            Q1bv ≜ {m ∈ Q1b : m.mbal ≥ 0}
+        IN  ∧ ∀ a ∈ Q : ∃ m ∈ Q1b : m.acc = a 
+            ∧ ∨ Q1bv = {}
+              ∨ ∃ m ∈ Q1bv : 
+                    ∧ m.mval = v
+                    ∧ ∀ mm ∈ Q1bv : m.mbal ≥ mm.mbal 
+  ∧ Send([type ↦ "2a", bal ↦ b, val ↦ v])
+  ∧ UNCHANGED ⟨maxBal, maxVBal, maxVal⟩
 
 
 (***************************************************************************)
@@ -242,24 +242,24 @@ Phase2a(b, v) ==
 (* maxVBal[a], and maxVal[a] so their values mean what they were claimed   *)
 (* to mean in the comments preceding the variable declarations.            *)
 (***************************************************************************)  
-Phase2b(a) == 
-  \E m \in msgs : 
-      /\ m.type = "2a"
-      /\ m.bal >= maxBal[a]
-      /\ maxBal' = [maxBal EXCEPT ![a] = m.bal] 
-      /\ maxVBal' = [maxVBal EXCEPT ![a] = m.bal] 
-      /\ maxVal' = [maxVal EXCEPT ![a] = m.val]
-      /\ Send([type |-> "2b", acc |-> a,
-              bal |-> m.bal, val |-> m.val]) 
+Phase2b(a) ≜ 
+  ∃ m ∈ msgs : 
+      ∧ m.type = "2a"
+      ∧ m.bal ≥ maxBal[a]
+      ∧ maxBal' = [maxBal EXCEPT ![a] = m.bal] 
+      ∧ maxVBal' = [maxVBal EXCEPT ![a] = m.bal] 
+      ∧ maxVal' = [maxVal EXCEPT ![a] = m.val]
+      ∧ Send([type ↦ "2b", acc ↦ a,
+              bal ↦ m.bal, val ↦ m.val]) 
 
 (***************************************************************************)
 (* The definitions of Next and Spec are what we expect them to be.         *)
 (***************************************************************************)
-Next == \/ \E b \in Ballot : \/ Phase1a(b)
-                             \/ \E v \in Value : Phase2a(b, v)
-        \/ \E a \in Acceptor : Phase1b(a) \/ Phase2b(a)
+Next ≜ ∨ ∃ b ∈ Ballot : ∨ Phase1a(b)
+                        ∨ ∃ v ∈ Value : Phase2a(b, v)
+       ∨ ∃ a ∈ Acceptor : Phase1b(a) ∨ Phase2b(a)
 
-Spec == Init /\ [][Next]_vars
+Spec ≜ Init ∧ □[Next]_vars
 ----------------------------------------------------------------------------
 (***************************************************************************)
 (* We define `votes' to be the function such that votes[a] is the set of   *)
@@ -271,17 +271,17 @@ Spec == Init /\ [][Next]_vars
 (* variable maxBal of module Voting with the variable of the same name of  *)
 (* the current module.                                                     *)
 (***************************************************************************)
-votes == 
-  [a \in Acceptor |->  
-      {<<m.bal, m.val>> : m \in {mm \in msgs: /\ mm.type = "2b"
-                                              /\ mm.acc = a }}]
+votes ≜ 
+  [a ∈ Acceptor ↦  
+      {⟨m.bal, m.val⟩ : m ∈ {mm ∈ msgs: ∧ mm.type = "2b"
+                                        ∧ mm.acc = a }}]
 (***************************************************************************)
 (* The following INSTANCE statement omits the redundant clause             *)
 (*                                                                         *)
 (*    WITH votes <- votes, maxBal <- maxBal,                               *)
 (*         Value <- Value, Acceptor <- Acceptor, Quorum <- Quorum          *)
 (***************************************************************************)
-V == INSTANCE Voting 
+V ≜ INSTANCE Voting 
 
 (***************************************************************************)
 (* The inductive invariant Inv explains why the Paxos consensus algorithm  *)
@@ -289,25 +289,25 @@ V == INSTANCE Voting
 (* statement because it uses the operator V!ShowsSafeAt imported by that   *)
 (* statement.                                                              *)
 (***************************************************************************)
-Inv == 
- /\ TypeOK
- /\ \A a \in Acceptor : maxBal[a] >= maxVBal[a]
- /\ \A a \in Acceptor : IF maxVBal[a] = -1
+Inv ≜ 
+ ∧ TypeOK
+ ∧ ∀ a ∈ Acceptor : maxBal[a] ≥ maxVBal[a]
+ ∧ ∀ a ∈ Acceptor : IF maxVBal[a] = -1
                           THEN maxVal[a] = None
-                          ELSE <<maxVBal[a], maxVal[a]>> \in votes[a]
- /\ \A m \in msgs : 
-       /\ (m.type = "1b") => /\ maxBal[m.acc] >= m.bal
-                             /\ (m.mbal >= 0) =>  
-                                 <<m.mbal, m.mval>> \in votes[m.acc]
-       /\ (m.type = "2a") => /\ \E Q \in Quorum : 
+                          ELSE ⟨maxVBal[a], maxVal[a]⟩ ∈ votes[a]
+ ∧ ∀ m ∈ msgs : 
+       ∧ (m.type = "1b") ⇒ ∧ maxBal[m.acc] ≥ m.bal
+                           ∧ (m.mbal ≥ 0) ⇒  
+                                 ⟨m.mbal, m.mval⟩ ∈ votes[m.acc]
+       ∧ (m.type = "2a") ⇒ ∧ ∃ Q ∈ Quorum : 
                                    V!ShowsSafeAt(Q, m.bal, m.val)
-                             /\ \A mm \in msgs : /\ mm.type ="2a"
-                                                 /\ mm.bal = m.bal
-                                                 => mm.val = m.val
-       /\ (m.type = "2b") => /\ maxVBal[m.acc] >= m.bal
-                             /\ \E mm \in msgs : /\ mm.type = "2a"
-                                                 /\ mm.bal  = m.bal
-                                                 /\ mm.val  = m.val
+                           ∧ ∀ mm ∈ msgs : ∧ mm.type ="2a"
+                                           ∧ mm.bal = m.bal
+                                           ⇒ mm.val = m.val
+       ∧ (m.type = "2b") ⇒ ∧ maxVBal[m.acc] ≥ m.bal
+                           ∧ ∃ mm ∈ msgs : ∧ mm.type = "2a"
+                                           ∧ mm.bal  = m.bal
+                                           ∧ mm.val  = m.val
 
 (***************************************************************************)
 (*  The following two theorems assert that Inv is an invariant of          *)
@@ -316,9 +316,9 @@ Inv ==
 (*  of that algorithm implemented by the correspondingly-named expressions *)
 (*  in the current module.                                                 *)
 (***************************************************************************)
-THEOREM Invariance  ==  Spec => []Inv
+THEOREM Invariance  ≜  Spec ⇒ □Inv
 
-THEOREM Implementation  ==  Spec => V!Spec
+THEOREM Implementation  ≜  Spec ⇒ V!Spec
 
 (***************************************************************************)
 (* The ASSUME statement of this module trivial implies trivially implies   *)

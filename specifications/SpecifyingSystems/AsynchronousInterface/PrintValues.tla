@@ -36,7 +36,7 @@ EXTENDS Naturals, TLC
 (* the value being printed.  So, we define PrintVal(id, exp) so it prints  *)
 (* the pair <<id, exp>>.                                                   *)
 (***************************************************************************)
-PrintVal(id, exp)  ==  Print(<<id, exp>>, TRUE)
+PrintVal(id, exp)  ≜  Print(⟨id, exp⟩, TRUE)
 
 
 (***************************************************************************)
@@ -46,10 +46,10 @@ PrintVal(id, exp)  ==  Print(<<id, exp>>, TRUE)
 (* values printed in the desired order.                                    *)
 (***************************************************************************)
 ASSUME
-  /\ PrintVal("Three more cats: ",
-              [cat |-> 1, dog |-> "d"].cat + 3)
-  /\ PrintVal("Here's a record: ",
-              [ [game |-> "baseball", player |-> "Marris", homers |-> 61]
+  ∧ PrintVal("Three more cats: ",
+              [cat ↦ 1, dog ↦ "d"].cat + 3)
+  ∧ PrintVal("Here's a record: ",
+              [ [game ↦ "baseball", player ↦ "Marris", homers ↦ 61]
                    EXCEPT !.player = "McGuire",
                           !.homers = @+9 ] )
 =============================================================================

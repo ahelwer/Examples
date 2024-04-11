@@ -33,13 +33,12 @@ EXTENDS InternalMemory
 (*                                                                         *)
 (*   memInt' = memInt.                                                     *)
 (***************************************************************************)
-MCSend(p, d, oldMemInt, newMemInt)  ==  newMemInt = <<p, d>>
-MCReply(p, d, oldMemInt, newMemInt) ==  newMemInt = <<p, d>>
+MCSend(p, d, oldMemInt, newMemInt)  ≜  newMemInt = ⟨p, d⟩
+MCReply(p, d, oldMemInt, newMemInt) ≜  newMemInt = ⟨p, d⟩
 
 (***************************************************************************)
 (* We define MCInitMemInt, the set of initial values of memInt, to contain *)
 (* the single element <<p, NoVal>>, for an arbitrary processor p.          *)
 (***************************************************************************)
-MCInitMemInt == {<<CHOOSE p \in Proc : TRUE, NoVal>>}
+MCInitMemInt ≜ {⟨CHOOSE p ∈ Proc : TRUE, NoVal⟩}
 =============================================================================
-

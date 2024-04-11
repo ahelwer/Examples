@@ -14,39 +14,39 @@ VARIABLES maxVBallot \* Maximum ballot an acceptor has accepted.
 VARIABLES maxValue \* Maximum value an acceptor has accepted.
 
 \* Set of all possible messages.
-P1aMessage == [type : {"P1a"},
+P1aMessage ≜ [type : {"P1a"},
                ballot : Ballots \ {0}]
-P1bMessage == [type : {"P1b"},
+P1bMessage ≜ [type : {"P1b"},
                ballot : Ballots,
                acceptor : Replicas,
                maxVBallot : Ballots,
-               maxValue : Values \union {none}] \* (maxVBallot = 0) <=> (maxValue = none)
-P2aMessage == [type : {"P2a"},
+               maxValue : Values ∪ {none}] \* (maxVBallot = 0) <=> (maxValue = none)
+P2aMessage ≜ [type : {"P2a"},
                ballot : Ballots,
-               value : Values \union {any}]
-P2bMessage == [type : {"P2b"},
+               value : Values ∪ {any}]
+P2bMessage ≜ [type : {"P2b"},
                ballot : Ballots,
                acceptor : Replicas,
                value : Values]
-Message == P1aMessage \union P1bMessage \union P2aMessage \union P2bMessage
+Message ≜ P1aMessage ∪ P1bMessage ∪ P2aMessage ∪ P2bMessage
 
-ASSUME PaxosAssume ==
-    /\ IsFiniteSet(Replicas)
-    /\ any \notin Values \union {none}
-    /\ none \notin Values \union {any}
-    /\ Ballots \subseteq Nat /\ 0 \in Ballots
-    /\ \A q \in Quorums : q \subseteq Replicas
-    /\ \A q \in Quorums : Cardinality(Replicas) \div 2 < Cardinality(q)
-    /\ \A q, r \in Quorums : q \intersect r # {}
+ASSUME PaxosAssume ≜
+    ∧ IsFiniteSet(Replicas)
+    ∧ any ∉ Values ∪ {none}
+    ∧ none ∉ Values ∪ {any}
+    ∧ Ballots ⊆ ℕ ∧ 0 ∈ Ballots
+    ∧ ∀ q ∈ Quorums : q ⊆ Replicas
+    ∧ ∀ q ∈ Quorums : Cardinality(Replicas) ÷ 2 < Cardinality(q)
+    ∧ ∀ q, r ∈ Quorums : q ∩ r ≠ {}
 
-p1aMessages == {m \in messages : m.type = "P1a"} \* Set of all P1a messages sent.
-p1bMessages == {m \in messages : m.type = "P1b"} \* Set of all P1b messages sent.
-p2aMessages == {m \in messages : m.type = "P2a"} \* Set of all P2a messages sent.
-p2bMessages == {m \in messages : m.type = "P2b"} \* Set of all P2b messages sent.
+p1aMessages ≜ {m ∈ messages : m.type = "P1a"} \* Set of all P1a messages sent.
+p1bMessages ≜ {m ∈ messages : m.type = "P1b"} \* Set of all P1b messages sent.
+p2aMessages ≜ {m ∈ messages : m.type = "P2a"} \* Set of all P2a messages sent.
+p2bMessages ≜ {m ∈ messages : m.type = "P2b"} \* Set of all P2b messages sent.
 
-ForcedValue(M) == (CHOOSE m \in M : \A n \in M : n.maxVBallot <= m.maxVBallot).maxValue
+ForcedValue(M) ≜ (CHOOSE m ∈ M : ∀ n ∈ M : n.maxVBallot ≤ m.maxVBallot).maxValue
 
-SendMessage(m) == messages' = messages \union {m}
+SendMessage(m) ≜ messages' = messages ∪ {m}
 
 (*
     Phase 1a:
@@ -68,11 +68,11 @@ SendMessage(m) == messages' = messages \union {m}
     only one of them can possibly receive a quorum of Promise replies. Thus, it is impossible for more than one proposer
     to have the same ballot number in Phase 2a.
 *)
-PaxosPrepare ==
-    /\ UNCHANGED<<decision, maxBallot, maxVBallot, maxValue>>
-    /\ \E b \in Ballots \ {0} :
-        SendMessage([type |-> "P1a",
-                     ballot |-> b])
+PaxosPrepare ≜
+    ∧ UNCHANGED⟨decision, maxBallot, maxVBallot, maxValue⟩
+    ∧ ∃ b ∈ Ballots \ {0} :
+        SendMessage([type ↦ "P1a",
+                     ballot ↦ b])
 
 (*
     Phase 1b:
@@ -89,16 +89,16 @@ PaxosPrepare ==
 
         2. Otherwise the acceptor can ignore the received proposal. It does not have to answer in this case for Paxos to work.
 *)
-PaxosPromise ==
-    /\ UNCHANGED<<decision, maxVBallot, maxValue>>
-    /\ \E a \in Replicas, m \in p1aMessages :
-        /\ maxBallot[a] < m.ballot
-        /\ maxBallot' = [maxBallot EXCEPT ![a] = m.ballot]
-        /\ SendMessage([type |-> "P1b",
-                        ballot |-> m.ballot,
-                        acceptor |-> a,
-                        maxVBallot |-> maxVBallot[a],
-                        maxValue |-> maxValue[a]])
+PaxosPromise ≜
+    ∧ UNCHANGED⟨decision, maxVBallot, maxValue⟩
+    ∧ ∃ a ∈ Replicas, m ∈ p1aMessages :
+        ∧ maxBallot[a] < m.ballot
+        ∧ maxBallot' = [maxBallot EXCEPT ![a] = m.ballot]
+        ∧ SendMessage([type ↦ "P1b",
+                        ballot ↦ m.ballot,
+                        acceptor ↦ a,
+                        maxVBallot ↦ maxVBallot[a],
+                        maxValue ↦ maxValue[a]])
 
 (*
     Phase 2a:
@@ -115,17 +115,17 @@ PaxosPromise ==
 
     This Accept message should be interpreted as a "request", as in "Accept this proposal, please!".
 *)
-PaxosAccept ==
-    /\ UNCHANGED<<decision, maxBallot, maxVBallot, maxValue>>
-    /\ \E b \in Ballots, q \in Quorums, v \in Values :
-        /\ \A m \in p2aMessages : ~(m.ballot = b)
-        /\ LET M == {m \in p1bMessages : m.ballot = b /\ m.acceptor \in q}
-           IN /\ \A a \in q : \E m \in M : m.acceptor = a
-              /\ \/ \A m \in M : m.maxValue = none
-                 \/ v = ForcedValue(M)
-              /\ SendMessage([type |-> "P2a",
-                              ballot |-> b,
-                              value |-> v])
+PaxosAccept ≜
+    ∧ UNCHANGED⟨decision, maxBallot, maxVBallot, maxValue⟩
+    ∧ ∃ b ∈ Ballots, q ∈ Quorums, v ∈ Values :
+        ∧ ∀ m ∈ p2aMessages : ¬(m.ballot = b)
+        ∧ LET M ≜ {m ∈ p1bMessages : m.ballot = b ∧ m.acceptor ∈ q}
+           IN ∧ ∀ a ∈ q : ∃ m ∈ M : m.acceptor = a
+              ∧ ∨ ∀ m ∈ M : m.maxValue = none
+                ∨ v = ForcedValue(M)
+              ∧ SendMessage([type ↦ "P2a",
+                              ballot ↦ b,
+                              value ↦ v])
 
 (*
     Phase 2b:
@@ -139,18 +139,18 @@ PaxosAccept ==
 
     Else, it can ignore the Accept message or request.
 *)
-PaxosAccepted ==
-    /\ UNCHANGED<<decision>>
-    /\ \E a \in Replicas, m \in p2aMessages :
-        /\ m.value \in Values
-        /\ maxBallot[a] <= m.ballot
-        /\ maxBallot' = [maxBallot EXCEPT ![a] = m.ballot]
-        /\ maxVBallot' = [maxVBallot EXCEPT ![a] = m.ballot]
-        /\ maxValue' = [maxValue EXCEPT ![a] = m.value]
-        /\ SendMessage([type |-> "P2b",
-                        ballot |-> m.ballot,
-                        acceptor |-> a,
-                        value |-> m.value])
+PaxosAccepted ≜
+    ∧ UNCHANGED⟨decision⟩
+    ∧ ∃ a ∈ Replicas, m ∈ p2aMessages :
+        ∧ m.value ∈ Values
+        ∧ maxBallot[a] ≤ m.ballot
+        ∧ maxBallot' = [maxBallot EXCEPT ![a] = m.ballot]
+        ∧ maxVBallot' = [maxVBallot EXCEPT ![a] = m.ballot]
+        ∧ maxValue' = [maxValue EXCEPT ![a] = m.value]
+        ∧ SendMessage([type ↦ "P2b",
+                        ballot ↦ m.ballot,
+                        acceptor ↦ a,
+                        value ↦ m.value])
 
 (*
     Consensus is achieved when a majority of acceptors accept the same ballot number (rather than the same value).
@@ -161,44 +161,44 @@ PaxosAccepted ==
     represents the decision of any acceptor, can its value may potentially be changed multiple times. Instead, we use
     the consistency safety property to proof that the decision for every acceptor is the same.
 *)
-PaxosDecide ==
-    /\ UNCHANGED<<messages, maxBallot, maxVBallot, maxValue>>
-    /\ \E b \in Ballots, q \in Quorums :
-        LET M == {m \in p2bMessages : m.ballot = b /\ m.acceptor \in q}
-        IN /\ \A a \in q : \E m \in M : m.acceptor = a
-           /\ \E m \in M : decision' = m.value
+PaxosDecide ≜
+    ∧ UNCHANGED⟨messages, maxBallot, maxVBallot, maxValue⟩
+    ∧ ∃ b ∈ Ballots, q ∈ Quorums :
+        LET M ≜ {m ∈ p2bMessages : m.ballot = b ∧ m.acceptor ∈ q}
+        IN ∧ ∀ a ∈ q : ∃ m ∈ M : m.acceptor = a
+           ∧ ∃ m ∈ M : decision' = m.value
 
-PaxosTypeOK == /\ messages \subseteq Message
-               /\ decision \in Values \union {none}
-               /\ maxBallot \in [Replicas -> Ballots]
-               /\ maxVBallot \in [Replicas -> Ballots]
-               /\ maxValue \in [Replicas -> Values \union {none}]
+PaxosTypeOK ≜ ∧ messages ⊆ Message
+              ∧ decision ∈ Values ∪ {none}
+              ∧ maxBallot ∈ [Replicas → Ballots]
+              ∧ maxVBallot ∈ [Replicas → Ballots]
+              ∧ maxValue ∈ [Replicas → Values ∪ {none}]
 
-PaxosInit == /\ messages = {}
-             /\ decision = none
-             /\ maxBallot = [r \in Replicas |-> 0]
-             /\ maxVBallot = [r \in Replicas |-> 0]
-             /\ maxValue = [r \in Replicas |-> none]
+PaxosInit ≜ ∧ messages = {}
+            ∧ decision = none
+            ∧ maxBallot = [r ∈ Replicas ↦ 0]
+            ∧ maxVBallot = [r ∈ Replicas ↦ 0]
+            ∧ maxValue = [r ∈ Replicas ↦ none]
 
-PaxosNext == \/ PaxosPrepare
-             \/ PaxosPromise
-             \/ PaxosAccept
-             \/ PaxosAccepted
-             \/ PaxosDecide
+PaxosNext ≜ ∨ PaxosPrepare
+            ∨ PaxosPromise
+            ∨ PaxosAccept
+            ∨ PaxosAccepted
+            ∨ PaxosDecide
 
-PaxosSpec == /\ PaxosInit
-             /\ [][PaxosNext]_<<messages, decision, maxBallot, maxVBallot, maxValue>>
-             /\ SF_<<messages, decision, maxBallot, maxVBallot, maxValue>>(PaxosDecide)
+PaxosSpec ≜ ∧ PaxosInit
+            ∧ □[PaxosNext]_⟨messages, decision, maxBallot, maxVBallot, maxValue⟩
+            ∧ SF_⟨messages, decision, maxBallot, maxVBallot, maxValue⟩(PaxosDecide)
 
 \* Non-triviality safety property: Only proposed values can be learnt.
-PaxosNontriviality ==
-    /\ \/ decision = none
-       \/ \E m \in p2aMessages : m.value = decision
-    /\ \A m \in p1bMessages : /\ m.maxValue \in Values \/ 0 = m.maxVBallot
-                              /\ m.maxValue = none \/ 0 < m.maxVBallot
+PaxosNontriviality ≜
+    ∧ ∨ decision = none
+      ∨ ∃ m ∈ p2aMessages : m.value = decision
+    ∧ ∀ m ∈ p1bMessages : ∧ m.maxValue ∈ Values ∨ 0 = m.maxVBallot
+                          ∧ m.maxValue = none ∨ 0 < m.maxVBallot
 
 \* Consistency safety property: At most 1 value can be learnt.
-PaxosConsistency == [][decision = none]_<<decision>>
+PaxosConsistency ≜ □[decision = none]_⟨decision⟩
 
 (*
     From Wikipedia:
@@ -211,9 +211,9 @@ PaxosConsistency == [][decision = none]_<<decision>>
     As Paxos's point is to ensure fault tolerance and it guarantees safety, it
     cannot also guarantee liveness. 
 *)
-PaxosLiveness == FALSE
+PaxosLiveness ≜ FALSE
 
 \* Define symmetry for faster computations.
-PaxosSymmetry == Permutations(Values) \union Permutations(Replicas)
+PaxosSymmetry ≜ Permutations(Values) ∪ Permutations(Replicas)
 
 ===============================================================

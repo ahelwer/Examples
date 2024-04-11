@@ -16,14 +16,14 @@ CONSTANT Jug,      \* The set of all jugs.
 (* We make an assumption about these constants--namely, that Capacity is a *)
 (* function from jugs to positive integers, and Goal is a natural number.  *)
 (***************************************************************************)
-ASSUME /\ Capacity \in [Jug -> {n \in Nat : n > 0}]
-       /\ Goal \in Nat
+ASSUME ∧ Capacity ∈ [Jug → {n ∈ ℕ : n > 0}]
+       ∧ Goal ∈ ℕ
 (***************************************************************************)
 (* We are going to need the Min operator again, so let's define it here.   *)
 (* (I prefer defining constant operators like this in the part of the      *)
 (* spec where constants are declared.                                      *)
 (***************************************************************************)
-Min(m,n) == IF m < n THEN m ELSE n
+Min(m,n) ≜ IF m < n THEN m ELSE n
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We declare the specification's single variable and define its type      *)
@@ -31,9 +31,9 @@ Min(m,n) == IF m < n THEN m ELSE n
 (***************************************************************************)
 VARIABLE contents \* contents[j] is the amount of water in jug j
 
-TypeOK == contents \in [Jug -> Nat]
+TypeOK ≜ contents ∈ [Jug → ℕ]
 
-Init == contents = [j \in Jug |-> 0]
+Init ≜ contents = [j ∈ Jug ↦ 0]
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* Now we define the actions that can be performed.  They are the obvious  *)
@@ -53,12 +53,12 @@ Init == contents = [j \in Jug |-> 0]
 (*                                                                         *)
 (* that has the expected meaning.                                          *)
 (***************************************************************************)
-FillJug(j)  == contents' = [contents EXCEPT ![j] = Capacity[j]]
+FillJug(j)  ≜ contents' = [contents EXCEPT ![j] = Capacity[j]]
 
-EmptyJug(j) == contents' = [contents EXCEPT ![j] = 0]
+EmptyJug(j) ≜ contents' = [contents EXCEPT ![j] = 0]
   
-JugToJug(j, k) == 
-  LET amountPoured == Min(contents[j], Capacity[k]-contents[k])
+JugToJug(j, k) ≜ 
+  LET amountPoured ≜ Min(contents[j], Capacity[k]-contents[k])
   IN  contents' = [contents EXCEPT ![j] = @ - amountPoured,
                                    ![k] = @ + amountPoured]
 
@@ -67,22 +67,22 @@ JugToJug(j, k) ==
 (* possible actions, where existential quantification is a general form of *)
 (* disjunction.                                                            *)
 (***************************************************************************)
-Next ==  \E j \in Jug : \/ FillJug(j)
-                        \/ EmptyJug(j)
-                        \/ \E k \in Jug \ {j} : JugToJug(j, k)
+Next ≜  ∃ j ∈ Jug : ∨ FillJug(j)
+                    ∨ EmptyJug(j)
+                    ∨ ∃ k ∈ Jug \ {j} : JugToJug(j, k)
 
 (***************************************************************************)
 (* We define the formula Spec to be the complete specification, asserting  *)
 (* of a behavior that it begins in a state satisfying Init, and that every *)
 (* step either satisfies Next or else leaves contents unchanged.           *)
 (***************************************************************************)
-Spec == Init /\ [][Next]_contents
+Spec ≜ Init ∧ □[Next]_contents
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We define NotSolved to be true of a state iff no jug contains Goal      *)
 (* gallons of water.                                                       *)
 (***************************************************************************)
-NotSolved == \A j \in Jug : contents[j] # Goal
+NotSolved ≜ ∀ j ∈ Jug : contents[j] ≠ Goal
 
 (***************************************************************************)
 (* We find a solution by having TLC check if NotSolved is an invariant,    *)

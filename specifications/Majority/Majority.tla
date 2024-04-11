@@ -13,7 +13,7 @@
 EXTENDS Integers, Sequences, FiniteSets
 
 CONSTANT Value
-ASSUME ConstAssump == Value # {}
+ASSUME ConstAssump ≜ Value ≠ {}
 
 (****************************************************************************)
 (* Although seq is an input to the algorithm, we make it a variable so that *)
@@ -26,54 +26,54 @@ VARIABLES
   cand,   \* current candidate for having a majority
   cnt     \* lower bound for the number of occurrences of the candidate so far
 
-vars == <<seq, i, cand, cnt>>
+vars ≜ ⟨seq, i, cand, cnt⟩
 
-TypeOK ==
-    /\ seq \in Seq(Value)
-    /\ i \in 1 .. Len(seq)+1
-    /\ cand \in Value
-    /\ cnt \in Nat
+TypeOK ≜
+    ∧ seq ∈ Seq(Value)
+    ∧ i ∈ 1 ‥ Len(seq)+1
+    ∧ cand ∈ Value
+    ∧ cnt ∈ ℕ
 
-Init ==
-    /\ seq \in Seq(Value)
-    /\ i = 1
-    /\ cand \in Value
-    /\ cnt = 0
+Init ≜
+    ∧ seq ∈ Seq(Value)
+    ∧ i = 1
+    ∧ cand ∈ Value
+    ∧ cnt = 0
 
-Next ==
-    /\ i <= Len(seq)
-    /\ i' = i+1 /\ seq' = seq
-    /\ \/ /\ cnt = 0
-          /\ cand' = seq[i]
-          /\ cnt' = 1
-       \/ /\ cnt # 0 /\ cand = seq[i]
-          /\ cand' = cand
-          /\ cnt' = cnt + 1
-       \/ /\ cnt # 0 /\ cand # seq[i]
-          /\ cand' = cand
-          /\ cnt' = cnt - 1
+Next ≜
+    ∧ i ≤ Len(seq)
+    ∧ i' = i+1 ∧ seq' = seq
+    ∧ ∨ ∧ cnt = 0
+        ∧ cand' = seq[i]
+        ∧ cnt' = 1
+      ∨ ∧ cnt ≠ 0 ∧ cand = seq[i]
+        ∧ cand' = cand
+        ∧ cnt' = cnt + 1
+      ∨ ∧ cnt ≠ 0 ∧ cand ≠ seq[i]
+        ∧ cand' = cand
+        ∧ cnt' = cnt - 1
 
-Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
+Spec ≜ Init ∧ □[Next]_vars ∧ WF_vars(Next)
 
 (****************************************************************************)
 (* Definitions used for stating correctness.                                *)
 (****************************************************************************)
 \* set of indexes in the prefix of the sequence strictly before j holding v
-PositionsBefore(v,j) == { k \in 1 .. (j-1) : seq[k] = v }
+PositionsBefore(v,j) ≜ { k ∈ 1 ‥ (j-1) : seq[k] = v }
 \* number of times v occurs in that prefix
-OccurrencesBefore(v,j) == Cardinality(PositionsBefore(v,j))
+OccurrencesBefore(v,j) ≜ Cardinality(PositionsBefore(v,j))
 \* number of times v occurs in all of the sequence
-Occurrences(x) == OccurrencesBefore(x, Len(seq)+1)
+Occurrences(x) ≜ OccurrencesBefore(x, Len(seq)+1)
 
 \* main correctness property: cand can be the only value that has a majority
-Correct == 
-    i > Len(seq) =>
-    \A v \in Value : 2 * Occurrences(v) > Len(seq) => v = cand
+Correct ≜ 
+    i > Len(seq) ⇒
+    ∀ v ∈ Value : 2 * Occurrences(v) > Len(seq) ⇒ v = cand
 
 \* inductive invariant for proving correctness
-Inv ==
-    /\ cnt <= OccurrencesBefore(cand, i)
-    /\ 2 * (OccurrencesBefore(cand, i) - cnt) <= i - 1 - cnt
-    /\ \A v \in Value \ {cand} : 2 * OccurrencesBefore(v, i) <= i - 1 - cnt
+Inv ≜
+    ∧ cnt ≤ OccurrencesBefore(cand, i)
+    ∧ 2 * (OccurrencesBefore(cand, i) - cnt) ≤ i - 1 - cnt
+    ∧ ∀ v ∈ Value \ {cand} : 2 * OccurrencesBefore(v, i) ≤ i - 1 - cnt
 
 ==============================================================================

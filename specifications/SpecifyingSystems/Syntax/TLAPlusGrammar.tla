@@ -1,10 +1,10 @@
 --------------------------- MODULE TLAPlusGrammar --------------------------- 
 EXTENDS Naturals, Sequences, BNFGrammars
 
-CommaList(L) == L & (tok(",") &  L)^*
-AtLeast4(s) == Tok({s \o s \o s} & {s}^+)
+CommaList(L) ≜ L & (tok(",") &  L)^*
+AtLeast4(s) ≜ Tok({s ∘ s ∘ s} & {s}⁺)
 
-ReservedWord == 
+ReservedWord ≜ 
   { "ASSUME",       "ELSE",      "LOCAL",      "UNION",     
    "ASSUMPTION",    "ENABLED",   "MODULE",     "VARIABLE",   
    "AXIOM",         "EXCEPT",    "OTHER",      "VARIABLES",  
@@ -14,34 +14,34 @@ ReservedWord ==
    "CONSTANTS" ,    "INSTANCE",  "THEOREM",       
    "DOMAIN",        "LET",       "UNCHANGED"   }
 
-Letter == OneOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-Numeral   == OneOf("0123456789") 
-NameChar  == Letter \cup Numeral \cup {"_"}  
+Letter ≜ OneOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+Numeral   ≜ OneOf("0123456789") 
+NameChar  ≜ Letter ∪ Numeral ∪ {"_"}  
 
-Name == Tok((NameChar^* & Letter & NameChar^*)  
-                   \ ({"WF_","SF_"} & NameChar^+))
+Name ≜ Tok((NameChar^* & Letter & NameChar^*)  
+                   \ ({"WF_","SF_"} & NameChar⁺))
 
 
-Identifier == Name \ Tok(ReservedWord)
+Identifier ≜ Name \ Tok(ReservedWord)
 
-IdentifierOrTuple  ==   
+IdentifierOrTuple  ≜   
    Identifier | tok("<<") & CommaList(Identifier) & tok(">>")
 
-NumberLexeme == 
-         Numeral^+ 
-      |  (Numeral^* & {"."} & Numeral^+) 
-      |  {"\\b", "\\B"} & OneOf("01")^+ 
-      |  {"\\o", "\\O"} & OneOf("01234567")^+ 
-      |  {"\\h", "\\H"} & OneOf("0123456789abcdefABCDEF")^+ 
+NumberLexeme ≜ 
+         Numeral⁺ 
+      |  (Numeral^* & {"."} & Numeral⁺) 
+      |  {"\\b", "\\B"} & OneOf("01")⁺ 
+      |  {"\\o", "\\O"} & OneOf("01234567")⁺ 
+      |  {"\\h", "\\H"} & OneOf("0123456789abcdefABCDEF")⁺ 
 
-Number == Tok(NumberLexeme)
+Number ≜ Tok(NumberLexeme)
 
-String == Tok({"\""} & STRING & {"\""})
+String ≜ Tok({"\""} & STRING & {"\""})
 
-PrefixOp  ==  Tok({ "-", "~", "\\lnot", "\\neg", "[]", "<>", "DOMAIN",  
+PrefixOp  ≜  Tok({ "-", "~", "\\lnot", "\\neg", "[]", "<>", "DOMAIN",  
                     "ENABLED", "SUBSET", "UNCHANGED", "UNION"})
 
-InfixOp   ==
+InfixOp   ≜
   Tok({  "!!",  "#",    "##",   "$",    "$$",   "%",    "%%",  
          "&",   "&&",   "(+)",  "(-)",  "(.)",  "(/)",  "(\\X)",  
          "*",   "**",   "+",    "++",   "-",    "-+->", "--",  
@@ -63,16 +63,16 @@ InfixOp   ==
          "\\doteq",   "\\ominus",    "\\sqsubseteq", "\\wr",      
          "\\equiv",   "\\oplus",     "\\sqsupset"                  })
 
-PostfixOp ==  Tok({ "^+", "^*", "^#", "'" })
+PostfixOp ≜  Tok({ "^+", "^*", "^#", "'" })
 
-TLAPlusGrammar ==
- LET P(G) ==
-   /\ G.Module ::=   AtLeast4("-") & tok("MODULE") & Name & AtLeast4("-")
+TLAPlusGrammar ≜
+ LET P(G) ≜
+   ∧ G.Module ⩴   AtLeast4("-") & tok("MODULE") & Name & AtLeast4("-")
                    & (Nil | (tok("EXTENDS") & CommaList(Name)))
                    & (G.Unit)^* 
                    & AtLeast4("=") 
 
-   /\ G.Unit ::=   G.VariableDeclaration 
+   ∧ G.Unit ⩴   G.VariableDeclaration 
                  | G.ConstantDeclaration 
                  | (Nil | tok("LOCAL")) & G.OperatorDefinition 
                  | (Nil | tok("LOCAL")) & G.FunctionDefinition 
@@ -83,72 +83,72 @@ TLAPlusGrammar ==
                  | G.Module  
                  | AtLeast4("-") 
 
-   /\ G.VariableDeclaration ::=  
+   ∧ G.VariableDeclaration ⩴  
           Tok({"VARIABLE", "VARIABLES"}) & CommaList(Identifier)
 
-   /\ G.ConstantDeclaration ::=   
+   ∧ G.ConstantDeclaration ⩴   
            Tok({"CONSTANT", "CONSTANTS"}) & CommaList(G.OpDecl)
 
-   /\ G.OpDecl ::=    Identifier 
+   ∧ G.OpDecl ⩴    Identifier 
                     | Identifier & tok("(") & CommaList(tok("_")) & tok(")")
                     | PrefixOp & tok("_")
                     | tok("_") & InfixOp & tok("_")
                     | tok("_") & PostfixOp  
 
-   /\  G.OperatorDefinition ::=  (  G.NonFixLHS 
+   ∧  G.OperatorDefinition ⩴  (  G.NonFixLHS 
                                   | PrefixOp & Identifier 
                                   | Identifier & InfixOp & Identifier 
                                   | Identifier & PostfixOp )
                                 & tok("==") 
                                 & G.Expression  
 
-   /\ G.NonFixLHS ::=   
+   ∧ G.NonFixLHS ⩴   
              Identifier 
           &  (  Nil 
               | tok("(") & CommaList(Identifier | G.OpDecl) & tok(")")) 
 
-   /\ G.FunctionDefinition ::=   
+   ∧ G.FunctionDefinition ⩴   
           Identifier  
         & tok("[") & CommaList(G.QuantifierBound) & tok("]") 
         & tok("==") 
         & G.Expression  
 
-   /\ G.QuantifierBound ::=   (IdentifierOrTuple | CommaList(Identifier))  
+   ∧ G.QuantifierBound ⩴   (IdentifierOrTuple | CommaList(Identifier))  
                             & tok("\\in") 
                             & G.Expression 
 
-   /\ G.Instance ::=   tok("INSTANCE") 
+   ∧ G.Instance ⩴   tok("INSTANCE") 
                      & Name 
                      & (Nil | tok("WITH") & CommaList(G.Substitution))  
 
-   /\ G.Substitution ::=   (Identifier | PrefixOp | InfixOp | PostfixOp) 
+   ∧ G.Substitution ⩴   (Identifier | PrefixOp | InfixOp | PostfixOp) 
                          & tok("<-") 
                          & G.Argument  
 
-   /\ G.Argument ::=   G.Expression  
+   ∧ G.Argument ⩴   G.Expression  
                      | G.GeneralPrefixOp 
                      | G.GeneralInfixOp  
                      | G.GeneralPostfixOp  
 
-   /\ G.InstancePrefix ::=  
+   ∧ G.InstancePrefix ⩴  
         (    Identifier 
           &  (   Nil 
                | tok("(") & CommaList(G.Expression) & tok(")") )
           &  tok("!")  )^*  
 
-   /\ G.GeneralIdentifier ::= G.InstancePrefix & Identifier 
-   /\ G.GeneralPrefixOp   ::= G.InstancePrefix & PrefixOp 
-   /\ G.GeneralInfixOp    ::= G.InstancePrefix & InfixOp
-   /\ G.GeneralPostfixOp  ::= G.InstancePrefix & PostfixOp  
+   ∧ G.GeneralIdentifier ⩴ G.InstancePrefix & Identifier 
+   ∧ G.GeneralPrefixOp   ⩴ G.InstancePrefix & PrefixOp 
+   ∧ G.GeneralInfixOp    ⩴ G.InstancePrefix & InfixOp
+   ∧ G.GeneralPostfixOp  ⩴ G.InstancePrefix & PostfixOp  
 
-   /\ G.ModuleDefinition ::=   G.NonFixLHS & tok("==") & G.Instance  
+   ∧ G.ModuleDefinition ⩴   G.NonFixLHS & tok("==") & G.Instance  
 
-   /\ G.Assumption ::=  
+   ∧ G.Assumption ⩴  
           Tok({"ASSUME", "ASSUMPTION", "AXIOM"}) & G.Expression  
 
-   /\ G.Theorem ::= tok("THEOREM") & G.Expression  
+   ∧ G.Theorem ⩴ tok("THEOREM") & G.Expression  
 
-   /\ G.Expression  ::= 
+   ∧ G.Expression  ⩴ 
             G.GeneralIdentifier 
 
          |  G.GeneralIdentifier & tok("(") 
@@ -209,13 +209,13 @@ TLAPlusGrammar ==
            &  tok("EXCEPT") 
            &  CommaList(  tok("!")
                         & (  tok(".") & Name 
-                           | tok("[") & CommaList(G.Expression) & tok("]"))^+ 
+                           | tok("[") & CommaList(G.Expression) & tok("]"))⁺ 
                         & tok("=") & G.Expression ) 
            &  tok("]") 
 
       |  tok("<<") & CommaList(G.Expression) & tok(">>") 
 
-      |  G.Expression & (Tok({"\\X", "\\times"}) & G.Expression)^+ 
+      |  G.Expression & (Tok({"\\X", "\\times"}) & G.Expression)⁺ 
 
       |  tok("[") & G.Expression & tok("]_") & G.Expression 
 
@@ -228,7 +228,7 @@ TLAPlusGrammar ==
               & G.Expression & tok("ELSE") & G.Expression 
 
       |  tok("CASE") 
-         &  ( LET CaseArm == 
+         &  ( LET CaseArm ≜ 
                      G.Expression & tok("->") & G.Expression
               IN  CaseArm & (tok("[]") & CaseArm)^* )
          &  (    Nil 
@@ -237,13 +237,13 @@ TLAPlusGrammar ==
      |        tok("LET") 
            &  (    G.OperatorDefinition 
                 |  G.FunctionDefinition 
-                |  G.ModuleDefinition)^+ 
+                |  G.ModuleDefinition)⁺ 
            &  tok("IN") 
            &  G.Expression
 
-     |  (tok("/\\") & G.Expression)^+ 
+     |  (tok("/\\") & G.Expression)⁺ 
 
-     |  (tok("\\/") & G.Expression)^+ 
+     |  (tok("\\/") & G.Expression)⁺ 
 
      |  Number 
 

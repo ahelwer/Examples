@@ -6,50 +6,49 @@ CONSTANT Node
 
 VARIABLES counter, converge
 
-vars == <<counter, converge>>
+vars ≜ ⟨counter, converge⟩
 
-S == INSTANCE CRDT
+S ≜ INSTANCE CRDT
 
-TypeOK ==
-  /\ S!TypeOK
-  /\ converge \in BOOLEAN
+TypeOK ≜
+  ∧ S!TypeOK
+  ∧ converge ∈ BOOLEAN
 
-Safety == S!Safety
+Safety ≜ S!Safety
 
-Monotonicity == S!Monotonicity
+Monotonicity ≜ S!Monotonicity
 
-Liveness == converge ~> S!Convergence
+Liveness ≜ converge ↝ S!Convergence
 
-Init ==
-  /\ S!Init
-  /\ converge = FALSE
+Init ≜
+  ∧ S!Init
+  ∧ converge = FALSE
 
-Increment(n) ==
-  /\ ~converge
-  /\ S!Increment(n)
-  /\ UNCHANGED converge
+Increment(n) ≜
+  ∧ ¬converge
+  ∧ S!Increment(n)
+  ∧ UNCHANGED converge
 
-Gossip(n, o) ==
-  /\ S!Gossip(n, o)
-  /\ UNCHANGED converge
+Gossip(n, o) ≜
+  ∧ S!Gossip(n, o)
+  ∧ UNCHANGED converge
 
-Converge ==
-  /\ converge' = TRUE
-  /\ UNCHANGED counter
+Converge ≜
+  ∧ converge' = TRUE
+  ∧ UNCHANGED counter
 
-Next ==
-  \/ \E n \in Node : Increment(n)
-  \/ \E n, o \in Node : Gossip(n, o)
-  \/ Converge
+Next ≜
+  ∨ ∃ n ∈ Node : Increment(n)
+  ∨ ∃ n, o ∈ Node : Gossip(n, o)
+  ∨ Converge
 
-Fairness == \A n, o \in Node : WF_vars(Gossip(n, o))
+Fairness ≜ ∀ n, o ∈ Node : WF_vars(Gossip(n, o))
 
-StateConstraint == \A n, o \in Node : counter[n][o] <= 3
+StateConstraint ≜ ∀ n, o ∈ Node : counter[n][o] ≤ 3
 
-Spec ==
-  /\ Init
-  /\ [][Next]_vars
-  /\ Fairness
+Spec ≜
+  ∧ Init
+  ∧ □[Next]_vars
+  ∧ Fairness
 
 =============================================================================
-

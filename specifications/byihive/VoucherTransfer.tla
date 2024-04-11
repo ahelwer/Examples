@@ -64,7 +64,7 @@ VARIABLES
     (* particular protocol, that's not a problem.                          *)
     (***********************************************************************)
 
-Messages ==
+Messages ≜
   (*************************************************************************)
   (* The set of all possible messages.  Messages of type "Prepared" are    *)
   (* sent from the SH indicated by the message's vsh field to the VTP.     *)
@@ -73,39 +73,39 @@ Messages ==
   (* broadcast by the VTPs, to be received by all SHs and DHs. The set     *)
   (* msgs contains just a single copy of such a message.                   *)
   (*************************************************************************)
-  [type : {"Prepared"}, vsh : SH] \cup
-  [type : {"Prepared"}, vdh : DH] \cup
+  [type : {"Prepared"}, vsh : SH] ∪
+  [type : {"Prepared"}, vdh : DH] ∪
   [type : {"Transfer", "Abort"}]
 
-VTPTypeOK ==
+VTPTypeOK ≜
   (*************************************************************************)
   (* The type-correctness invariant                                        *)
   (*************************************************************************)
-  /\ vState \in [V -> {"valid"}]
-  /\ vlcState \in [V -> {"working"}]
-  /\ shState \in [SH -> {"holding", "prepared", "transferred", "aborted"}]
-  /\ dhState \in [DH -> {"waiting", "prepared", "holding", "aborted"}]
-  /\ vtpState \in {"init", "done"}
-  /\ vtpTPrepared \subseteq (SH \cup DH)
-  /\ msgs \subseteq Messages
+  ∧ vState ∈ [V → {"valid"}]
+  ∧ vlcState ∈ [V → {"working"}]
+  ∧ shState ∈ [SH → {"holding", "prepared", "transferred", "aborted"}]
+  ∧ dhState ∈ [DH → {"waiting", "prepared", "holding", "aborted"}]
+  ∧ vtpState ∈ {"init", "done"}
+  ∧ vtpTPrepared ⊆ (SH ∪ DH)
+  ∧ msgs ⊆ Messages
 
-VTPInit ==
+VTPInit ≜
   (*************************************************************************)
   (* The initial predicate.                                                *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ shState = [sh \in SH |-> "holding"]
-  /\ dhState = [dh \in DH |-> "waiting"]
-  /\ vtpState = "init"
-  /\ vtpTPrepared   = {}
-  /\ msgs = {}
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ shState = [sh ∈ SH ↦ "holding"]
+  ∧ dhState = [dh ∈ DH ↦ "waiting"]
+  ∧ vtpState = "init"
+  ∧ vtpTPrepared   = {}
+  ∧ msgs = {}
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now define the actions that may be performed by the processes, first *)
 (* the VTP's actions, the SHs' actions, then the DHs' actions.             *)
 (***************************************************************************)
-VTPRcvPrepared(sh,dh) ==
+VTPRcvPrepared(sh,dh) ≜
   (*************************************************************************)
   (* The VTP receives a "Prepared" message from Source Voucher Holder sh   *)
   (* and the Destination Voucher Holder dh. We could add the additional    *)
@@ -114,157 +114,157 @@ VTPRcvPrepared(sh,dh) ==
   (* no need, because in that case the action has no effect; it leaves the *)
   (* state unchanged.                                                      *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ vtpState = "init"
-  /\ [type |-> "Prepared", vsh |-> sh] \in msgs
-  /\ [type |-> "Prepared", vdh |-> dh] \in msgs
-  /\ vtpTPrepared' = vtpTPrepared \cup {sh,dh}
-  /\ UNCHANGED <<vState, vlcState, shState, dhState, vtpState, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ vtpState = "init"
+  ∧ [type ↦ "Prepared", vsh ↦ sh] ∈ msgs
+  ∧ [type ↦ "Prepared", vdh ↦ dh] ∈ msgs
+  ∧ vtpTPrepared' = vtpTPrepared ∪ {sh,dh}
+  ∧ UNCHANGED ⟨vState, vlcState, shState, dhState, vtpState, msgs⟩
 
-VTPTransfer(v) ==
+VTPTransfer(v) ≜
   (*************************************************************************)
   (* The VTP Transfers the voucher; enabled iff the VTP is in its          *)
   (* initial state and every SH and DH has sent a "Prepared" message.      *)
   (*************************************************************************)
-  /\ vState[v] = "valid"
-  /\ vlcState[v] = "working"
-  /\ vtpState = "init"
-  /\ vtpTPrepared = SH \cup DH
-  /\ vtpState' = "done"
-  /\ msgs' = msgs \cup {[type |-> "Transfer"]}
-  /\ UNCHANGED <<shState, dhState, vState, vlcState, vtpTPrepared>>
+  ∧ vState[v] = "valid"
+  ∧ vlcState[v] = "working"
+  ∧ vtpState = "init"
+  ∧ vtpTPrepared = SH ∪ DH
+  ∧ vtpState' = "done"
+  ∧ msgs' = msgs ∪ {[type ↦ "Transfer"]}
+  ∧ UNCHANGED ⟨shState, dhState, vState, vlcState, vtpTPrepared⟩
 
-VTPAbort(v) ==
+VTPAbort(v) ≜
   (*************************************************************************)
   (* The VTP spontaneously aborts the transaction.                         *)
   (*************************************************************************)
-  /\ vState[v] = "valid"
-  /\ vlcState[v] = "working"
-  /\ vtpState = "init"
-  /\ vtpState' = "done"
-  /\ msgs' = msgs \cup {[type |-> "Abort"]}
-  /\ UNCHANGED <<vState, vlcState, shState, dhState, vtpTPrepared>>
+  ∧ vState[v] = "valid"
+  ∧ vlcState[v] = "working"
+  ∧ vtpState = "init"
+  ∧ vtpState' = "done"
+  ∧ msgs' = msgs ∪ {[type ↦ "Abort"]}
+  ∧ UNCHANGED ⟨vState, vlcState, shState, dhState, vtpTPrepared⟩
 
-SHPrepare(sh) ==
+SHPrepare(sh) ≜
   (*************************************************************************)
   (* Source Voucher holder sh prepares.                                    *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ shState[sh] = "holding"
-  /\ shState' = [shState EXCEPT ![sh] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", vsh |-> sh]}
-  /\ UNCHANGED <<vState, vlcState, vtpState, dhState, vtpTPrepared>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ shState[sh] = "holding"
+  ∧ shState' = [shState EXCEPT ![sh] = "prepared"]
+  ∧ msgs' = msgs ∪ {[type ↦ "Prepared", vsh ↦ sh]}
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, dhState, vtpTPrepared⟩
 
-SHChooseToAbort(sh) ==
+SHChooseToAbort(sh) ≜
   (*************************************************************************)
   (* Source Voucher holder sh spontaneously decides to abort. As noted     *)
   (* above, sh does not send any message in our simplified spec.           *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ shState[sh] = "holding"
-  /\ shState' = [shState EXCEPT ![sh] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, dhState, vtpTPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ shState[sh] = "holding"
+  ∧ shState' = [shState EXCEPT ![sh] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, dhState, vtpTPrepared, msgs⟩
 
-SHRcvTransferMsg(sh) ==
+SHRcvTransferMsg(sh) ≜
   (*************************************************************************)
   (* Source Voucher holder sh is told by the VTP to Transfer.              *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ shState[sh] = "holding"
-  /\ [type |-> "Transfer"] \in msgs
-  /\ shState' = [shState EXCEPT ![sh] = "transferred"]
-  /\ UNCHANGED <<vtpState, vlcState, vState, dhState, vtpTPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ shState[sh] = "holding"
+  ∧ [type ↦ "Transfer"] ∈ msgs
+  ∧ shState' = [shState EXCEPT ![sh] = "transferred"]
+  ∧ UNCHANGED ⟨vtpState, vlcState, vState, dhState, vtpTPrepared, msgs⟩
 
-SHRcvAbortMsg(sh) ==
+SHRcvAbortMsg(sh) ≜
   (*************************************************************************)
   (* Source Voucher holder sh is told by the VTP to abort.                 *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ shState[sh] = "holding"
-  /\ [type |-> "Abort"] \in msgs
-  /\ shState' = [shState EXCEPT ![sh] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, dhState, vtpTPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ shState[sh] = "holding"
+  ∧ [type ↦ "Abort"] ∈ msgs
+  ∧ shState' = [shState EXCEPT ![sh] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, dhState, vtpTPrepared, msgs⟩
 
-DHPrepare(dh) ==
+DHPrepare(dh) ≜
   (*************************************************************************)
   (* Destination Voucher holder dh prepares.                                         *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ dhState[dh] = "waiting"
-  /\ dhState' = [dhState EXCEPT ![dh] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", vdh |-> dh]}
-  /\ UNCHANGED <<vState, vlcState, vtpState, shState, vtpTPrepared>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ dhState[dh] = "waiting"
+  ∧ dhState' = [dhState EXCEPT ![dh] = "prepared"]
+  ∧ msgs' = msgs ∪ {[type ↦ "Prepared", vdh ↦ dh]}
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, shState, vtpTPrepared⟩
 
-DHChooseToAbort(dh) ==
+DHChooseToAbort(dh) ≜
   (*************************************************************************)
   (* Destination Voucher holder dh spontaneously decides to abort. As      *)
   (* noted above, dh does not send any message in our simplified spec.     *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ dhState[dh] = "waiting"
-  /\ dhState' = [dhState EXCEPT ![dh] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, shState, vtpTPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ dhState[dh] = "waiting"
+  ∧ dhState' = [dhState EXCEPT ![dh] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, shState, vtpTPrepared, msgs⟩
 
-DHRcvTransferMsg(dh) ==
+DHRcvTransferMsg(dh) ≜
   (*************************************************************************)
   (* Destination Voucher holder dh is told by the VTP to Transfer.         *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ dhState[dh] = "waiting"
-  /\ [type |-> "Transfer"] \in msgs
-  /\ dhState' = [dhState EXCEPT ![dh] = "holding"]
-  /\ UNCHANGED <<vtpState, vState, vlcState, shState, vtpTPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ dhState[dh] = "waiting"
+  ∧ [type ↦ "Transfer"] ∈ msgs
+  ∧ dhState' = [dhState EXCEPT ![dh] = "holding"]
+  ∧ UNCHANGED ⟨vtpState, vState, vlcState, shState, vtpTPrepared, msgs⟩
 
-DHRcvAbortMsg(dh) ==
+DHRcvAbortMsg(dh) ≜
   (*************************************************************************)
   (* Destination Voucher holder dh is told by the VTP to abort.            *)
   (*************************************************************************)
-  /\ vState = [v \in V |-> "valid"]
-  /\ vlcState = [v \in V |-> "working"]
-  /\ dhState[dh] = "waiting"
-  /\ [type |-> "Abort"] \in msgs
-  /\ dhState' = [dhState EXCEPT ![dh] = "aborted"]
-  /\ UNCHANGED <<vState, vlcState, vtpState, shState, vtpTPrepared, msgs>>
+  ∧ vState = [v ∈ V ↦ "valid"]
+  ∧ vlcState = [v ∈ V ↦ "working"]
+  ∧ dhState[dh] = "waiting"
+  ∧ [type ↦ "Abort"] ∈ msgs
+  ∧ dhState' = [dhState EXCEPT ![dh] = "aborted"]
+  ∧ UNCHANGED ⟨vState, vlcState, vtpState, shState, vtpTPrepared, msgs⟩
 
-VTPNext ==
-  \/ \E v \in V:
-       VTPTransfer(v) \/ VTPAbort(v)
-  \/ \E sh,dh \in SH \cup DH:
+VTPNext ≜
+  ∨ ∃ v ∈ V:
+       VTPTransfer(v) ∨ VTPAbort(v)
+  ∨ ∃ sh,dh ∈ SH ∪ DH:
        VTPRcvPrepared(sh,dh)
-  \/ \E sh \in SH:
-       SHPrepare(sh) \/ SHChooseToAbort(sh)
-       \/ SHRcvAbortMsg(sh) \/ SHRcvTransferMsg(sh)
-  \/ \E dh \in DH:
-       DHPrepare(dh) \/ DHChooseToAbort(dh)
-       \/ DHRcvAbortMsg(dh) \/ DHRcvTransferMsg(dh)
+  ∨ ∃ sh ∈ SH:
+       SHPrepare(sh) ∨ SHChooseToAbort(sh)
+       ∨ SHRcvAbortMsg(sh) ∨ SHRcvTransferMsg(sh)
+  ∨ ∃ dh ∈ DH:
+       DHPrepare(dh) ∨ DHChooseToAbort(dh)
+       ∨ DHRcvAbortMsg(dh) ∨ DHRcvTransferMsg(dh)
 -----------------------------------------------------------------------------
-VTPConsistent ==
+VTPConsistent ≜
   (*************************************************************************)
   (* A state predicate asserting that a SH and an DH have not reached      *)
   (* conflicting decisions. It is an invariant of the specification.       *)
   (*************************************************************************)
-  /\ \A sh \in SH, dh \in DH :   /\ ~ /\ shState[sh] = "transferred"
-                                      /\ dhState[dh] = "aborted"
-                                 /\ ~ /\ shState[sh] = "aborted"
-                                      /\ dhState[dh] = "holding"
+  ∧ ∀ sh ∈ SH, dh ∈ DH :   ∧ ¬ ∧ shState[sh] = "transferred"
+                               ∧ dhState[dh] = "aborted"
+                           ∧ ¬ ∧ shState[sh] = "aborted"
+                               ∧ dhState[dh] = "holding"
 -----------------------------------------------------------------------------
-VTPVars == <<shState, dhState, vState, vlcState, vtpState, vtpTPrepared, msgs>>
+VTPVars ≜ ⟨shState, dhState, vState, vlcState, vtpState, vtpTPrepared, msgs⟩
 
-VTPSpec == VTPInit /\ [][VTPNext]_VTPVars
+VTPSpec ≜ VTPInit ∧ □[VTPNext]_VTPVars
   (*************************************************************************)
   (* The complete spec of the a Voucher Transfer using Two-Phase Commit    *)
   (* protocol.                                                             *)
   (*************************************************************************)
 
-THEOREM VTPSpec => [](VTPTypeOK /\ VTPConsistent)
+THEOREM VTPSpec ⇒ □(VTPTypeOK ∧ VTPConsistent)
   (*************************************************************************)
   (* This theorem asserts the truth of the temporal formula whose meaning  *)
   (* is that the state predicate VTPTypeOK /\ VTPConsistent is an          *)
@@ -281,7 +281,7 @@ THEOREM VTPSpec => [](VTPTypeOK /\ VTPConsistent)
 (***************************************************************************)
 INSTANCE VoucherLifeCycle
 
-THEOREM VTPSpec => VSpec
+THEOREM VTPSpec ⇒ VSpec
   (*************************************************************************)
   (* This theorem asserts that the specification VTPSpec of the Two-Phase  *)
   (* Commit protocol implements the specification VSpec of the             *)

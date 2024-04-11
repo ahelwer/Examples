@@ -7,7 +7,7 @@ a, b, c
 ----
 
 \* MV CONSTANT definitions Value
-const_156017750645611000 == 
+const_156017750645611000 ≜ 
 {a, b, c}
 ----
 

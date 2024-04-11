@@ -5,10 +5,10 @@ INSTANCE ABCorrectness
 
 CONSTANTS msgQLen, ackQLen
 
-SeqConstraint == /\ Len(msgQ) \leq msgQLen
-                 /\ Len(ackQ) \leq ackQLen
+SeqConstraint ≜ ∧ Len(msgQ) ≤ msgQLen
+                ∧ Len(ackQ) ≤ ackQLen
 
-SentLeadsToRcvd == \A d \in Data : (sent = d) /\ (sBit # sAck) ~> (rcvd = d)
+SentLeadsToRcvd ≜ ∀ d ∈ Data : (sent = d) ∧ (sBit ≠ sAck) ↝ (rcvd = d)
 =============================================================================
 
 ImpliedAction == [ABCNext]_cvars

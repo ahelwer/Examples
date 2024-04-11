@@ -1,7 +1,7 @@
 -------------------------------- MODULE Integers ----------------------------
 EXTENDS Naturals
-LOCAL R == INSTANCE ProtoReals
+LOCAL R ≜ INSTANCE ProtoReals
 
-Int  ==  R!Int
--. a == 0 - a
+Int  ≜  R!Int
+-. a ≜ 0 - a
 =============================================================================

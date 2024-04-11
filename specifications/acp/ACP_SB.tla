@@ -29,8 +29,8 @@ VARIABLES
 
 --------------------------------------------------------------------------------
 
-TypeInvParticipant  == participant \in  [
-                         participants -> [
+TypeInvParticipant  ≜ participant ∈  [
+                         participants → [
                            vote      : {yes, no}, 
                            alive     : BOOLEAN, 
                            decision  : {undecided, commit, abort},
@@ -39,16 +39,16 @@ TypeInvParticipant  == participant \in  [
                          ]
                        ]
 
-TypeInvCoordinator == coordinator \in  [
-                        request   : [participants -> BOOLEAN],
-                        vote      : [participants -> {waiting, yes, no}],
-                        broadcast : [participants -> {commit, abort, notsent}],
+TypeInvCoordinator ≜ coordinator ∈  [
+                        request   : [participants → BOOLEAN],
+                        vote      : [participants → {waiting, yes, no}],
+                        broadcast : [participants → {commit, abort, notsent}],
                         decision  : {commit, abort, undecided},
                         alive     : BOOLEAN,
                         faulty    : BOOLEAN
                       ]
 
-TypeInv == TypeInvParticipant /\ TypeInvCoordinator
+TypeInv ≜ TypeInvParticipant ∧ TypeInvCoordinator
 
 --------------------------------------------------------------------------------
 
@@ -66,8 +66,8 @@ TypeInv == TypeInvParticipant /\ TypeInvCoordinator
 \*  has not sent broadcast messages to any participant
 \*  is undecided about final decision
 
-InitParticipant == participant \in [
-                     participants -> [
+InitParticipant ≜ participant ∈ [
+                     participants → [
                        vote     : {yes, no},
                        alive    : {TRUE},
                        decision : {undecided},
@@ -76,16 +76,16 @@ InitParticipant == participant \in [
                      ]
                    ]
 
-InitCoordinator == coordinator \in [
-                     request   : [participants -> {FALSE}],
-                     vote      : [participants -> {waiting}],
+InitCoordinator ≜ coordinator ∈ [
+                     request   : [participants → {FALSE}],
+                     vote      : [participants → {waiting}],
                      alive     : {TRUE},
-                     broadcast : [participants -> {notsent}],
+                     broadcast : [participants → {notsent}],
                      decision  : {undecided},
                      faulty    : {FALSE}
                    ]       
 
-Init == InitParticipant /\ InitCoordinator
+Init ≜ InitParticipant ∧ InitCoordinator
 
 --------------------------------------------------------------------------------
 \* COORDINATOR STATEMENTS
@@ -97,12 +97,12 @@ Init == InitParticipant /\ InitCoordinator
 \* THEN `~ why isn't THEN left-justified? ~'
 \*   request for vote is sent to participant i
 
-request(i) == /\ coordinator.alive
-              /\ ~coordinator.request[i]
-              /\ coordinator' = [coordinator EXCEPT !.request =
+request(i) ≜ ∧ coordinator.alive
+             ∧ ¬coordinator.request[i]
+             ∧ coordinator' = [coordinator EXCEPT !.request =
                    [@ EXCEPT ![i] = TRUE]
                  ]
-              /\ UNCHANGED<<participant>>
+             ∧ UNCHANGED⟨participant⟩
 
 
 \* getVote(i):
@@ -115,15 +115,15 @@ request(i) == /\ coordinator.alive
 \* THEN
 \*   the coordinator can record the vote of participant i
 
-getVote(i) == /\ coordinator.alive
-              /\ coordinator.decision = undecided
-              /\ \A j \in participants : coordinator.request[j]
-              /\ coordinator.vote[i] = waiting
-              /\ participant[i].voteSent
-              /\ coordinator' = [coordinator EXCEPT !.vote = 
+getVote(i) ≜ ∧ coordinator.alive
+             ∧ coordinator.decision = undecided
+             ∧ ∀ j ∈ participants : coordinator.request[j]
+             ∧ coordinator.vote[i] = waiting
+             ∧ participant[i].voteSent
+             ∧ coordinator' = [coordinator EXCEPT !.vote = 
                    [@ EXCEPT ![i] = participant[i].vote]
                  ]
-              /\ UNCHANGED<<participant>>
+             ∧ UNCHANGED⟨participant⟩
 
 
 \* detectFault(i):
@@ -136,14 +136,14 @@ getVote(i) == /\ coordinator.alive
 \* THEN
 \*   coordinator times out on participant i and decides to abort
 
-detectFault(i) == /\ coordinator.alive
-                  /\ coordinator.decision = undecided
-                  /\ \A j \in participants : coordinator.request[j]
-                  /\ coordinator.vote[i] = waiting
-                  /\ ~participant[i].alive
-                  /\ ~participant[i].voteSent
-                  /\ coordinator' = [coordinator EXCEPT !.decision = abort]
-                  /\ UNCHANGED<<participant>>
+detectFault(i) ≜ ∧ coordinator.alive
+                 ∧ coordinator.decision = undecided
+                 ∧ ∀ j ∈ participants : coordinator.request[j]
+                 ∧ coordinator.vote[i] = waiting
+                 ∧ ¬participant[i].alive
+                 ∧ ¬participant[i].voteSent
+                 ∧ coordinator' = [coordinator EXCEPT !.decision = abort]
+                 ∧ UNCHANGED⟨participant⟩
 
 
 \* makeDecision:
@@ -159,14 +159,14 @@ detectFault(i) == /\ coordinator.alive
 \*   ELSE
 \*     coordinator decides abort
 
-makeDecision == /\ coordinator.alive
-                /\ coordinator.decision = undecided
-                /\ \A j \in participants : coordinator.vote[j] \in {yes, no}
-                /\ \/ /\ \A j \in participants : coordinator.vote[j] = yes
-                      /\ coordinator' = [coordinator EXCEPT !.decision = commit]
-                   \/ /\ \E j \in participants : coordinator.vote[j] = no
-                      /\ coordinator' = [coordinator EXCEPT !.decision = abort]
-                /\ UNCHANGED<<participant>>
+makeDecision ≜ ∧ coordinator.alive
+               ∧ coordinator.decision = undecided
+               ∧ ∀ j ∈ participants : coordinator.vote[j] ∈ {yes, no}
+               ∧ ∨ ∧ ∀ j ∈ participants : coordinator.vote[j] = yes
+                   ∧ coordinator' = [coordinator EXCEPT !.decision = commit]
+                 ∨ ∧ ∃ j ∈ participants : coordinator.vote[j] = no
+                   ∧ coordinator' = [coordinator EXCEPT !.decision = abort]
+               ∧ UNCHANGED⟨participant⟩
 
 
 \* coordBroadcast(i) (simple broadcast):
@@ -177,13 +177,13 @@ makeDecision == /\ coordinator.alive
 \* THEN
 \*   coordinator sends its decision to participant i 
 
-coordBroadcast(i) == /\ coordinator.alive
-                     /\ coordinator.decision # undecided
-                     /\ coordinator.broadcast[i] = notsent
-                     /\ coordinator' = [coordinator EXCEPT !.broadcast = 
+coordBroadcast(i) ≜ ∧ coordinator.alive
+                    ∧ coordinator.decision ≠ undecided
+                    ∧ coordinator.broadcast[i] = notsent
+                    ∧ coordinator' = [coordinator EXCEPT !.broadcast = 
                           [@ EXCEPT ![i] = coordinator.decision]
                         ]
-                     /\ UNCHANGED<<participant>>
+                    ∧ UNCHANGED⟨participant⟩
 
 
 \* coordDie:
@@ -193,9 +193,9 @@ coordBroadcast(i) == /\ coordinator.alive
 \*   coordinator dies
 \*   coordinator is now faulty
 
-coordDie == /\ coordinator.alive
-            /\ coordinator' = [coordinator EXCEPT !.alive = FALSE, !.faulty = TRUE]
-            /\ UNCHANGED<<participant>>
+coordDie ≜ ∧ coordinator.alive
+           ∧ coordinator' = [coordinator EXCEPT !.alive = FALSE, !.faulty = TRUE]
+           ∧ UNCHANGED⟨participant⟩
 
 ------------------------------------------------------------------------------
 
@@ -208,12 +208,12 @@ coordDie == /\ coordinator.alive
 \* THEN
 \*   participant sends vote
 
-sendVote(i) == /\ participant[i].alive
-               /\ coordinator.request[i]
-               /\ participant' = [participant EXCEPT ![i] = 
+sendVote(i) ≜ ∧ participant[i].alive
+              ∧ coordinator.request[i]
+              ∧ participant' = [participant EXCEPT ![i] = 
                     [@ EXCEPT !.voteSent = TRUE]
                   ]
-               /\ UNCHANGED<<coordinator>>
+              ∧ UNCHANGED⟨coordinator⟩
 
 
 \* abortOnVote(i):
@@ -225,14 +225,14 @@ sendVote(i) == /\ participant[i].alive
 \* THEN
 \*   participant decides (unilaterally) to abort
 
-abortOnVote(i) == /\ participant[i].alive
-                  /\ participant[i].decision = undecided
-                  /\ participant[i].voteSent
-                  /\ participant[i].vote = no
-                  /\ participant' = [participant EXCEPT ![i] = 
+abortOnVote(i) ≜ ∧ participant[i].alive
+                 ∧ participant[i].decision = undecided
+                 ∧ participant[i].voteSent
+                 ∧ participant[i].vote = no
+                 ∧ participant' = [participant EXCEPT ![i] = 
                        [@ EXCEPT !.decision = abort]
                      ]
-                  /\ UNCHANGED<<coordinator>>
+                 ∧ UNCHANGED⟨coordinator⟩
 
 
 \* abortOnTimeoutRequest(i):
@@ -243,14 +243,14 @@ abortOnVote(i) == /\ participant[i].alive
 \* THEN
 \*   participant decides (unilaterally) to abort
 
-abortOnTimeoutRequest(i) == /\ participant[i].alive
-                            /\ participant[i].decision = undecided
-                            /\ ~coordinator.alive
-                            /\ ~coordinator.request[i]
-                            /\ participant' = [participant EXCEPT ![i] = 
+abortOnTimeoutRequest(i) ≜ ∧ participant[i].alive
+                           ∧ participant[i].decision = undecided
+                           ∧ ¬coordinator.alive
+                           ∧ ¬coordinator.request[i]
+                           ∧ participant' = [participant EXCEPT ![i] = 
                                  [@ EXCEPT !.decision = abort]
                                ]
-                            /\ UNCHANGED<<coordinator>>
+                           ∧ UNCHANGED⟨coordinator⟩
 
 
 \* decide(i):
@@ -262,13 +262,13 @@ abortOnTimeoutRequest(i) == /\ participant[i].alive
 \*   participant decides according to decision from coordinator
 \*
 
-decide(i) == /\ participant[i].alive
-             /\ participant[i].decision = undecided
-             /\ coordinator.broadcast[i] # notsent
-             /\ participant' = [participant EXCEPT ![i] = 
+decide(i) ≜ ∧ participant[i].alive
+            ∧ participant[i].decision = undecided
+            ∧ coordinator.broadcast[i] ≠ notsent
+            ∧ participant' = [participant EXCEPT ![i] = 
                   [@ EXCEPT !.decision = coordinator.broadcast[i]]
                 ]
-             /\ UNCHANGED<<coordinator>>
+            ∧ UNCHANGED⟨coordinator⟩
 
 
 \* parDie(i):
@@ -277,37 +277,37 @@ decide(i) == /\ participant[i].alive
 \* THEN
 \*   participant dies and is now faulty
 
-parDie(i) == /\ participant[i].alive
-             /\ participant' = [participant EXCEPT ![i] = 
+parDie(i) ≜ ∧ participant[i].alive
+            ∧ participant' = [participant EXCEPT ![i] = 
                   [@ EXCEPT !.alive = FALSE, !.faulty = TRUE]
                 ]
-             /\ UNCHANGED<<coordinator>>
+            ∧ UNCHANGED⟨coordinator⟩
 
 -------------------------------------------------------------------------------
 
 \* FOR N PARTICIPANTS
 
-parProg(i) == sendVote(i) \/ abortOnVote(i) \/ abortOnTimeoutRequest(i) \/ decide(i)
+parProg(i) ≜ sendVote(i) ∨ abortOnVote(i) ∨ abortOnTimeoutRequest(i) ∨ decide(i)
 
-parProgN == \E i \in participants : parDie(i) \/ parProg(i)
-
-
-coordProgA(i) ==  request(i) \/ getVote(i) \/ detectFault(i) \/ coordBroadcast(i)
-
-coordProgB == makeDecision \/ \E i \in participants : coordProgA(i)
-
-coordProgN == coordDie \/ coordProgB
+parProgN ≜ ∃ i ∈ participants : parDie(i) ∨ parProg(i)
 
 
-progN == parProgN \/ coordProgN
+coordProgA(i) ≜  request(i) ∨ getVote(i) ∨ detectFault(i) ∨ coordBroadcast(i)
+
+coordProgB ≜ makeDecision ∨ ∃ i ∈ participants : coordProgA(i)
+
+coordProgN ≜ coordDie ∨ coordProgB
+
+
+progN ≜ parProgN ∨ coordProgN
 
 \* Death transitions are left outside of fairness
 
-fairness == /\ \A i \in participants : WF_<<coordinator, participant>>(parProg(i))
-            /\ WF_<<coordinator, participant>>(coordProgB)
+fairness ≜ ∧ ∀ i ∈ participants : WF_⟨coordinator, participant⟩(parProg(i))
+           ∧ WF_⟨coordinator, participant⟩(coordProgB)
 
 
-Spec == Init /\ [][progN]_<<coordinator, participant>> /\ fairness
+Spec ≜ Init ∧ □[progN]_⟨coordinator, participant⟩ ∧ fairness
 
 --------------------------------------------------------------------------------
 
@@ -326,77 +326,77 @@ Spec == Init /\ [][progN]_<<coordinator, participant>> /\ fairness
 \* SAFETY
 
 \* All participants that decide reach the same decision
-AC1 == [] \A i, j \in participants : 
-          \/ participant[i].decision # commit 
-          \/ participant[j].decision # abort
+AC1 ≜ □ ∀ i, j ∈ participants : 
+          ∨ participant[i].decision ≠ commit 
+          ∨ participant[j].decision ≠ abort
 
 \* If any participant decides commit, then all participants must have votes YES
-AC2 == [] (  (\E i \in participants : participant[i].decision = commit) 
-          => (\A j \in participants : participant[j].vote = yes))
+AC2 ≜ □ (  (∃ i ∈ participants : participant[i].decision = commit) 
+          ⇒ (∀ j ∈ participants : participant[j].vote = yes))
 
 \* If any participant decides abort, then:
 \*   at least one participant voted NO, or
 \*   at least one participant is faulty, or
 \*   coordinator is faulty
-AC3_1 == [] (  (\E i \in participants : participant[i].decision = abort) 
-            => \/ (\E j \in participants : participant[j].vote = no)
-               \/ (\E j \in participants : participant[j].faulty)
-               \/ coordinator.faulty)
+AC3_1 ≜ □ (  (∃ i ∈ participants : participant[i].decision = abort) 
+            ⇒ ∨ (∃ j ∈ participants : participant[j].vote = no)
+              ∨ (∃ j ∈ participants : participant[j].faulty)
+              ∨ coordinator.faulty)
 
 \* Each participant decides at most once
-AC4 == [] /\ (\A i \in participants : participant[i].decision = commit 
-                                => [](participant[i].decision = commit))
-          /\ (\A j \in participants : participant[j].decision = abort  
-                                => [](participant[j].decision = abort))
+AC4 ≜ □ ∧ (∀ i ∈ participants : participant[i].decision = commit 
+                                ⇒ □(participant[i].decision = commit))
+        ∧ (∀ j ∈ participants : participant[j].decision = abort  
+                                ⇒ □(participant[j].decision = abort))
 
 --------------------------------------------------------------------------------
 
 \* LIVENESS 
 \* (stronger for AC3 than in the original paper)
 
-AC3_2 == <> \/ \A i \in participants : participant[i].decision \in {abort, commit}
-            \/ \E j \in participants : participant[j].faulty
-            \/ coordinator.faulty
+AC3_2 ≜ ◇ ∨ ∀ i ∈ participants : participant[i].decision ∈ {abort, commit}
+          ∨ ∃ j ∈ participants : participant[j].faulty
+          ∨ coordinator.faulty
 
 --------------------------------------------------------------------------------
 
 \* (SOME) INTERMEDIATE PROPERTIES USED IN PROOFS
 
-FaultyStable == /\ \A i \in participants : [](participant[i].faulty => []participant[i].faulty)
-                /\ [](coordinator.faulty => [] coordinator.faulty)
+FaultyStable ≜ ∧ ∀ i ∈ participants : □(participant[i].faulty ⇒ □participant[i].faulty)
+               ∧ □(coordinator.faulty ⇒ □ coordinator.faulty)
 
-VoteStable == \A i \in participants : 
-                \/ [](participant[i].vote = yes)
-                \/ [](participant[i].vote = no)
+VoteStable ≜ ∀ i ∈ participants : 
+                ∨ □(participant[i].vote = yes)
+                ∨ □(participant[i].vote = no)
 
-StrongerAC2 == [] (  (\E i \in participants : participant[i].decision = commit) 
-                  => /\ (\A j \in participants : participant[j].vote = yes)
-                     /\ coordinator.decision = commit)
+StrongerAC2 ≜ □ (  (∃ i ∈ participants : participant[i].decision = commit) 
+                  ⇒ ∧ (∀ j ∈ participants : participant[j].vote = yes)
+                    ∧ coordinator.decision = commit)
 
-StrongerAC3_1 == [] (  (\E i \in participants : participant[i].decision = abort) 
-                    => \/ (\E j \in participants : participant[j].vote = no)
-                       \/ /\ \E j \in participants : participant[j].faulty
-                          /\ coordinator.decision = abort
-                       \/ /\ coordinator.faulty
-                          /\ coordinator.decision = undecided)
+StrongerAC3_1 ≜ □ (  (∃ i ∈ participants : participant[i].decision = abort) 
+                    ⇒ ∨ (∃ j ∈ participants : participant[j].vote = no)
+                      ∨ ∧ ∃ j ∈ participants : participant[j].faulty
+                        ∧ coordinator.decision = abort
+                      ∨ ∧ coordinator.faulty
+                        ∧ coordinator.decision = undecided)
 
 \* (AC1 follows from StrongerAC2 /\ StrongerAC3_1)
 
-NoRecovery == [] /\ \A i \in participants : participant[i].alive <=> ~participant[i].faulty
-                 /\ coordinator.alive <=> ~coordinator.faulty
+NoRecovery ≜ □ ∧ ∀ i ∈ participants : participant[i].alive ⇔ ¬participant[i].faulty
+               ∧ coordinator.alive ⇔ ¬coordinator.faulty
 
 --------------------------------------------------------------------------------
 
 \* (SOME) INVALID PROPERTIES 
 
-DecisionReachedNoFault == (\A i \in participants : participant[i].alive)
-                          ~> (\A k \in participants : participant[k].decision # undecided)
+DecisionReachedNoFault ≜ (∀ i ∈ participants : participant[i].alive)
+                          ↝ (∀ k ∈ participants : participant[k].decision ≠ undecided)
 
-AbortImpliesNoVote == [] (  (\E i \in participants : participant[i].decision = abort) 
-                  => (\E j \in participants : participant[j].vote = no))
+AbortImpliesNoVote ≜ □ (  (∃ i ∈ participants : participant[i].decision = abort) 
+                  ⇒ (∃ j ∈ participants : participant[j].vote = no))
 
 \* The following is the termination property that this SB algorithm doesn't have
-AC5 == <> \A i \in participants : \/ participant[i].decision \in {abort, commit} 
-                                  \/ participant[i].faulty
+AC5 ≜ ◇ ∀ i ∈ participants : ∨ participant[i].decision ∈ {abort, commit} 
+                             ∨ participant[i].faulty
 
 ================================================================================

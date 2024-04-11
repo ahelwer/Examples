@@ -5,10 +5,10 @@
 (****************************************************************************)
 EXTENDS Integers
 CONSTANTS A, B, C, bound
-ASSUME bound \in Nat
+ASSUME bound ∈ ℕ
 
-Value == {A,B,C}
-BoundedSeq(S) == UNION { [1 .. n -> S] : n \in 0 .. bound }
+Value ≜ {A,B,C}
+BoundedSeq(S) ≜ UNION { [1 ‥ n → S] : n ∈ 0 ‥ bound }
 
 VARIABLES seq, i, cand, cnt
 

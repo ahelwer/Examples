@@ -28,13 +28,13 @@
 EXTENDS Reachability, Integers, FiniteSets
 
 CONSTANT Root
-ASSUME RootAssump == Root \in Nodes
+ASSUME RootAssump ≜ Root ∈ Nodes
 
 (***************************************************************************)
 (* Reachable is defined to be the set of notes reachable from Root.  The   *)
 (* purpose of the algorithm is to compute Reachable.                       *)
 (***************************************************************************)
-Reachable == ReachableFrom({Root})
+Reachable ≜ ReachableFrom({Root})
 ---------------------------------------------------------------------------
 (***************************************************************************
 The obvious algorithm for computing Reachable({Root}) is as follows.
@@ -64,12 +64,12 @@ node and does the following:
 
 --fair algorithm Reachable {
   variables marked = {}, vroot = {Root};
-  { a: while (vroot /= {})
-        { with (v \in vroot)
-           { if (v \notin marked)
-                  { marked := marked \cup {v};
-                    vroot  := vroot \cup Succ[v] }
-             else { vroot := vroot \ {v} }
+  { a: while (vroot ≠ {})
+        { with (v ∈ vroot)
+           { if (v ∉ marked)
+                  { marked ≔ marked ∪ {v};
+                    vroot  ≔ vroot ∪ Succ[v] }
+             else { vroot ≔ vroot \ {v} }
            }
         }
   }
@@ -81,35 +81,35 @@ node and does the following:
 \* BEGIN TRANSLATION    Here is the TLA+ translation of the PlusCal code.
 VARIABLES marked, vroot, pc
 
-vars == << marked, vroot, pc >>
+vars ≜ ⟨ marked, vroot, pc ⟩
 
-Init == (* Global variables *)
-        /\ marked = {}
-        /\ vroot = {Root}
-        /\ pc = "a"
+Init ≜ (* Global variables *)
+        ∧ marked = {}
+        ∧ vroot = {Root}
+        ∧ pc = "a"
 
-a == /\ pc = "a"
-     /\ IF vroot /= {}
-           THEN /\ \E v \in vroot:
-                     IF v \notin marked
-                        THEN /\ marked' = (marked \cup {v})
-                             /\ vroot' = (vroot \cup Succ[v])
-                        ELSE /\ vroot' = vroot \ {v}
-                             /\ UNCHANGED marked
-                /\ pc' = "a"
-           ELSE /\ pc' = "Done"
-                /\ UNCHANGED << marked, vroot >>
+a ≜ ∧ pc = "a"
+    ∧ IF vroot ≠ {}
+           THEN ∧ ∃ v ∈ vroot:
+                     IF v ∉ marked
+                        THEN ∧ marked' = (marked ∪ {v})
+                             ∧ vroot' = (vroot ∪ Succ[v])
+                        ELSE ∧ vroot' = vroot \ {v}
+                             ∧ UNCHANGED marked
+                ∧ pc' = "a"
+           ELSE ∧ pc' = "Done"
+                ∧ UNCHANGED ⟨ marked, vroot ⟩
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
-Terminating == pc = "Done" /\ UNCHANGED vars
+Terminating ≜ pc = "Done" ∧ UNCHANGED vars
 
-Next == a
-           \/ Terminating
+Next ≜ a
+           ∨ Terminating
 
-Spec == /\ Init /\ [][Next]_vars
-        /\ WF_vars(Next)
+Spec ≜ ∧ Init ∧ □[Next]_vars
+       ∧ WF_vars(Next)
 
-Termination == <>(pc = "Done")
+Termination ≜ ◇(pc = "Done")
 
 \* END TRANSLATION
 ----------------------------------------------------------------------------
@@ -122,18 +122,18 @@ Termination == <>(pc = "Done")
 (* The last theorem asserts termination, which is a liveness property, and *)
 (* TLAPS is not yet capable of proving liveness properties.                *)
 (***************************************************************************)
-TypeOK == /\ marked \in SUBSET Nodes
-          /\ vroot \in SUBSET Nodes
-          /\ pc \in {"a", "Done"}
-          /\ (pc = "Done") => (vroot = {})
+TypeOK ≜ ∧ marked ∈ SUBSET Nodes
+         ∧ vroot ∈ SUBSET Nodes
+         ∧ pc ∈ {"a", "Done"}
+         ∧ (pc = "Done") ⇒ (vroot = {})
   (*************************************************************************)
   (* The invariance of TypeOK is obvious.  (I decided to make the obvious  *)
   (* fact that pc equals "Done" only if vroot is empty part of the         *)
   (* type-correctness invariant.)                                          *)
   (*************************************************************************)
 
-Inv1 == /\ TypeOK  
-        /\ \A n \in marked : Succ[n] \subseteq (marked \cup vroot)
+Inv1 ≜ ∧ TypeOK  
+       ∧ ∀ n ∈ marked : Succ[n] ⊆ (marked ∪ vroot)
   (*************************************************************************)
   (* The second conjunct of Inv1 is invariant because each element of      *)
   (* Succ[n] is added to vroot when n is added to `marked', and it remains *)
@@ -142,7 +142,7 @@ Inv1 == /\ TypeOK
   (* TLA+ proof of its invariance a tiny bit easier to read.               *)
   (*************************************************************************)
 
-Inv2 == (marked \cup ReachableFrom(vroot)) = ReachableFrom(marked \cup vroot)
+Inv2 ≜ (marked ∪ ReachableFrom(vroot)) = ReachableFrom(marked ∪ vroot)
   (*************************************************************************)
   (* Since ReachableFrom(marked \cup vroot) is the union of                *)
   (* ReachableFrom(marked) and ReachableFrom(vroot), to prove that Inv2 is *)
@@ -163,7 +163,7 @@ Inv2 == (marked \cup ReachableFrom(vroot)) = ReachableFrom(marked \cup vroot)
   (* or ReachableFrom(vroot).                                              *)
   (*************************************************************************)
 
-Inv3 == Reachable = marked \cup ReachableFrom(vroot)
+Inv3 ≜ Reachable = marked ∪ ReachableFrom(vroot)
   (*************************************************************************)
   (* For convenience, let R equal marked \cup ReachableFrom(vroot).  In    *)
   (* the initial state, marked = {} and vroot = {Root}, so R equals        *)
@@ -191,8 +191,8 @@ Inv3 == Reachable = marked \cup ReachableFrom(vroot)
 (* then `marked' equals Reachable.  The algorithm has terminated when pc   *)
 (* equals "Done", so this theorem asserts partial correctness.             *)
 (***************************************************************************)
-PartialCorrectness == (pc = "Done") => (marked = Reachable)
-THEOREM Spec => []PartialCorrectness
+PartialCorrectness ≜ (pc = "Done") ⇒ (marked = Reachable)
+THEOREM Spec ⇒ □PartialCorrectness
   (*************************************************************************)
   (* TypeOK implies (pc = "Done") => (vroot = {}).  Since,                 *)
   (* ReachableFrom({}) equals {}, Inv3 implies                             *)
@@ -207,7 +207,7 @@ THEOREM Spec => []PartialCorrectness
 (* fairness of Next, which equals action `a'.                              *)
 (***************************************************************************)
 THEOREM  ASSUME IsFiniteSet(Reachable)
-         PROVE  Spec => <>(pc = "Done")
+         PROVE  Spec ⇒ ◇(pc = "Done")
   (*************************************************************************)
   (* To prove the theorem, we assume a behavior satisfies Spec and prove   *)
   (* that it satisfies <>(pc = "Done").  If pc = "a" and vroot = {}, then  *)

@@ -3,11 +3,11 @@
 EXTENDS Naturals
 
 CONSTANTS N , Inputs
-ASSUME (N \in Nat) /\ (N > 0)
+ASSUME (N ∈ ℕ) ∧ (N > 0)
 
-Proc == 1..N
+Proc ≜ 1‥N
 
-NotAnInput == CHOOSE c : c \notin Inputs
+NotAnInput ≜ CHOOSE c : c ∉ Inputs
 
 VARIABLES input, output
 
@@ -15,35 +15,35 @@ VARIABLES input, output
 
 VARIABLES allInput, chosen
 
-IInit == /\ input \in [Proc -> Inputs]
-         /\ output = [p \in Proc |-> NotAnInput]
-         /\ chosen = NotAnInput
-         /\ allInput = {input[p] : p \in Proc}
+IInit ≜ ∧ input ∈ [Proc → Inputs]
+        ∧ output = [p ∈ Proc ↦ NotAnInput]
+        ∧ chosen = NotAnInput
+        ∧ allInput = {input[p] : p ∈ Proc}
 
-IChoose(p) ==
-  /\ output[p] = NotAnInput
-  /\ IF chosen = NotAnInput
-     THEN \E ip \in allInput : /\ chosen' = ip
-                               /\ output' = [output EXCEPT ![p] = ip]
-     ELSE /\ output' = [output EXCEPT ![p] = chosen]
-          /\ UNCHANGED chosen
-  /\ UNCHANGED <<input, allInput>>
+IChoose(p) ≜
+  ∧ output[p] = NotAnInput
+  ∧ IF chosen = NotAnInput
+     THEN ∃ ip ∈ allInput : ∧ chosen' = ip
+                            ∧ output' = [output EXCEPT ![p] = ip]
+     ELSE ∧ output' = [output EXCEPT ![p] = chosen]
+          ∧ UNCHANGED chosen
+  ∧ UNCHANGED ⟨input, allInput⟩
 
-IFail(p) ==
-  /\ output' = [output EXCEPT ![p] = NotAnInput]
-  /\ \E ip \in Inputs : /\ input' = [input EXCEPT ![p] = ip]
-                        /\ allInput = allInput \cup {ip}
-  /\ UNCHANGED chosen
+IFail(p) ≜
+  ∧ output' = [output EXCEPT ![p] = NotAnInput]
+  ∧ ∃ ip ∈ Inputs : ∧ input' = [input EXCEPT ![p] = ip]
+                    ∧ allInput = allInput ∪ {ip}
+  ∧ UNCHANGED chosen
 
-INext == \E p \in Proc : IChoose(p) \/ IFail (p)
+INext ≜ ∃ p ∈ Proc : IChoose(p) ∨ IFail (p)
 
-ISpec == IInit /\ [][INext]_<<input, output, chosen, allInput>>
+ISpec ≜ IInit ∧ □[INext]_⟨input, output, chosen, allInput⟩
 
 =============================================================================
 
-IS(chosen, allInput) == INSTANCE Inner
+IS(chosen, allInput) ≜ INSTANCE Inner
 
-SynodSpec == \EE chosen, allInput : IS(chosen, allInput)!ISpec
+SynodSpec ≜ \EE chosen, allInput : IS(chosen, allInput)!ISpec
 
 
 

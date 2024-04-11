@@ -42,16 +42,16 @@ LOCAL INSTANCE Integers
 \*
 \* https://en.wikipedia.org/wiki/Bitwise_operation#Mathematical_equivalents
 RECURSIVE And(_,_,_,_)
-LOCAL And(x,y,n,m) == LET exp == 2^n
+LOCAL And(x,y,n,m) ≜ LET exp ≜ 2^n
                 IN IF m = 0 
                    THEN 0
-                   ELSE exp * ((x \div exp) % 2) * ((y \div exp) % 2) 
-                        + And(x,y,n+1,m \div 2)
+                   ELSE exp * ((x ÷ exp) % 2) * ((y ÷ exp) % 2) 
+                        + And(x,y,n+1,m ÷ 2)
 
 (***************************************************************************)
 (* Bitwise AND of x and y                                                  *)
 (***************************************************************************)
-x & y == And(x, y, 0, x) \* Infix variant of And(x,y)
+x & y ≜ And(x, y, 0, x) \* Infix variant of And(x,y)
 
 =============================================================================
 \* Modification History

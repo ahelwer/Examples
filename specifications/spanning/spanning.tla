@@ -1,47 +1,47 @@
 ------------------------------ MODULE spanning ------------------------------
 EXTENDS Integers
 CONSTANTS Proc, NoPrnt, root, nbrs
-ASSUME NoPrnt \notin Proc /\ nbrs \subseteq Proc \times Proc
+ASSUME NoPrnt ∉ Proc ∧ nbrs ⊆ Proc × Proc
 VARIABLES prnt, rpt, msg
-vars == <<prnt, rpt, msg>> 
+vars ≜ ⟨prnt, rpt, msg⟩ 
              
-Init == /\ prnt = [i \in Proc |-> NoPrnt]
-        /\ rpt = [i \in Proc |-> FALSE]
-        /\ msg = {}
+Init ≜ ∧ prnt = [i ∈ Proc ↦ NoPrnt]
+       ∧ rpt = [i ∈ Proc ↦ FALSE]
+       ∧ msg = {}
 
-CanSend(i, j) ==  (<<i, j>> \in nbrs) /\ (i = root \/ prnt[i] # NoPrnt)
+CanSend(i, j) ≜  (⟨i, j⟩ ∈ nbrs) ∧ (i = root ∨ prnt[i] ≠ NoPrnt)
 
-Update(i, j) == /\ prnt' = [prnt EXCEPT ![i] = j]
-                /\ UNCHANGED <<rpt, msg>>
+Update(i, j) ≜ ∧ prnt' = [prnt EXCEPT ![i] = j]
+               ∧ UNCHANGED ⟨rpt, msg⟩
     
-Send(i) == \E k \in Proc: /\ CanSend(i, k) /\ (<<i, k>> \notin msg)
-                          /\ msg' = msg \cup {<<i, k>>}
-                          /\ UNCHANGED <<prnt, rpt>>
+Send(i) ≜ ∃ k ∈ Proc: ∧ CanSend(i, k) ∧ (⟨i, k⟩ ∉ msg)
+                      ∧ msg' = msg ∪ {⟨i, k⟩}
+                      ∧ UNCHANGED ⟨prnt, rpt⟩
                                                                                     
-Parent(i) == /\ prnt[i] # NoPrnt /\ ~rpt[i]
-             /\ rpt' = [rpt EXCEPT ![i] = TRUE] 
-             /\ UNCHANGED <<msg, prnt>>
+Parent(i) ≜ ∧ prnt[i] ≠ NoPrnt ∧ ¬rpt[i]
+            ∧ rpt' = [rpt EXCEPT ![i] = TRUE] 
+            ∧ UNCHANGED ⟨msg, prnt⟩
              
-Next == \E i, j \in Proc: IF i # root /\ prnt[i] = NoPrnt /\ <<j, i>> \in msg
+Next ≜ ∃ i, j ∈ Proc: IF i ≠ root ∧ prnt[i] = NoPrnt ∧ ⟨j, i⟩ ∈ msg
                           THEN Update(i, j)
-                          ELSE \/ Send(i) \/ Parent(i) 
-                               \/ UNCHANGED <<prnt, msg, rpt>>                   
+                          ELSE ∨ Send(i) ∨ Parent(i) 
+                               ∨ UNCHANGED ⟨prnt, msg, rpt⟩                   
                                                         
-Spec == /\ Init /\ [][Next]_vars 
-        /\ WF_vars(\E i, j \in Proc: IF i # root /\ prnt[i] = NoPrnt /\ <<j, i>> \in msg
+Spec ≜ ∧ Init ∧ □[Next]_vars 
+       ∧ WF_vars(∃ i, j ∈ Proc: IF i ≠ root ∧ prnt[i] = NoPrnt ∧ ⟨j, i⟩ ∈ msg
                                      THEN Update(i, j)
-                                     ELSE \/ Send(i) \/ Parent(i) 
-                                          \/ UNCHANGED <<prnt, msg, rpt>>)
+                                     ELSE ∨ Send(i) ∨ Parent(i) 
+                                          ∨ UNCHANGED ⟨prnt, msg, rpt⟩)
                                            
-TypeOK == /\ \A i \in Proc : prnt[i] = NoPrnt \/ <<i, prnt[i]>> \in nbrs             
-          /\ rpt \in [Proc -> BOOLEAN]  
-          /\ msg \subseteq Proc \times Proc
+TypeOK ≜ ∧ ∀ i ∈ Proc : prnt[i] = NoPrnt ∨ ⟨i, prnt[i]⟩ ∈ nbrs             
+         ∧ rpt ∈ [Proc → BOOLEAN]  
+         ∧ msg ⊆ Proc × Proc
   
-Termination == <>(\A i \in Proc : i = root \/ (prnt[i] # NoPrnt /\ <<i, prnt[i]>> \in nbrs)) 
+Termination ≜ ◇(∀ i ∈ Proc : i = root ∨ (prnt[i] ≠ NoPrnt ∧ ⟨i, prnt[i]⟩ ∈ nbrs)) 
 
-OneParent == [][\A i \in Proc : prnt[i] # NoPrnt => prnt[i] = prnt'[i]]_vars
+OneParent ≜ □[∀ i ∈ Proc : prnt[i] ≠ NoPrnt ⇒ prnt[i] = prnt'[i]]_vars
 
-SntMsg == \A i \in Proc: (i # root /\ prnt[i] = NoPrnt => \A j \in Proc: <<i ,j>> \notin msg)
+SntMsg ≜ ∀ i ∈ Proc: (i ≠ root ∧ prnt[i] = NoPrnt ⇒ ∀ j ∈ Proc: ⟨i ,j⟩ ∉ msg)
 
 =============================================================================
 \* Modification History

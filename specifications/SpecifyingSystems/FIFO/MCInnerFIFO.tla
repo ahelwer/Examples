@@ -25,7 +25,7 @@ CONSTANT qLen
   (* configuration file.                                                   *)
   (*************************************************************************)
 
-qConstraint == Len(q) \leq qLen
+qConstraint ≜ Len(q) ≤ qLen
   (*************************************************************************)
   (* This is the predicate constraining the length of q.                   *)
   (*************************************************************************)

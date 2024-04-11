@@ -46,7 +46,7 @@ CONSTANTS a, b, c, d, e, f, g
 (* This example shows how you can check propositional logic tautologies.   *)
 (***************************************************************************)
 ASSUME
-  \A F, G \in {TRUE, FALSE} : (F => G) <=> ~F \/ G
+  ∀ F, G ∈ {TRUE, FALSE} : (F ⇒ G) ⇔ ¬F ∨ G
   
 
 (***************************************************************************)
@@ -54,7 +54,7 @@ ASSUME
 (* tautology of propositional logic.                                       *)
 (***************************************************************************)
 ASSUME
-  ~ \A F, G \in {TRUE, FALSE} : (F \/ G) => (F /\ G)
+  ¬ ∀ F, G ∈ {TRUE, FALSE} : (F ∨ G) ⇒ (F ∧ G)
 
 
 (***************************************************************************)
@@ -64,16 +64,16 @@ ASSUME
   {1, 2, 2, 3, 3, 3} = {3, 1, 1, 2}
 
 ASSUME
-  {1, 2} \cup {2, 3, 4} = {5, 4, 3, 2, 1} \cap {1, 2, 3, 4}
+  {1, 2} ∪ {2, 3, 4} = {5, 4, 3, 2, 1} ∩ {1, 2, 3, 4}
 
 ASSUME 
-  {1, 3} \subseteq {3, 2, 1}
+  {1, 3} ⊆ {3, 2, 1}
 
 ASSUME
   {a, b, c} \ {c} = {a, b}
 
 ASSUME
-  {a, b} \in {{a, b}, c, {d, e}}
+  {a, b} ∈ {{a, b}, c, {d, e}}
 
 
 (***************************************************************************)
@@ -83,9 +83,9 @@ ASSUME
 (* SomeSets.  (This doesn't imply that the property is valid for all sets, *)
 (* but it's likely to discover if the property is not valid.)              *)
 (***************************************************************************)
-SomeSets == SUBSET {a, b, c, d, e}
+SomeSets ≜ SUBSET {a, b, c, d, e}
 
 ASSUME
-  \A S, T \in SomeSets : (S \subseteq T) <=> S = (S \cap T)
+  ∀ S, T ∈ SomeSets : (S ⊆ T) ⇔ S = (S ∩ T)
 
 =============================================================================

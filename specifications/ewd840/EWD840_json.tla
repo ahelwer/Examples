@@ -11,10 +11,10 @@ EXTENDS EWD840,
   Comment e.g. the "active[i]" conjunct in EWD840!SendMsg to trigger a violation
   of `RealInv`.
 *)
-JsonInv ==
-    \/ RealInv:: Inv \* The ordinary invariant to check in EWD840 module.
-    \/ Export:: /\ JsonSerialize("trace.json", Trace)
-                /\ TLCSet("exit", TRUE) \* Stop model-checking *without* TLC reporting
+JsonInv ≜
+    ∨ RealInv∷ Inv \* The ordinary invariant to check in EWD840 module.
+    ∨ Export∷ ∧ JsonSerialize("trace.json", Trace)
+              ∧ TLCSet("exit", TRUE) \* Stop model-checking *without* TLC reporting
                                         \* the usual text-based error trace. Replace
                                         \* with FALSE to also print the error-trace
                                         \* and terminate with non-zero process exit

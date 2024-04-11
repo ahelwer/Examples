@@ -3,13 +3,12 @@ EXTENDS ReachabilityTest, Sequences
 
 CONSTANT RandomSuccCount
 
-RandomSuccSet == SuccSet2(RandomSuccCount)
+RandomSuccSet ≜ SuccSet2(RandomSuccCount)
 
-ASSUME \A i \in DOMAIN Test : Test[i]
+ASSUME ∀ i ∈ DOMAIN Test : Test[i]
 
-LimitedSeq(S) == UNION {
-  [1 .. len -> S]
-  : len \in 0 .. Cardinality(Nodes)
+LimitedSeq(S) ≜ UNION {
+  [1 ‥ len → S]
+  : len ∈ 0 ‥ Cardinality(Nodes)
 }
 ===================================
-

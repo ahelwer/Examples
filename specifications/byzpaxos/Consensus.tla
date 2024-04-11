@@ -62,7 +62,7 @@ algorithm a tiny bit simpler.
 --algorithm Consensus {
   variable chosen = {}; 
   macro Choose() { when chosen = {};
-                   with (v \in Value) { chosen := {v} } }
+                   with (v ∈ Value) { chosen ≔ {v} } }
    { lbl: while (TRUE) { Choose() }
    }  
 }
@@ -80,16 +80,16 @@ their values in the new state.
 \***** BEGIN TRANSLATION  
 VARIABLE chosen
 
-vars == << chosen >>
+vars ≜ ⟨ chosen ⟩
 
-Init == (* Global variables *)
-        /\ chosen = {}
+Init ≜ (* Global variables *)
+        ∧ chosen = {}
 
-Next == /\ chosen = {}
-        /\ \E v \in Value:
+Next ≜ ∧ chosen = {}
+       ∧ ∃ v ∈ Value:
              chosen' = {v}
 
-Spec == Init /\ [][Next]_vars
+Spec ≜ Init ∧ □[Next]_vars
 
 \***** END TRANSLATION
 -----------------------------------------------------------------------------
@@ -102,11 +102,11 @@ Spec == Init /\ [][Next]_vars
 (* Inv is true in all states.  This means that at most one value is chosen *)
 (* in any behavior.                                                        *)
 (***************************************************************************)
-TypeOK == /\ chosen \subseteq Value
-          /\ IsFiniteSet(chosen) 
+TypeOK ≜ ∧ chosen ⊆ Value
+         ∧ IsFiniteSet(chosen) 
 
-Inv == /\ TypeOK
-       /\ Cardinality(chosen) \leq 1
+Inv ≜ ∧ TypeOK
+      ∧ Cardinality(chosen) ≤ 1
 
 (***************************************************************************)
 (* We now prove that Inv is an invariant, meaning that it is true in every *)
@@ -140,8 +140,8 @@ Inv == /\ TypeOK
 (* next-state action Next.  It is the key step in proving that Inv is an   *)
 (* invariant of (true in every behavior allowed by) specification Spec.    *)
 (***************************************************************************)
-LEMMA InductiveInvariance ==
-           Inv /\ [Next]_vars => Inv'
+LEMMA InductiveInvariance ≜
+           Inv ∧ [Next]_vars ⇒ Inv'
 <1>. SUFFICES ASSUME Inv, [Next]_vars
               PROVE  Inv'
   OBVIOUS
@@ -153,8 +153,8 @@ LEMMA InductiveInvariance ==
 <1>3. QED
   BY <1>1, <1>2 DEF Next
 
-THEOREM Invariance == Spec => []Inv 
-<1>1.  Init => Inv
+THEOREM Invariance ≜ Spec ⇒ □Inv 
+<1>1.  Init ⇒ Inv
   BY FS_EmptySet DEF Init, Inv, TypeOK
 <1>2.  QED
  BY PTL, <1>1, InductiveInvariance DEF Spec
@@ -168,13 +168,13 @@ THEOREM Invariance == Spec => []Inv
 (* chosen.  Below, we prove that LiveSpec implies Success This means that, *)
 (* in every behavior satisfying LiveSpec, some value is chosen.            *)
 (***************************************************************************)
-LiveSpec == Spec /\ WF_vars(Next)
-Success == <>(chosen # {})
+LiveSpec ≜ Spec ∧ WF_vars(Next)
+Success ≜ ◇(chosen ≠ {})
 
 (***************************************************************************)
 (* For liveness, we need to assume that there exists at least one value.   *)
 (***************************************************************************)
-ASSUME ValueNonempty == Value # {}
+ASSUME ValueNonempty ≜ Value ≠ {}
 
 (***************************************************************************)
 (* TLAPS does not yet reason about ENABLED.  Therefore, we must omit all   *)
@@ -194,21 +194,21 @@ ASSUME ValueNonempty == Value # {}
 (*                                                                         *)
 (*  3. Existentially quantifying over those new symbols.                   *)
 (***************************************************************************)
-LEMMA EnabledDef ==
-        TypeOK => 
-          ((ENABLED <<Next>>_vars) <=> (chosen = {}))
-<1> DEFINE E == 
-       \E chosenp :
-               /\ /\ chosen = {}
-                  /\ \E v \in Value: chosenp = {v}
-               /\ ~ (<<chosenp>> = <<chosen>>)
-<1>1. E = ENABLED <<Next>>_vars
+LEMMA EnabledDef ≜
+        TypeOK ⇒ 
+          ((ENABLED ⟨Next⟩_vars) ⇔ (chosen = {}))
+<1> DEFINE E ≜ 
+       ∃ chosenp :
+               ∧ ∧ chosen = {}
+                 ∧ ∃ v ∈ Value: chosenp = {v}
+               ∧ ¬ (⟨chosenp⟩ = ⟨chosen⟩)
+<1>1. E = ENABLED ⟨Next⟩_vars
   \* BY DEF Next, vars (* and def of ENABLED *)
   PROOF OMITTED
 <1>2. SUFFICES ASSUME TypeOK
                PROVE  E = (chosen = {})
   BY <1>1, Zenon
-<1>3. E = \E chosenp : E!(chosenp)!1
+<1>3. E = ∃ chosenp : E!(chosenp)!1
   BY <1>2, Isa  DEF TypeOK
 <1>4. @ = (chosen = {})
  BY <1>2, ValueNonempty, Zenon DEF TypeOK
@@ -233,22 +233,22 @@ LEMMA EnabledDef ==
 (* when TLAPS handles temporal reasoning, it will use a decision procedure *)
 (* for PTL.                                                                *)
 (***************************************************************************)
-THEOREM LiveSpec => Success
-<1>1. []Inv /\ [][Next]_vars /\ WF_vars(Next) => (chosen = {} ~> chosen # {})
-  <2>. DEFINE P == chosen = {}
-              Q == chosen # {}
-  <2>1. SUFFICES [][Next]_vars /\ WF_vars(Next) => ((Inv /\ P) ~> Q)
+THEOREM LiveSpec ⇒ Success
+<1>1. □Inv ∧ □[Next]_vars ∧ WF_vars(Next) ⇒ (chosen = {} ↝ chosen ≠ {})
+  <2>. DEFINE P ≜ chosen = {}
+              Q ≜ chosen ≠ {}
+  <2>1. SUFFICES □[Next]_vars ∧ WF_vars(Next) ⇒ ((Inv ∧ P) ↝ Q)
     BY PTL
-  <2>2. (Inv /\ P) /\ [Next]_vars => ((Inv' /\ P') \/ Q')
+  <2>2. (Inv ∧ P) ∧ [Next]_vars ⇒ ((Inv' ∧ P') ∨ Q')
     BY InductiveInvariance
-  <2>3. (Inv /\ P) /\ <<Next>>_vars => Q'
+  <2>3. (Inv ∧ P) ∧ ⟨Next⟩_vars ⇒ Q'
     BY DEF Inv, Next, vars
-  <2>4. (Inv /\ P) => ENABLED <<Next>>_vars
+  <2>4. (Inv ∧ P) ⇒ ENABLED ⟨Next⟩_vars
     BY EnabledDef DEF Inv
   <2>. HIDE DEF P,Q
   <2>. QED
     BY <2>2, <2>3, <2>4, PTL
-<1>2. (chosen = {} ~> chosen # {}) => ((chosen = {}) => <>(chosen # {}))
+<1>2. (chosen = {} ↝ chosen ≠ {}) ⇒ ((chosen = {}) ⇒ ◇(chosen ≠ {}))
   BY PTL
 <1>3. QED
   BY Invariance, <1>1, <1>2, PTL DEF LiveSpec, Spec, Init, Success
@@ -258,14 +258,14 @@ THEOREM LiveSpec => Success
 (* The following theorem is used in the refinement proof in module         *)
 (* VoteProof.                                                              *)
 (***************************************************************************)
-THEOREM LiveSpecEquals ==
-          LiveSpec <=> Spec /\ ([]<><<Next>>_vars \/ []<>(chosen # {}))
-<1>1. /\ Spec <=> Spec /\ []TypeOK
-      /\ LiveSpec <=> LiveSpec /\ []TypeOK
+THEOREM LiveSpecEquals ≜
+          LiveSpec ⇔ Spec ∧ (□◇⟨Next⟩_vars ∨ □◇(chosen ≠ {}))
+<1>1. ∧ Spec ⇔ Spec ∧ □TypeOK
+      ∧ LiveSpec ⇔ LiveSpec ∧ □TypeOK
   BY Invariance, PTL DEF LiveSpec, Inv
-<1>2. (chosen # {}) <=> ~(chosen = {})
+<1>2. (chosen ≠ {}) ⇔ ¬(chosen = {})
   OBVIOUS
-<1>3. []TypeOK => (([]<>~ENABLED <<Next>>_vars) <=> []<>(chosen # {}))
+<1>3. □TypeOK ⇒ ((□◇¬ENABLED ⟨Next⟩_vars) ⇔ □◇(chosen ≠ {}))
   BY <1>2, EnabledDef, PTL
 <1>4. QED
   BY <1>1, <1>3, PTL DEF LiveSpec

@@ -12,35 +12,35 @@ EXTENDS ACP_SB
 \* Participants type is extended with a "forward" variable.  
 \* Coordinator type is unchanged.
 
-TypeInvParticipantNB  == participant \in  [
-                           participants -> [
+TypeInvParticipantNB  ≜ participant ∈  [
+                           participants → [
                              vote      : {yes, no}, 
                              alive     : BOOLEAN, 
                              decision  : {undecided, commit, abort},
                              faulty    : BOOLEAN,
                              voteSent  : BOOLEAN,
-                             forward   : [ participants -> {notsent, commit, abort} ]
+                             forward   : [ participants → {notsent, commit, abort} ]
                            ]
                          ]
 
-TypeInvNB == TypeInvParticipantNB /\ TypeInvCoordinator
+TypeInvNB ≜ TypeInvParticipantNB ∧ TypeInvCoordinator
 
 --------------------------------------------------------------------------------
 
 \* Initially, participants have not forwarded anything yet
 
-InitParticipantNB == participant \in [
-                       participants -> [
+InitParticipantNB ≜ participant ∈ [
+                       participants → [
                          vote     : {yes, no},
                          alive    : {TRUE},
                          decision : {undecided},
                          faulty   : {FALSE},
                          voteSent : {FALSE},
-                         forward  : [ participants -> {notsent} ]
+                         forward  : [ participants → {notsent} ]
                        ]
                      ]
 
-InitNB == InitParticipantNB /\ InitCoordinator
+InitNB ≜ InitParticipantNB ∧ InitCoordinator
 
 --------------------------------------------------------------------------------
 
@@ -54,16 +54,16 @@ InitNB == InitParticipantNB /\ InitCoordinator
 \* THEN
 \*   participant i forwards the decision to participant j
 
-forward(i,j) == /\ i # j
-                /\ participant[i].alive
-                /\ participant[i].decision # notsent
-                /\ participant[i].forward[j] = notsent
-                /\ participant' = [participant EXCEPT ![i] = 
+forward(i,j) ≜ ∧ i ≠ j
+               ∧ participant[i].alive
+               ∧ participant[i].decision ≠ notsent
+               ∧ participant[i].forward[j] = notsent
+               ∧ participant' = [participant EXCEPT ![i] = 
                      [@ EXCEPT !.forward = 
                        [@ EXCEPT ![j] = participant[i].decision]
                      ]
                    ]
-                /\ UNCHANGED<<coordinator>>
+               ∧ UNCHANGED⟨coordinator⟩
 
 
 \* decideOnForward(i,j): participant i receives decision from participant j
@@ -74,14 +74,14 @@ forward(i,j) == /\ i # j
 \* THEN
 \*   participant i decides in accordance with participant j's decision (it should only predecide)
 
-decideOnForward(i,j) == /\ i # j
-                        /\ participant[i].alive
-                        /\ participant[i].decision = undecided
-                        /\ participant[j].forward[i] # notsent
-                        /\ participant' = [participant EXCEPT ![i] = 
+decideOnForward(i,j) ≜ ∧ i ≠ j
+                       ∧ participant[i].alive
+                       ∧ participant[i].decision = undecided
+                       ∧ participant[j].forward[i] ≠ notsent
+                       ∧ participant' = [participant EXCEPT ![i] = 
                              [@ EXCEPT !.decision = participant[j].forward[i]]
                            ]
-                        /\ UNCHANGED<<coordinator>>
+                       ∧ UNCHANGED⟨coordinator⟩
 
 
 \* abortOnTimeout(i): conditions for a timeout are simulated
@@ -92,30 +92,30 @@ decideOnForward(i,j) == /\ i # j
 \* THEN
 \*  decide abort
 
-abortOnTimeout(i) == /\ participant[i].alive
-                     /\ participant[i].decision = undecided
-                     /\ ~coordinator.alive
-                     /\ \A j \in participants : participant[j].alive => coordinator.broadcast[j] = notsent
-                     /\ \A j,k \in participants : ~participant[j].alive /\ participant[k].alive => participant[j].forward[k] = notsent
-                     /\ participant' = [participant EXCEPT ![i] = [@ EXCEPT !.decision = abort]]
-                     /\ UNCHANGED<<coordinator>>
+abortOnTimeout(i) ≜ ∧ participant[i].alive
+                    ∧ participant[i].decision = undecided
+                    ∧ ¬coordinator.alive
+                    ∧ ∀ j ∈ participants : participant[j].alive ⇒ coordinator.broadcast[j] = notsent
+                    ∧ ∀ j,k ∈ participants : ¬participant[j].alive ∧ participant[k].alive ⇒ participant[j].forward[k] = notsent
+                    ∧ participant' = [participant EXCEPT ![i] = [@ EXCEPT !.decision = abort]]
+                    ∧ UNCHANGED⟨coordinator⟩
 
 ---------------------------------------------------------------------------------
 
 \* FOR N PARTICIPANTS
 
-parProgNB(i,j) == \/ parProg(i)
-                  \/ forward(i,j) 
-                  \/ decideOnForward(i,j) 
-                  \/ abortOnTimeout(i) 
+parProgNB(i,j) ≜ ∨ parProg(i)
+                 ∨ forward(i,j) 
+                 ∨ decideOnForward(i,j) 
+                 ∨ abortOnTimeout(i) 
 
-parProgNNB == \E i,j \in participants : parDie(i) \/ parProgNB(i,j)
+parProgNNB ≜ ∃ i,j ∈ participants : parDie(i) ∨ parProgNB(i,j)
 
-progNNB == parProgNNB \/ coordProgN
+progNNB ≜ parProgNNB ∨ coordProgN
 
-fairnessNB == /\ \A i \in participants : WF_<<coordinator, participant>>(\E j \in participants : parProgNB(i,j))
-              /\ WF_<<coordinator, participant>>(coordProgB)
+fairnessNB ≜ ∧ ∀ i ∈ participants : WF_⟨coordinator, participant⟩(∃ j ∈ participants : parProgNB(i,j))
+             ∧ WF_⟨coordinator, participant⟩(coordProgB)
 
-SpecNB == InitNB /\ [][progNNB]_<<coordinator, participant>> /\ fairnessNB
+SpecNB ≜ InitNB ∧ □[progNNB]_⟨coordinator, participant⟩ ∧ fairnessNB
 
 ================================================================================

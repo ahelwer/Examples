@@ -5,9 +5,9 @@
 
 EXTENDS SchedulingAllocator
 
-Simple == INSTANCE SimpleAllocator
-SimpleAllocator == Simple!SimpleAllocator
+Simple ≜ INSTANCE SimpleAllocator
+SimpleAllocator ≜ Simple!SimpleAllocator
 
 THEOREM
-  Allocator => SimpleAllocator
+  Allocator ⇒ SimpleAllocator
 =======================================================================

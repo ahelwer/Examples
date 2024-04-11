@@ -14,35 +14,35 @@ VARIABLE chosen
 (***************************************************************************)
 (* The type-correctness invariant.                                         *)
 (***************************************************************************)
-TypeOK == /\ chosen \subseteq Value
-          /\ IsFiniteSet(chosen) 
+TypeOK ≜ ∧ chosen ⊆ Value
+         ∧ IsFiniteSet(chosen) 
 
 (***************************************************************************)
 (* The initial predicate and next-state relation.                          *)
 (***************************************************************************)
-Init == chosen = {}
+Init ≜ chosen = {}
 
-Next == /\ chosen = {}
-        /\ \E v \in Value : chosen' = {v}
+Next ≜ ∧ chosen = {}
+       ∧ ∃ v ∈ Value : chosen' = {v}
 
 (***************************************************************************)
 (* The complete spec.                                                      *)
 (***************************************************************************)
-Spec == Init /\ [][Next]_chosen 
+Spec ≜ Init ∧ □[Next]_chosen 
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* Safety: At most one value is chosen.                                    *)
 (***************************************************************************)
-Inv == /\ TypeOK
-       /\ Cardinality(chosen) \leq 1
+Inv ≜ ∧ TypeOK
+      ∧ Cardinality(chosen) ≤ 1
 
-THEOREM Invariance == Spec => []Inv
-<1>1. Init => Inv
+THEOREM Invariance ≜ Spec ⇒ □Inv
+<1>1. Init ⇒ Inv
   BY FS_EmptySet DEF Init, Inv, TypeOK
-<1>2. Inv /\ [Next]_chosen => Inv'
-  <2>1. Inv /\ Next => Inv'
+<1>2. Inv ∧ [Next]_chosen ⇒ Inv'
+  <2>1. Inv ∧ Next ⇒ Inv'
     BY FS_Singleton DEF Inv, TypeOK, Next
-  <2>2. Inv /\ UNCHANGED chosen => Inv'
+  <2>2. Inv ∧ UNCHANGED chosen ⇒ Inv'
     BY DEF Inv, TypeOK
   <2>. QED  BY <2>1, <2>2
 <1>3. QED   BY <1>1, <1>2, PTL DEF Spec
@@ -51,8 +51,8 @@ THEOREM Invariance == Spec => []Inv
 (***************************************************************************)
 (* Liveness: A value is eventually chosen.                                 *)
 (***************************************************************************)
-Success == <>(chosen # {})
-LiveSpec == Spec /\ WF_chosen(Next)  
+Success ≜ ◇(chosen ≠ {})
+LiveSpec ≜ Spec ∧ WF_chosen(Next)  
 
-THEOREM LivenessTheorem == LiveSpec =>  Success
+THEOREM LivenessTheorem ≜ LiveSpec ⇒  Success
 =============================================================================

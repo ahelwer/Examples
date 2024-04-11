@@ -13,18 +13,18 @@ VARIABLES
     writers, \* set of processes currently writing
     waiting  \* queue of processes waiting to access the resource
 
-vars == <<readers, writers, waiting>>
+vars ≜ ⟨readers, writers, waiting⟩
 
-Actors == 1..NumActors
+Actors ≜ 1‥NumActors
 
-ToSet(s) == { s[i] : i \in DOMAIN s }
+ToSet(s) ≜ { s[i] : i ∈ DOMAIN s }
 
-read(s)  == s[1] = "read"
-write(s) == s[1] = "write"
+read(s)  ≜ s[1] = "read"
+write(s) ≜ s[1] = "write"
 
-WaitingToRead  == { p[2] : p \in ToSet(SelectSeq(waiting, read)) }
+WaitingToRead  ≜ { p[2] : p ∈ ToSet(SelectSeq(waiting, read)) }
 
-WaitingToWrite == { p[2] : p \in ToSet(SelectSeq(waiting, write)) }
+WaitingToWrite ≜ { p[2] : p ∈ ToSet(SelectSeq(waiting, write)) }
 
 ---------------------------------------------------------------------------
 
@@ -32,43 +32,43 @@ WaitingToWrite == { p[2] : p \in ToSet(SelectSeq(waiting, write)) }
 (* Actions *)
 (***********)
 
-TryRead(actor) ==
-    /\ actor \notin WaitingToRead
-    /\ waiting' = Append(waiting, <<"read", actor>>)
-    /\ UNCHANGED <<readers, writers>>
+TryRead(actor) ≜
+    ∧ actor ∉ WaitingToRead
+    ∧ waiting' = Append(waiting, ⟨"read", actor⟩)
+    ∧ UNCHANGED ⟨readers, writers⟩
 
-TryWrite(actor) ==
-    /\ actor \notin WaitingToWrite
-    /\ waiting' = Append(waiting, <<"write", actor>>)
-    /\ UNCHANGED <<readers, writers>>
+TryWrite(actor) ≜
+    ∧ actor ∉ WaitingToWrite
+    ∧ waiting' = Append(waiting, ⟨"write", actor⟩)
+    ∧ UNCHANGED ⟨readers, writers⟩
 
-Read(actor) ==
-    /\ readers' = readers \union {actor}
-    /\ waiting' = Tail(waiting)
-    /\ UNCHANGED writers
+Read(actor) ≜
+    ∧ readers' = readers ∪ {actor}
+    ∧ waiting' = Tail(waiting)
+    ∧ UNCHANGED writers
 
-Write(actor) ==
-    /\ readers = {}
-    /\ writers' = writers \union {actor}
-    /\ waiting' = Tail(waiting)
-    /\ UNCHANGED readers
+Write(actor) ≜
+    ∧ readers = {}
+    ∧ writers' = writers ∪ {actor}
+    ∧ waiting' = Tail(waiting)
+    ∧ UNCHANGED readers
 
-ReadOrWrite ==
-    /\ waiting /= <<>>
-    /\ writers = {}
-    /\ LET pair  == Head(waiting)
-           actor == pair[2]
-       IN CASE pair[1] = "read" -> Read(actor)
-            [] pair[1] = "write" -> Write(actor)
+ReadOrWrite ≜
+    ∧ waiting ≠ ⟨⟩
+    ∧ writers = {}
+    ∧ LET pair  ≜ Head(waiting)
+           actor ≜ pair[2]
+       IN CASE pair[1] = "read" → Read(actor)
+            □ pair[1] = "write" → Write(actor)
 
-StopActivity(actor) ==
-    IF actor \in readers
-    THEN /\ readers' = readers \ {actor}
-         /\ UNCHANGED <<writers, waiting>>
-    ELSE /\ writers' = writers \ {actor}
-         /\ UNCHANGED <<readers, waiting>>
+StopActivity(actor) ≜
+    IF actor ∈ readers
+    THEN ∧ readers' = readers \ {actor}
+         ∧ UNCHANGED ⟨writers, waiting⟩
+    ELSE ∧ writers' = writers \ {actor}
+         ∧ UNCHANGED ⟨readers, waiting⟩
 
-Stop == \E actor \in readers \cup writers : StopActivity(actor)
+Stop ≜ ∃ actor ∈ readers ∪ writers : StopActivity(actor)
 
 ---------------------------------------------------------------------------
 
@@ -76,24 +76,24 @@ Stop == \E actor \in readers \cup writers : StopActivity(actor)
 (* Specification *)
 (*****************)
 
-Init ==
-    /\ readers = {}
-    /\ writers = {}
-    /\ waiting = <<>>
+Init ≜
+    ∧ readers = {}
+    ∧ writers = {}
+    ∧ waiting = ⟨⟩
 
-Next ==
-    \/ \E actor \in Actors : TryRead(actor)
-    \/ \E actor \in Actors : TryWrite(actor)
-    \/ ReadOrWrite
-    \/ Stop
+Next ≜
+    ∨ ∃ actor ∈ Actors : TryRead(actor)
+    ∨ ∃ actor ∈ Actors : TryWrite(actor)
+    ∨ ReadOrWrite
+    ∨ Stop
 
-Fairness ==
-    /\ \A actor \in Actors : WF_vars(TryRead(actor))
-    /\ \A actor \in Actors : WF_vars(TryWrite(actor))
-    /\ WF_vars(ReadOrWrite)
-    /\ WF_vars(Stop)
+Fairness ≜
+    ∧ ∀ actor ∈ Actors : WF_vars(TryRead(actor))
+    ∧ ∀ actor ∈ Actors : WF_vars(TryWrite(actor))
+    ∧ WF_vars(ReadOrWrite)
+    ∧ WF_vars(Stop)
 
-Spec == Init /\ [][Next]_vars /\ Fairness
+Spec ≜ Init ∧ □[Next]_vars ∧ Fairness
 
 ---------------------------------------------------------------------------
 
@@ -101,23 +101,23 @@ Spec == Init /\ [][Next]_vars /\ Fairness
 (* Invariants *)
 (**************)
 
-TypeOK ==
-    /\ readers \subseteq Actors
-    /\ writers \subseteq Actors
-    /\ waiting \in Seq({"read", "write"} \times Actors)
+TypeOK ≜
+    ∧ readers ⊆ Actors
+    ∧ writers ⊆ Actors
+    ∧ waiting ∈ Seq({"read", "write"} × Actors)
 
-Safety ==
-    /\ ~(readers /= {} /\ writers /= {})
-    /\ Cardinality(writers) <= 1
+Safety ≜
+    ∧ ¬(readers ≠ {} ∧ writers ≠ {})
+    ∧ Cardinality(writers) ≤ 1
 
 (**************)
 (* Properties *)
 (**************)
 
-Liveness ==
-    /\ \A actor \in Actors : []<>(actor \in readers)
-    /\ \A actor \in Actors : []<>(actor \in writers)
-    /\ \A actor \in Actors : []<>(actor \notin readers)
-    /\ \A actor \in Actors : []<>(actor \notin writers)
+Liveness ≜
+    ∧ ∀ actor ∈ Actors : □◇(actor ∈ readers)
+    ∧ ∀ actor ∈ Actors : □◇(actor ∈ writers)
+    ∧ ∀ actor ∈ Actors : □◇(actor ∉ readers)
+    ∧ ∀ actor ∈ Actors : □◇(actor ∉ writers)
 
 ============================================================================

@@ -13,17 +13,17 @@ CONSTANT Value,     \* The set of choosable values.
 (***************************************************************************)
 (* Here are the assumptions we make about quorums.                         *)
 (***************************************************************************)
-ASSUME QuorumAssumption == /\ \A Q \in Quorum : Q \subseteq Acceptor
-                           /\ \A Q1, Q2 \in Quorum : Q1 \cap Q2 # {}  
+ASSUME QuorumAssumption ≜ ∧ ∀ Q ∈ Quorum : Q ⊆ Acceptor
+                          ∧ ∀ Q1, Q2 ∈ Quorum : Q1 ∩ Q2 ≠ {}  
 
-THEOREM QuorumNonEmpty == \A Q \in Quorum : Q # {}
+THEOREM QuorumNonEmpty ≜ ∀ Q ∈ Quorum : Q ≠ {}
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* Ballot is a set of "ballot numbers".  For simplicity, we let it be the  *)
 (* set of natural numbers.  However, we write Ballot for that set to       *)
 (* distinguish ballots from natural numbers used for other purposes.       *)
 (***************************************************************************)
-Ballot == Nat
+Ballot ≜ ℕ
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* In the algorithm, each acceptor can cast one or more votes, where each  *)
@@ -43,95 +43,95 @@ VARIABLE votes,   \* votes[a] is the set of votes cast by acceptor a
 (***************************************************************************)
 (* The type-correctness invariant.                                         *)
 (***************************************************************************)
-TypeOK == /\ votes \in [Acceptor -> SUBSET (Ballot \X Value)]
-          /\ maxBal \in [Acceptor -> Ballot \cup {-1}]
+TypeOK ≜ ∧ votes ∈ [Acceptor → SUBSET (Ballot × Value)]
+         ∧ maxBal ∈ [Acceptor → Ballot ∪ {-1}]
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now make a series of definitions an assert some simple theorems      *)
 (* about those definitions that lead to the algorithm.                     *)
 (***************************************************************************)
-VotedFor(a, b, v) == <<b, v>> \in votes[a]
+VotedFor(a, b, v) ≜ ⟨b, v⟩ ∈ votes[a]
   (*************************************************************************)
   (* True iff acceptor a has voted for v in ballot b.                      *)
   (*************************************************************************)
   
-ChosenAt(b, v) == \E Q \in Quorum : 
-                     \A a \in Q : VotedFor(a, b, v)
+ChosenAt(b, v) ≜ ∃ Q ∈ Quorum : 
+                     ∀ a ∈ Q : VotedFor(a, b, v)
   (*************************************************************************)
   (* True iff a quorum of acceptors have all voted for v in ballot b.      *)
   (*************************************************************************)
 
-chosen == {v \in Value : \E b \in Ballot : ChosenAt(b, v)}
+chosen ≜ {v ∈ Value : ∃ b ∈ Ballot : ChosenAt(b, v)}
   (*************************************************************************)
   (* The set of values that have been chosen.                              *)
   (*************************************************************************)
   
-DidNotVoteAt(a, b) == \A v \in Value : ~ VotedFor(a, b, v) 
+DidNotVoteAt(a, b) ≜ ∀ v ∈ Value : ¬ VotedFor(a, b, v) 
 
-CannotVoteAt(a, b) == /\ maxBal[a] > b
-                      /\ DidNotVoteAt(a, b)
+CannotVoteAt(a, b) ≜ ∧ maxBal[a] > b
+                     ∧ DidNotVoteAt(a, b)
   (*************************************************************************)
   (* Because acceptor a will not cast any more votes in a ballot numbered  *)
   (* < maxBal[a], this implies that a has not and will never cast a vote   *)
   (* in ballot b.                                                          *)
   (*************************************************************************)
 
-NoneOtherChoosableAt(b, v) == 
-   \E Q \in Quorum :
-     \A a \in Q : VotedFor(a, b, v) \/ CannotVoteAt(a, b)
+NoneOtherChoosableAt(b, v) ≜ 
+   ∃ Q ∈ Quorum :
+     ∀ a ∈ Q : VotedFor(a, b, v) ∨ CannotVoteAt(a, b)
   (*************************************************************************)
   (* If this is true, then ChosenAt(b, w) is not and can never become true *)
   (* for any w # v.                                                        *)
   (*************************************************************************)
 
-SafeAt(b, v) == \A c \in 0..(b-1) : NoneOtherChoosableAt(c, v)
+SafeAt(b, v) ≜ ∀ c ∈ 0‥(b-1) : NoneOtherChoosableAt(c, v)
   (*************************************************************************)
   (* If this is true, then no value other than v has been or can ever be   *)
   (* chosen in any ballot numbered less than b.                            *)
   (*************************************************************************)
 -----------------------------------------------------------------------------
-THEOREM AllSafeAtZero == \A v \in Value : SafeAt(0, v)
+THEOREM AllSafeAtZero ≜ ∀ v ∈ Value : SafeAt(0, v)
 -----------------------------------------------------------------------------
-THEOREM ChoosableThm ==
-          \A b \in Ballot, v \in Value : 
-             ChosenAt(b, v) => NoneOtherChoosableAt(b, v)
+THEOREM ChoosableThm ≜
+          ∀ b ∈ Ballot, v ∈ Value : 
+             ChosenAt(b, v) ⇒ NoneOtherChoosableAt(b, v)
 -----------------------------------------------------------------------------
-VotesSafe == \A a \in Acceptor, b \in Ballot, v \in Value :
-                 VotedFor(a, b, v) => SafeAt(b, v)
+VotesSafe ≜ ∀ a ∈ Acceptor, b ∈ Ballot, v ∈ Value :
+                 VotedFor(a, b, v) ⇒ SafeAt(b, v)
 
-OneVote == \A a \in Acceptor, b \in Ballot, v, w \in Value : 
-              VotedFor(a, b, v) /\ VotedFor(a, b, w) => (v = w)
-OneValuePerBallot ==  
-    \A a1, a2 \in Acceptor, b \in Ballot, v1, v2 \in Value : 
-       VotedFor(a1, b, v1) /\ VotedFor(a2, b, v2) => (v1 = v2)
+OneVote ≜ ∀ a ∈ Acceptor, b ∈ Ballot, v, w ∈ Value : 
+              VotedFor(a, b, v) ∧ VotedFor(a, b, w) ⇒ (v = w)
+OneValuePerBallot ≜  
+    ∀ a1, a2 ∈ Acceptor, b ∈ Ballot, v1, v2 ∈ Value : 
+       VotedFor(a1, b, v1) ∧ VotedFor(a2, b, v2) ⇒ (v1 = v2)
 -----------------------------------------------------------------------------
-THEOREM OneValuePerBallot => OneVote
+THEOREM OneValuePerBallot ⇒ OneVote
 -----------------------------------------------------------------------------
-THEOREM VotesSafeImpliesConsistency ==
-          /\ TypeOK 
-          /\ VotesSafe
-          /\ OneVote
-          => \/ chosen = {}
-             \/ \E v \in Value : chosen = {v}
+THEOREM VotesSafeImpliesConsistency ≜
+          ∧ TypeOK 
+          ∧ VotesSafe
+          ∧ OneVote
+          ⇒ ∨ chosen = {}
+            ∨ ∃ v ∈ Value : chosen = {v}
 -----------------------------------------------------------------------------
-ShowsSafeAt(Q, b, v) == 
-  /\ \A a \in Q : maxBal[a] \geq b
-  /\ \E c \in -1..(b-1) : 
-      /\ (c # -1) => \E a \in Q : VotedFor(a, c, v)
-      /\ \A d \in (c+1)..(b-1), a \in Q : DidNotVoteAt(a, d)
+ShowsSafeAt(Q, b, v) ≜ 
+  ∧ ∀ a ∈ Q : maxBal[a] ≥ b
+  ∧ ∃ c ∈ -1‥(b-1) : 
+      ∧ (c ≠ -1) ⇒ ∃ a ∈ Q : VotedFor(a, c, v)
+      ∧ ∀ d ∈ (c+1)‥(b-1), a ∈ Q : DidNotVoteAt(a, d)
 -----------------------------------------------------------------------------
-THEOREM ShowsSafety == 
-          TypeOK /\ VotesSafe /\ OneValuePerBallot =>
-             \A Q \in Quorum, b \in Ballot, v \in Value :
-               ShowsSafeAt(Q, b, v) => SafeAt(b, v)
+THEOREM ShowsSafety ≜ 
+          TypeOK ∧ VotesSafe ∧ OneValuePerBallot ⇒
+             ∀ Q ∈ Quorum, b ∈ Ballot, v ∈ Value :
+               ShowsSafeAt(Q, b, v) ⇒ SafeAt(b, v)
  
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* We now write the specification.  The initial condition is               *)
 (* straightforward.                                                        *)
 (***************************************************************************)
-Init == /\ votes = [a \in Acceptor |-> {}]
-        /\ maxBal = [a \in Acceptor |-> -1]
+Init ≜ ∧ votes = [a ∈ Acceptor ↦ {}]
+       ∧ maxBal = [a ∈ Acceptor ↦ -1]
 
 
 (***************************************************************************)
@@ -140,10 +140,10 @@ Init == /\ votes = [a \in Acceptor |-> {}]
 (* An acceptor a is allowed to increase maxBal[a] to a ballot number b at  *)
 (* any time.                                                               *)
 (***************************************************************************)
-IncreaseMaxBal(a, b) ==
-  /\ b > maxBal[a]
-  /\ maxBal' = [maxBal EXCEPT ![a] = b]
-  /\ UNCHANGED votes
+IncreaseMaxBal(a, b) ≜
+  ∧ b > maxBal[a]
+  ∧ maxBal' = [maxBal EXCEPT ![a] = b]
+  ∧ UNCHANGED votes
 
 (***************************************************************************)
 (* Next is the action in which acceptor a votes for v in ballot b.  The    *)
@@ -153,28 +153,28 @@ IncreaseMaxBal(a, b) ==
 (* OneValuePerBallot.  The fourth conjunct maintains the invariance of     *)
 (* VotesSafe.                                                              *)
 (***************************************************************************)
-VoteFor(a, b, v) ==
-    /\ maxBal[a] \leq b
-    /\ \A vt \in votes[a] : vt[1] # b
-    /\ \A c \in Acceptor \ {a} : 
-         \A vt \in votes[c] : (vt[1] = b) => (vt[2] = v)
-    /\ \E Q \in Quorum : ShowsSafeAt(Q, b, v)
-    /\ votes' = [votes EXCEPT ![a] = @ \cup {<<b, v>>}]
-    /\ maxBal' = [maxBal EXCEPT ![a] = b]
+VoteFor(a, b, v) ≜
+    ∧ maxBal[a] ≤ b
+    ∧ ∀ vt ∈ votes[a] : vt[1] ≠ b
+    ∧ ∀ c ∈ Acceptor \ {a} : 
+         ∀ vt ∈ votes[c] : (vt[1] = b) ⇒ (vt[2] = v)
+    ∧ ∃ Q ∈ Quorum : ShowsSafeAt(Q, b, v)
+    ∧ votes' = [votes EXCEPT ![a] = @ ∪ {⟨b, v⟩}]
+    ∧ maxBal' = [maxBal EXCEPT ![a] = b]
 
 
 (***************************************************************************)
 (* The next-state action and the invariant.                                *)
 (***************************************************************************)
-Next  ==  \E a \in Acceptor, b \in Ballot : 
-            \/ IncreaseMaxBal(a, b)
-            \/ \E v \in Value : VoteFor(a, b, v)
+Next  ≜  ∃ a ∈ Acceptor, b ∈ Ballot : 
+            ∨ IncreaseMaxBal(a, b)
+            ∨ ∃ v ∈ Value : VoteFor(a, b, v)
 
-Spec == Init /\ [][Next]_<<votes, maxBal>>
+Spec ≜ Init ∧ □[Next]_⟨votes, maxBal⟩
 
-Inv == TypeOK /\ VotesSafe /\ OneValuePerBallot
+Inv ≜ TypeOK ∧ VotesSafe ∧ OneValuePerBallot
 -----------------------------------------------------------------------------
-THEOREM Invariance == Spec => []Inv
+THEOREM Invariance ≜ Spec ⇒ □Inv
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (* The following statement instantiates module Consensus with the constant *)
@@ -184,13 +184,12 @@ THEOREM Invariance == Spec => []Inv
 (* for each defined identifier id of module Value, this statement defines  *)
 (* C!id to equal the value of id under these substitutions.                *)
 (***************************************************************************)
-C == INSTANCE Consensus
+C ≜ INSTANCE Consensus
 
-THEOREM Spec => C!Spec 
-<1>1. Inv /\ Init => C!Init
-<1>2. Inv /\ [Next]_<<votes, maxBal>> => [C!Next]_chosen
+THEOREM Spec ⇒ C!Spec 
+<1>1. Inv ∧ Init ⇒ C!Init
+<1>2. Inv ∧ [Next]_⟨votes, maxBal⟩ ⇒ [C!Next]_chosen
 <1>3. QED
   BY <1>1, <1>2, Invariance, PTL DEF Spec, C!Spec
 
 =============================================================================
-

@@ -14,10 +14,10 @@ EXTENDS Consensus
 (*                                                                         *)
 (*     Inv /\ [][Next]_chosen                                              *)
 (***************************************************************************)
-ITypeOK == chosen \in SUBSET Value
+ITypeOK ≜ chosen ∈ SUBSET Value
 
-IInv == /\ ITypeOK
-        /\ Cardinality(chosen) \leq 1
+IInv ≜ ∧ ITypeOK
+       ∧ Cardinality(chosen) ≤ 1
           
-ISpec == IInv /\ [][Next]_chosen  
+ISpec ≜ IInv ∧ □[Next]_chosen  
 =============================================================================

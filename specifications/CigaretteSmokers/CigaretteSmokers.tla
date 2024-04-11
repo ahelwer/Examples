@@ -14,8 +14,8 @@ VARIABLE smokers, dealer
 (* {matches, paper, tobacco}. 'Offers' is a subset of subsets of           *)
 (* ingredients, each missing just one ingredient                           *)
 (***************************************************************************)
-ASSUME /\ Offers \subseteq (SUBSET Ingredients)
-       /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
+ASSUME ∧ Offers ⊆ (SUBSET Ingredients)
+       ∧ ∀ n ∈ Offers : Cardinality(n) = Cardinality(Ingredients) - 1
 
 (***************************************************************************)
 (* 'smokers' is a function from the ingredient the smoker has              *)
@@ -23,35 +23,35 @@ ASSUME /\ Offers \subseteq (SUBSET Ingredients)
 (* (smoking/not smoking)                                                   *)
 (* 'dealer' is an element of 'Offers', or an empty set                     *)
 (***************************************************************************)
-TypeOK == /\ smokers \in [Ingredients -> [smoking: BOOLEAN]]
-          /\ dealer  \in Offers \/ dealer = {}
+TypeOK ≜ ∧ smokers ∈ [Ingredients → [smoking: BOOLEAN]]
+         ∧ dealer  ∈ Offers ∨ dealer = {}
           
-vars == <<smokers, dealer>>
+vars ≜ ⟨smokers, dealer⟩
 
-ChooseOne(S, P(_)) == CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x
+ChooseOne(S, P(_)) ≜ CHOOSE x ∈ S : P(x) ∧ ∀ y ∈ S : P(y) ⇒ y = x
 
-Init == /\ smokers = [r \in Ingredients |-> [smoking |-> FALSE]]
-        /\ dealer \in Offers
+Init ≜ ∧ smokers = [r ∈ Ingredients ↦ [smoking ↦ FALSE]]
+       ∧ dealer ∈ Offers
         
-startSmoking == /\ dealer /= {}
-                /\ smokers' = [r \in Ingredients |-> [smoking |-> {r} \cup 
+startSmoking ≜ ∧ dealer ≠ {}
+               ∧ smokers' = [r ∈ Ingredients ↦ [smoking ↦ {r} ∪ 
                                                       dealer = Ingredients]]
-                /\ dealer' = {}
+               ∧ dealer' = {}
                 
-stopSmoking == /\ dealer = {}
-               /\ LET r == ChooseOne(Ingredients,
+stopSmoking ≜ ∧ dealer = {}
+              ∧ LET r ≜ ChooseOne(Ingredients,
                                      LAMBDA x : smokers[x].smoking)
                   IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
-               /\ dealer' \in Offers
+              ∧ dealer' ∈ Offers
 
-Next == startSmoking \/ stopSmoking
+Next ≜ startSmoking ∨ stopSmoking
 
-Spec == Init /\ [][Next]_vars
-FairSpec == Spec /\ WF_vars(Next)
+Spec ≜ Init ∧ □[Next]_vars
+FairSpec ≜ Spec ∧ WF_vars(Next)
 
 (***************************************************************************)
 (* An invariant checking that at most one smoker smokes at any particular  *)
 (* moment                                                                  *)
 (***************************************************************************)
-AtMostOne == Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
+AtMostOne ≜ Cardinality({r ∈ Ingredients : smokers[r].smoking}) ≤ 1
 =============================================================================

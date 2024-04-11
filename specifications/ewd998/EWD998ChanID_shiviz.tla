@@ -26,23 +26,23 @@ EXTENDS EWD998ChanID, TLC, TLCExt, Json
 
 \* Init  except that  active  and  color  are restricted to TRUE and "white" to
  \* not waste time generating initial states nobody needs.
-MCInit ==
+MCInit ≜
   (* Each node maintains a (local) vector clock *)
   (* https://en.wikipedia.org/wiki/Vector_clock *)
-  /\ clock = [ n \in Node |-> IF n = Initiator 
-                THEN [ m \in Node |-> IF m = Initiator THEN 1 ELSE 0 ]
-                ELSE [ m \in Node |-> 0 ] ]
+  ∧ clock = [ n ∈ Node ↦ IF n = Initiator 
+                THEN [ m ∈ Node ↦ IF m = Initiator THEN 1 ELSE 0 ]
+                ELSE [ m ∈ Node ↦ 0 ] ]
   (* Rule 0 *)
-  /\ counter = [n \in Node |-> 0] \* c properly initialized
-  /\ inbox = [n \in Node |-> IF n = Initiator 
-                              THEN << [type |-> "tok", q |-> 0, color |-> "black", vc |-> clock[n] ] >> 
-                              ELSE <<>>] \* with empty channels.
+  ∧ counter = [n ∈ Node ↦ 0] \* c properly initialized
+  ∧ inbox = [n ∈ Node ↦ IF n = Initiator 
+                              THEN ⟨ [type ↦ "tok", q ↦ 0, color ↦ "black", vc ↦ clock[n] ] ⟩ 
+                              ELSE ⟨⟩] \* with empty channels.
   (* EWD840 *)
   \* Reduce the number of initial states. 
-  /\ active \in [Node -> {TRUE}]
-  /\ color \in [Node -> {"white"}]
+  ∧ active ∈ [Node → {TRUE}]
+  ∧ color ∈ [Node → {"white"}]
 
-Inv ==
+Inv ≜
     \* TODO Choose some upper length or a invariant that produces a more
      \* TODO interesting behavior.  If you increase the length, don't forget
      \* TODO to also update TLC's depth parameter.
@@ -61,23 +61,23 @@ Inv ==
  \* Determining whether or not a node has changed is usually easiest by
  \* introducing a prophecy variable into the spec (see  thread  variable in
  \* https://git.io/JZ0Wb).
-host ==
-    LET None == "--" \* This should be a model value:  CHOOSE n : n \notin Node
-        lvl == TLCGet("level")
-        trc == Trace
+host ≜
+    LET None ≜ "--" \* This should be a model value:  CHOOSE n : n \notin Node
+        lvl ≜ TLCGet("level")
+        trc ≜ Trace
     IN IF lvl = 1 THEN Initiator
-       ELSE CHOOSE n \in Node:
-            trc[lvl].clock[n] # trc[lvl-1].clock[n]
+       ELSE CHOOSE n ∈ Node:
+            trc[lvl].clock[n] ≠ trc[lvl-1].clock[n]
 
-Alias == 
+Alias ≜ 
     [
-        Host |-> host
-        ,Clock |-> ToJsonObject(clock[host])
+        Host ↦ host
+        ,Clock ↦ ToJsonObject(clock[host])
         
-        ,active |-> active
-        ,color |-> color
-        ,counter |-> counter
-        ,inbox |-> inbox
+        ,active ↦ active
+        ,color ↦ color
+        ,counter ↦ counter
+        ,inbox ↦ inbox
     ]
 
 =============================================================================
