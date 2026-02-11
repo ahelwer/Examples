@@ -6,7 +6,7 @@
 EXTENDS Naturals
 
 (***************************************************************************)
-(* We now declare two constant parameters.                                 *)
+(* We now declare three constant parameters.                               *)
 (***************************************************************************)
 
 CONSTANT Jug,      \* The set of all jugs.
