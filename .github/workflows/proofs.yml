@@ -1,0 +1,46 @@
+name: Check Proofs
+on:
+  push:
+    branches:
+      - master
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false
+    env:
+      SCRIPT_DIR: .github/scripts
+      DEPS_DIR: deps
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: $SCRIPT_DIR/linux-setup.sh $SCRIPT_DIR $DEPS_DIR false
+      - name: Check proofs
+        run: |
+          set -o pipefail
+          find specifications -iname "manifest.json" -print0 \
+          | xargs --null --no-run-if-empty \
+          jq --join-output '
+            .modules
+            | map(select(has("proof")))
+            # Failing on Linux
+            | map(select(.path != "specifications/LoopInvariance/SumSequence.tla"))
+            | map(.path + "\u0000")
+            | join("")' \
+          | xargs --verbose --null --no-run-if-empty -I {TLA_FILE} \
+          time "$DEPS_DIR/tlapm/bin/tlapm" "{TLA_FILE}" -I "$DEPS_DIR/community" --stretch 5
+

@@ -132,20 +132,6 @@ jobs:
             --community_modules_jar_path $DEPS_DIR/community/modules.jar \
             --examples_root .                                            \
             --skip "${SKIP[@]}"
-      - name: Check proofs
-        if: matrix.os != 'windows-latest' && !matrix.unicode
-        run: |
-          set -o pipefail
-          find specifications -iname "manifest.json" -print0 \
-          | xargs --null --no-run-if-empty \
-          jq --join-output '
-            .modules
-            | map(select(has("proof")))
-            | map(select(.path != "specifications/LoopInvariance/SumSequence.tla"))
-            | map(.path + "\u0000")
-            | join("")' \
-          | xargs --verbose --null --no-run-if-empty -I {TLA_FILE} \
-          "$DEPS_DIR/tlapm/bin/tlapm" "{TLA_FILE}" -I "$DEPS_DIR/community" --stretch 5
       - name: Smoke-test manifest generation script
         run: |
           python $SCRIPT_DIR/generate_manifest.py \
